@@ -1,8 +1,13 @@
 {
   "CheckInEmail": "seantcanavan@gmail.com",
-  "CheckInFrequencySeconds": "3600",
-  "UpdateURI": "https://github.com/seantcanavan/anon-eth-net.git",
-  "UpdateFrequencySeconds": "3600",
-  "EtherWallet": "7ebda736922f2c46dec50b633404972e49803c73",
-  "MineEther": false
+  "CheckInFrequencySeconds": 3600,
+  "UpdateFrequencySeconds": 3600,
+  "RemoteUpdateURI": "https://github.com/seantcanavan/anon-eth-net.git",
+  "RemoteVersionURI": "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/main/version.no",
+  "LocalVersionURI": "main/version.no",
+  "LocalVersion": 0,
+  "MineEther": false,
+  "GPUMine": false,
+  "CPUMine": true,
+  "EtherWallet": ""
 }
