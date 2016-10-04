@@ -1,0 +1,8 @@
+{
+  "CheckInEmail": "seantcanavan@gmail.com",
+  "CheckInFrequencySeconds": "3600",
+  "UpdateURI": "https://github.com/seantcanavan/anon-eth-net.git",
+  "UpdateFrequencySeconds": "3600",
+  "EtherWallet": "7ebda736922f2c46dec50b633404972e49803c73",
+  "MineEther": false
+}
