@@ -26,3 +26,6 @@ _testmain.go
 
 #compiled binaries
 /bin/
+
+#ignore password files
+src/github.com/seantcanavan/emailpassword.txt

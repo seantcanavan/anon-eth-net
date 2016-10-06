@@ -3,7 +3,7 @@ package logger
 import (
 	"bufio"
 	"bytes"
-	"log"
+	"fmt"
 	"os"
 	"time"
 
@@ -16,33 +16,33 @@ type SeanLogger struct {
 	BaseLogName        string        // The beginning text to append to this log instance for naming and management purposes
 	MaxLogFileCount    uint64        // The maximum number of log files saved to disk before pruning occurs
 	MaxLogMessageCount uint64        // The maximum number of bytes a log file can take up before it's cut off and a new one is created
-	MaxLogDuration     uint64        // The maximum number of seconds a log can exist for before it's cut off and a new one is created
+	MaxLogDuration     int64        // The maximum number of seconds a log can exist for before it's cut off and a new one is created
 	logFileCount       uint64        // The current number of logs that have been created
 	logMessageCount    uint64        // The current number of messages that have been logged
-	logDuration        time.Duration // The duration, in seconds, that this log has been logging for
-	logStamp           uint64        // The time when this log was last written to in unix time
+	logDuration        int64 // The duration, in seconds, that this log has been logging for
+	logStamp           int64        // The time when this log was last written to in unix time
 	log                *os.File      // The file that we're logging to
-	writer             *Writer       // our writer we use to log to the current log file
+	writer             *bufio.Writer       // our writer we use to log to the current log file
 }
 
 // LogFileHandle will generate a string name of a file based off of an initial
 // string and append the date to the end to signify when it was created.
-func LogFileHandle(string logBaseName) string {
+func LogFileHandle(logBaseName string) string {
 
-	dts := utils.FullDateTimeString()
+	dts := utils.FullDateStringSafe()
 
 	var nameBuffer bytes.Buffer
-	dts.WriteString(logBaseName)
-	dts.WriteString(separatingCharacter)
-	dts.WriteString(dts)
+	nameBuffer.WriteString(logBaseName)
+	nameBuffer.WriteString(" ")
+	nameBuffer.WriteString(dts)
 
-	return dts.String(utils.FullDateStringSafe())
+	return nameBuffer.String()
 }
 
 // StartLog initializes all the log tracking variables
-func (sl *SeanLogger) StartLog(string logBaseName) error {
+func (sl *SeanLogger) StartLog(logBaseName string) error {
 
-	filePtr, err := os.File.Create(LogFileHandle(logBaseName))
+	filePtr, err := os.Create(LogFileHandle(logBaseName))
 	if err != nil {
 		return err
 	}
@@ -52,9 +52,8 @@ func (sl *SeanLogger) StartLog(string logBaseName) error {
 	sl.logFileCount = 0
 	sl.logDuration = 0
 	sl.logStamp = time.Now().Unix()
-	sl.flushFrequency = 10
 	sl.log = filePtr
-	sl.writer = &bufio.NewWriter(sl.log)
+	sl.writer = bufio.NewWriter(sl.log)
 	return nil
 }
 
@@ -63,34 +62,34 @@ func (sl *SeanLogger) StartLog(string logBaseName) error {
 // max duration of the log file, and the maximum number of overall log files
 // has not been reached. If any of the above parameters have been tripped,
 // log cleanup will occur.
-func (sl *SeanLogger) LogMessage(string message) {
+func (sl *SeanLogger) LogMessage(message string) {
 
 	now := time.Now().Unix()
 
 	fmt.Fprintln(sl.writer, message)
 
-	logMessageCount++
-	logDuration += now - sl.logStamp
-	logStamp = now
+	sl.logMessageCount++
+	sl.logDuration += now - sl.logStamp
+	sl.logStamp = now
 
-	if logMessageCount > sl.MaxLogMessageCount ||
-		logDuratoin > sl.MaxLogDuration {
+	if sl.logMessageCount > sl.MaxLogMessageCount ||
+		sl.logDuration > sl.MaxLogDuration {
 		sl.newFile()
 	}
 }
 
 func (sl *SeanLogger) newFile() {
 
-	sl.writer.Close()
+	sl.writer.Flush()
 	sl.log.Close()
 
-	filePtr, err := os.File.Create(LogFileHandle(sl.logBaseName))
+	filePtr, err := os.Create(LogFileHandle(sl.BaseLogName))
 	if err != nil {
-		handleCreateError()
+		sl.handleCreateError()
 	}
 
 	sl.log = filePtr
-	sl.writer = &bufio.NewWriter(sl.log)
+	sl.writer = bufio.NewWriter(sl.log)
 }
 
 func (sl *SeanLogger) handleCreateError() {

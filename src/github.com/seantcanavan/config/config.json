@@ -1,5 +1,6 @@
 {
   "CheckInEmail": "seantcanavan@gmail.com",
+  "CheckInEmailPasswordFile": "emailpassword.txt",
   "CheckInFrequencySeconds": 3600,
   "UpdateFrequencySeconds": 3600,
   "RemoteUpdateURI": "https://github.com/seantcanavan/anon-eth-net.git",
