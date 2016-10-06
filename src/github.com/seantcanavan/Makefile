@@ -19,5 +19,9 @@ version-update:
 
 format:
 	gofmt -w config
+	gofmt -w loader
+	gofmt -w logger
 	gofmt -w main
+	gofmt -w reporter
 	gofmt -w updater
+	gofmt -w utils
