@@ -1,7 +1,6 @@
 package main
 
 import (
-	"../config"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -9,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/seantcanavan/config"
 )
 
 var cfg = &config.Config{}

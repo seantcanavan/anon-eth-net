@@ -85,17 +85,22 @@ func (sl *SeanLogger) LogMessage(message string) {
 	}
 }
 
+// newFile generates a new log file to store the log messages within. It
+// intelligently keeps track of the number of log files that have already been
+// created so that you don't overload your disk with logs and can 'prune' extra
+// logs as necessary.
 func (sl *SeanLogger) newFile() {
-
-	sl.writer.Flush()
-	sl.log.Close()
 
 	logFileName := LogFileHandle(sl.baseLogName)
 
 	filePtr, err := os.Create(logFileName)
 	if err != nil {
 		sl.handleCreateError()
+		return
 	}
+
+	sl.writer.Flush()
+	sl.log.Close()
 
 	sl.log = filePtr
 	sl.writer = bufio.NewWriter(sl.log)

@@ -1,6 +1,5 @@
 {
-  "CheckInEmail": "seantcanavan@gmail.com",
-  "CheckInEmailPasswordFile": "emailpassword.txt",
+  "CheckInGmailCredentialsFile": "../emaillogindetails.txt",
   "CheckInFrequencySeconds": 3600,
   "UpdateFrequencySeconds": 3600,
   "RemoteUpdateURI": "https://github.com/seantcanavan/anon-eth-net.git",
@@ -10,5 +9,7 @@
   "MineEther": false,
   "GPUMine": false,
   "CPUMine": true,
-  "EtherWallet": ""
+  "EtherWallet": "",
+  "DeviceId": "519a2a15-afad-4c1a-94a3-71660c83504b",
+  "DeviceName": "LG Smart Fridge"
 }
