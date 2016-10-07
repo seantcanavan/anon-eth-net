@@ -1,11 +1,16 @@
 package profiler
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
+
+	"github.com/seantcanavan/logger"
 )
 
 const CPU_AND_DISK_UTIL = "CPU and Disk Utilization"
@@ -14,31 +19,67 @@ const DISK_FREE_SPACE = "Disk Free Space"
 const PROCESS_LIST = "Running Processes"
 const UPTIME = "Uptime"
 const NETWORK_DETAILS = "Network Details"
-const END_COMMAND_DIVIDER = "(------------------------------------------------)"
-
-type Profiler struct {
-
-}
-
+const END_COMMAND_DIVIDER = "------------------------------------------------------------"
+const SEPARATING_SEQUENCE = "\n\n"
 
 // GetInMemorySystemReportAsStringSlice will return a system report generated
 // entirely in memory. The full report will be returned as a concatenated slice
 // of strings.
-func GetInMemorySystemReportAsStringSlice() {
+func ReportAsStrings() []string {
 
+	var bytesRepr bytes.Buffer
+	var stringSliceRepr []string
+
+	bytesRepr.Write(ReportAsBytes())
+	scanner := bufio.NewScanner(&bytesRepr)
+
+	for scanner.Scan() {
+    	stringSliceRepr = append(stringSliceRepr, scanner.Text())
+	}
+
+	return stringSliceRepr
 }
 
 // GetInMemorySystemReportAsByteArray will return a system report generated
 // entirely in memory. The full report will be returned as an array of bytes.
-func GetInMemorySystemReportAsByteArray() {
+func ReportAsBytes() []byte {
 
+	var inMemoryBuffer bytes.Buffer
+
+	inMemoryBuffer.Write(cpuAndDiskUtilization())
+	inMemoryBuffer.WriteString(SEPARATING_SEQUENCE)
+	inMemoryBuffer.Write(memoryUtilization())
+	inMemoryBuffer.WriteString(SEPARATING_SEQUENCE)
+	inMemoryBuffer.Write(diskFreeSpace())
+	inMemoryBuffer.WriteString(SEPARATING_SEQUENCE)
+	inMemoryBuffer.Write(runningProcessList())
+	inMemoryBuffer.WriteString(SEPARATING_SEQUENCE)
+	inMemoryBuffer.Write(uptime())
+	inMemoryBuffer.WriteString(SEPARATING_SEQUENCE)
+	inMemoryBuffer.Write(networkDetails())
+	inMemoryBuffer.WriteString(SEPARATING_SEQUENCE)
+
+	return inMemoryBuffer.Bytes()
 }
 
 // GetInFileSystemReport will return a system report that has been saved to a
 // file and return the pointer to that file. If the requested report is
-// transient - it will be deleted after a minute automatically.
-func GetInFileSystemReport(transient bool) *os.File {
-	return nil
+// transient - it will be deleted after  automatically.
+func ReportAsFile(transient bool, duration time.Duration) (string, error) {
+
+	bytes := ReportAsBytes()
+	fileName := logger.LogFileHandle("sysreport")
+
+	if transient {
+		go func() {
+			time.Sleep(duration * time.Second)
+			//TODO(Canavan) handle this error somehow
+			_ = os.Remove(fileName)
+		}()
+	}
+
+	ioutil.WriteFile(fileName, bytes, 0744)
+	return fileName, nil
 }
 
 // GetCompressedSystemReport will generate an individual file for each
@@ -46,72 +87,102 @@ func GetInFileSystemReport(transient bool) *os.File {
 // the compressed file containing all of the reports inside of it. Deletes the
 // individual files after they've been compressed to clean up disk space. If the
 // requested report is transient it will be deleted after a minute automatically.
-func GetCompressedSystemReport(transient bool) *os.File {
-	return nil
+func ReportAsArchive(transient bool) (*os.File, error) {
+
+	memoryUtilizationFileName := logger.LogFileHandle("memory_util")
+	networkDetailsFileName := logger.LogFileHandle("network_details")
+	processListFileName := logger.LogFileHandle("process_list")
+	cpuAndDiskFileName := logger.LogFileHandle("cpu_and_disk")
+	diskSpaceFileName := logger.LogFileHandle("disk_space")
+	uptimeFileName := logger.LogFileHandle("uptime")
+
+	mem := memoryUtilization()
+	net := networkDetails()
+	proc := runningProcessList()
+	cpudisk := cpuAndDiskUtilization()
+	freedisk := diskFreeSpace()
+	uptime := uptime()
+
+	ioutil.WriteFile(memoryUtilizationFileName, mem, 0744)
+	ioutil.WriteFile(networkDetailsFileName, net, 0744)
+	ioutil.WriteFile(processListFileName, proc, 0744)
+	ioutil.WriteFile(cpuAndDiskFileName, cpudisk, 0744)
+	ioutil.WriteFile(diskSpaceFileName, freedisk, 0744)
+	ioutil.WriteFile(uptimeFileName, uptime, 0744)
+
+
+
+	return nil, nil
 }
 
 func beautifyTitle(title string) []byte {
 	var titleBuffer bytes.Buffer
-	titleBuffer.WriteString("--------------------  ")
+
+	titleBuffer.WriteString("-------------------- ")
 	titleBuffer.WriteString(title)
-	titleBuffer.WriteString("  --------------------")
+	titleBuffer.WriteString(" ")
+	for titleBuffer.Len() < 60 {
+		titleBuffer.WriteString("-")
+	}
+
 	return titleBuffer.Bytes()
 }
 
-func (p *Profiler) getCPUAndDiskUtilization() []byte {
+func cpuAndDiskUtilization() []byte {
 
-	return p.execCommand(CPU_AND_DISK_UTIL, "iostat 1 10")
+	return execCommand(CPU_AND_DISK_UTIL, "iostat",  "1", "10")
 }
 
-func (p *Profiler) getMemoryUtilization() []byte {
+func memoryUtilization() []byte {
 
-	return p.execCommand(MEMORY_UTILIZATION, "free")
+	return execCommand(MEMORY_UTILIZATION, "free")
 }
 
-func (p *Profiler) getDiskFreeSpace() []byte {
+func diskFreeSpace() []byte {
 
-	return p.execCommand(DISK_FREE_SPACE, "df -h")
+	return execCommand(DISK_FREE_SPACE, "df", "-h")
 }
 
-func (p *Profiler) getRunningProcessList() []byte {
+func runningProcessList() []byte {
 
-	return p.execCommand(PROCESS_LIST, "ps -AlF")
+	return execCommand(PROCESS_LIST, "ps", "-AlF")
 }
 
-func (p *Profiler) getUptime() []byte {
+func uptime() []byte {
 
-	return p.execCommand(UPTIME, "uptime")
+	return execCommand(UPTIME, "uptime")
 }
 
-func (p *Profiler) getNetworkDetails() []byte {
+func networkDetails() []byte {
 
-	return p.execCommand(NETWORK_DETAILS, "netstat -vea")
-	// TODO(Canavan) add all these commands to the network details
-	// netstat -r
-	// netstat -i
-	// netstat -se
-	// full socket list
-	// netstat -vea
+	var networkBuffer bytes.Buffer
+	networkCommands := []string{"netstat -r", "netstat -i", "netstat -se", "netstat -vea"}
+
+	for i := range networkCommands {
+		splitCmd := strings.Split(networkCommands[i], " ")
+		networkBuffer.Write(execCommand(NETWORK_DETAILS + ": " + networkCommands[i], splitCmd[0], splitCmd[1]))
+	}
+
+	return networkBuffer.Bytes()
 }
 
-func (p *Profiler) execCommand(header string, command string) []byte {
-
-	cmd := exec.Command(command)
+func execCommand(header string, command string, args ...string) []byte {
 
 	var cmdBuffer bytes.Buffer
 	cmdBuffer.Write(beautifyTitle(header))
+	cmdBuffer.WriteString("\n")
 
-	if out, err := cmd.Output(); err == nil {
-		cmdBuffer.Write(out)
+	if out, err := exec.Command(command, args...).Output(); err != nil {
+		cmdBuffer.WriteString(fmt.Sprintf("Command failed: \n%v \n\nError: \n%v \n\nOutput: \n%v", command, err, os.Stderr))
 	} else {
-		cmdBuffer.WriteString(fmt.Sprintf("Command failed: %v", command))
+		cmdBuffer.Write(out)
 	}
 
 	cmdBuffer.WriteString(END_COMMAND_DIVIDER)
 	return cmdBuffer.Bytes()
 }
 
-func (p *Profiler) cleanupFile(systemReport *os.File) error {
+func cleanupFile(systemReport *os.File) error {
 	time.Sleep(60 * time.Second)
 	return os.Remove(systemReport.Name())
 }
