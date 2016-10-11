@@ -10,7 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/reporter"
 )
 
 const CPU_AND_DISK_UTIL = "CPU and Disk Utilization"
@@ -21,8 +23,9 @@ const UPTIME = "Uptime"
 const NETWORK_DETAILS = "Network Details"
 const END_COMMAND_DIVIDER = "------------------------------------------------------------"
 const SEPARATING_SEQUENCE = "\n\n"
+const FILE_CLEANUP_DELAY = 180
 
-// GetInMemorySystemReportAsStringSlice will return a system report generated
+// ReportAsStrings will return a system report generated
 // entirely in memory. The full report will be returned as a concatenated slice
 // of strings.
 func ReportAsStrings() []string {
@@ -40,7 +43,7 @@ func ReportAsStrings() []string {
 	return stringSliceRepr
 }
 
-// GetInMemorySystemReportAsByteArray will return a system report generated
+// ReportAsBytes will return a system report generated
 // entirely in memory. The full report will be returned as an array of bytes.
 func ReportAsBytes() []byte {
 
@@ -62,53 +65,60 @@ func ReportAsBytes() []byte {
 	return inMemoryBuffer.Bytes()
 }
 
-// GetInFileSystemReport will return a system report that has been saved to a
-// file and return the pointer to that file. If the requested report is
-// transient - it will be deleted after  automatically.
-func ReportAsFile(transient bool, duration time.Duration) (string, error) {
+// ReportAsFile will return a system report that has been saved to a
+// file and return the name of that file. If the requested report is
+// transient - it will be deleted after automatically after two minutes.
+func ReportAsFile(transient bool) (string, error) {
 
 	bytes := ReportAsBytes()
 	fileName := logger.LogFileHandle("sysreport")
 
+	ioutil.WriteFile(fileName, bytes, 0744)
+
 	if transient {
-		go func() {
-			time.Sleep(duration * time.Second)
-			//TODO(Canavan) handle this error somehow
-			_ = os.Remove(fileName)
-		}()
+		go cleanupFile(handle)
 	}
 
-	ioutil.WriteFile(fileName, bytes, 0744)
 	return fileName, nil
 }
 
-// GetCompressedSystemReport will generate an individual file for each
+func cleanupFile(filename string) error {
+	time.Sleep(FILE_CLEANUP_DELAY * time.Second)
+	return os.Remove(fileName)
+
+}
+
+// ReportAsArchive will generate an individual file for each
 // system resources and then compress them all together. Returns a pointer to
 // the compressed file containing all of the reports inside of it. Deletes the
 // individual files after they've been compressed to clean up disk space. If the
 // requested report is transient it will be deleted after a minute automatically.
 func ReportAsArchive(transient bool) (*os.File, error) {
 
-	memoryUtilizationFileName := logger.LogFileHandle("memory_util")
-	networkDetailsFileName := logger.LogFileHandle("network_details")
-	processListFileName := logger.LogFileHandle("process_list")
-	cpuAndDiskFileName := logger.LogFileHandle("cpu_and_disk")
-	diskSpaceFileName := logger.LogFileHandle("disk_space")
-	uptimeFileName := logger.LogFileHandle("uptime")
+	reports := make(map[string][]byte)
+	tarBuffer := new(bytes.Buffer)
+	tarWrite := tar.NewWriter(tarBuffer)
 
-	mem := memoryUtilization()
-	net := networkDetails()
-	proc := runningProcessList()
-	cpudisk := cpuAndDiskUtilization()
-	freedisk := diskFreeSpace()
-	uptime := uptime()
+	reports.add(logger.LogFileHandle("memory_util"), memoryUtilization())
+	reports.add(logger.LogFileHandle("network_details"), networkDetails())
+	reports.add(logger.LogFileHandle("process_list"), processList())
+	reports.add(logger.LogFileHandle("cpu_and_disk"), cpuAndDiskUtilization())
+	reports.add(logger.LogFileHandle("disk_space"), diskFreeSpace())
+	reports.add(logger.LogFileHandle("uptime"), uptime())
 
-	ioutil.WriteFile(memoryUtilizationFileName, mem, 0744)
-	ioutil.WriteFile(networkDetailsFileName, net, 0744)
-	ioutil.WriteFile(processListFileName, proc, 0744)
-	ioutil.WriteFile(cpuAndDiskFileName, cpudisk, 0744)
-	ioutil.WriteFile(diskSpaceFileName, freedisk, 0744)
-	ioutil.WriteFile(uptimeFileName, uptime, 0744)
+	for file, contents := range reports {
+		tarHeader := &tar.Header{
+			Name: file,
+			Mode: 0600,
+			Size: int64(len(contents)),
+		}
+		if err := tarWriter.WriteHeader(tarHeader); err != nil {
+			logger.
+		}
+		if _, err := tarWriter.Write(contents); err != nil {
+			return err
+		}
+	}
 
 
 
@@ -143,7 +153,7 @@ func diskFreeSpace() []byte {
 	return execCommand(DISK_FREE_SPACE, "df", "-h")
 }
 
-func runningProcessList() []byte {
+func processList() []byte {
 
 	return execCommand(PROCESS_LIST, "ps", "-AlF")
 }

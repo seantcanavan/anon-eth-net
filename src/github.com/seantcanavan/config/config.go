@@ -24,12 +24,12 @@ type Config struct {
 	DeviceName                  string        `json:DeviceName`
 	DeviceId                    string        `json:DeviceId`
 
-	// Do not manually set. Configure the email credentials file instead.
+	// You may manually set these in your code if you wish if it remains private. Otherwise you may configure the email credentials file instead.
 	CheckInGmailAddress  string // the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
 	CheckInGmailPassword string // the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
 }
 
-func GetConfigFromFile(fileName string) (*Config, error) {
+func ConfigFromFile(fileName string) (*Config, error) {
 
 	bytes, loadErr := ioutil.ReadFile(fileName)
 	if loadErr != nil {

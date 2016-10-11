@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"testing"
+
+	"github.com/seantcanavan/config"
 )
 
 func TestReportAsBytes(t *testing.T) {
@@ -24,4 +26,18 @@ func TestReportAsFile(t *testing.T) {
 	}
 
 	fmt.Println(string(bytes))
+}
+
+func TestReportAsEmailBody(t *testing.T) {
+
+	conf, err := config.ConfigFromFile("../config/config.json")
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = SendReportAsEmail(conf)
+
+	if err != nil {
+		t.Error(err)
+	}
 }

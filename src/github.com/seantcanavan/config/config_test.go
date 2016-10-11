@@ -7,7 +7,7 @@ import (
 )
 
 func TestSimpleConfigLoadFromFile(t *testing.T) {
-	conf, err := GetConfigFromFile("config.json")
+	conf, err := ConfigFromFile("config.json")
 
 	if err != nil {
 		t.Errorf("generic unmarshal error: %v", conf)

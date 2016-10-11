@@ -3,6 +3,9 @@ package reporter
 import (
 	"bytes"
 	"net/smtp"
+	"strings"
+
+	"github.com/seantcanavan/config"
 )
 
 type Reporter struct {
@@ -15,17 +18,31 @@ type Reporter struct {
 	emailAuth     smtp.Auth
 }
 
-func (r *Reporter) InitializeReporter() {
+func (r *Reporter) InitializeReporter(cfg *config.Config) {
+	r.GmailAddress = cfg.CheckInGmailAddress
+	r.GmailPassword = cfg.CheckInGmailPassword
+	r.DeviceName = cfg.DeviceName
+	r.DeviceId = cfg.DeviceId
 	r.emailServer = "smtp.gmail.com"
 	r.emailPort = "587"
 	r.emailAuth = smtp.PlainAuth("", r.GmailAddress, r.GmailPassword, r.emailServer)
 }
 
-// SendEmailReport will send the current slice of strings to yourself. The
-// email username is pulled from config.json and the target is always yourself.
-// This guarantees that the emails stay secluded and private.
-func (r *Reporter) SendEmailUpdate(subject string, contents []string) error {
-	return r.prepareAndSendEmail(subject, contents)
+// SendPlainEmail will send the content of the byte array as the body of an
+// email along with the provided subject. The default sender and receiver are
+// defined by InitializeReporter() which in turn can be defined via a
+// config.json file. A sample is provided in the config package folder.
+func (r *Reporter) SendPlainEmail(subject string, contents []byte) error {
+	return r.prepareAndSendEmail(subject, strings.Split(string(contents), "\n"), nil)
+}
+
+// SendEmailAttachment will send the content of the byte array as the body of an
+// email along with the provided subject. A pointer to a file is also accepted
+// to be uploaded and sent as an attachment. The default sender and receiver are
+// defined by InitializeReporter() which in turn can be defined via a
+// config.json file. A sample is provided in the config package folder.
+func (r *Reporter) SendEmailAttachment(subject string, contents []byte, attachment *os.File) error {
+	return r.prepareAndSendEmail(subject, contents, attachment)
 }
 
 // SendCheckinEmail will send a simple email to the configured email address for
@@ -33,16 +50,7 @@ func (r *Reporter) SendEmailUpdate(subject string, contents []string) error {
 // everything is still running. Contains a standard report of the computer's
 // status like CPU usage, memory usage, disk usage, running processes, etc.
 func (r *Reporter) SendCheckinEmail() {
-	// computerProfile := profiler.GetProfile()
 	// r.prepareAndSendEmail("Check In", computerProfile)
-}
-
-// SendUrgentStatusUpdate will immediately immediately send an email containing
-// any error message(s) included and also included the provided log file for the
-// owner to inspect. A standard report of the computer's health will also be
-// provided.
-func (r *Reporter) SendUrgentStatusUpdate(subject string, contents []string, logFilePath string) {
-	// find a way to send attachments
 }
 
 // generateSubject will append the device ID to the beginning of the email
@@ -61,7 +69,7 @@ func (r *Reporter) generateSubject(subject string) string {
 // sendEmail will accept the subject and contents of the email as strings
 // and concatenate them all into a nice clean buffer before sending off the
 // email. Emails are sent asynchronously.
-func (r *Reporter) prepareAndSendEmail(subject string, contents []string) error {
+func (r *Reporter) prepareAndSendEmail(subject string, contents []string attachment *os.File) error {
 
 	var messageBuffer bytes.Buffer
 	messageBuffer.WriteString("From: ")
