@@ -64,8 +64,8 @@ func main() {
 // to the local build number to see if an update is required.
 func waitForUpdates() error {
 	for 1 == 1 {
-		fmt.Println("waiting for updates. sleeping %v seconds", cfg.UpdateFrequencySeconds)
-		time.Sleep(cfg.UpdateFrequencySeconds * time.Second)
+		fmt.Println("waiting for updates. sleeping %v seconds", cfg.CheckInFrequencySeconds)
+		time.Sleep(cfg.CheckInFrequencySeconds * time.Second)
 		var s string // hold the value from the http GET
 		if resp, err := http.Get(cfg.RemoteVersionURI); err != nil {
 			return err
