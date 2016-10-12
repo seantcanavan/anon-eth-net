@@ -4,17 +4,52 @@ import (
 	"testing"
 
 	"github.com/seantcanavan/config"
+	"github.com/seantcanavan/profile"
 )
 
-func TestSimpleEmail(t *testing.T) {
+var repr reporter.Reporter
+var prof profiler.Profiler
 
-    r := &Reporter{}
-	cfg, err := config.GetConfigFromFile("../config/config.json")
+func TestMain(m *testing.M) {
+	flag.Parse()
+	cfg, err := config.ConfigFromFile("../config/config.json")
 	if err != nil {
-		return err
+		t.Error()
 	}
 
-	r.InitializeReporter(cfg)
+	repr = NewReporter(cfg)
+	prof = NewSysProfiler(repr)
 
-	r.SendEmailUpdate("test subject", []string{"test body"})
+	os.Exit(m.Run())
+}
+
+func TestSimpleEmail(t *testing.T) {
+	err := repr.SendPlainEmail("test subject", []byte{"test body"})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestEmailAttachment(t *testing.T) {
+	fileProfile, err := prof.ProfileAsFile()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = repr.SendEmailAttachment("test subject", []byte{"test body"}, fileProfile)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestEmailArchive(t *testing.T) {
+	archiveProfile, err := prof.ProfileAsArchive()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = repr.SendEmailAttachment("test subject", []byte{"test body"}, archiveProfile)
+	if err != nil {
+		t.Error(err)
+	}
 }

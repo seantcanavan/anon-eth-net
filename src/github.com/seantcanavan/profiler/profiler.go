@@ -29,10 +29,10 @@ const PROFILE_FILE_EXTENSION = ".rep"
 const PROFILE_EMAIL_SUBJECT = "System Profile"
 
 type SysProfiler struct {
-	repr reporter.Reporter
+	repr *reporter.Reporter
 }
 
-func NewSysProfiler(repr reporter.Reporter) *SysProfiler {
+func NewSysProfiler(repr *reporter.Reporter) *SysProfiler {
 	SysProfiler := SysProfiler{}
 	SysProfiler.repr = repr
 	return &SysProfiler
@@ -219,7 +219,7 @@ func kernelVersion() []byte {
 func networkDetails() []byte {
 
 	var networkBuffer bytes.Buffer
-	networkCommands := []string{"netstat -r", "netstat -i", "netstat -se", "netstat -vea"}
+	networkCommands := []string{"netstat -r", "netstat -i", "netstat -s", "netstat -va"}
 
 	for i := range networkCommands {
 		splitCmd := strings.Split(networkCommands[i], " ")

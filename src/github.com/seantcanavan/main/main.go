@@ -26,7 +26,7 @@ func main() {
 	}
 
 	if _, err := os.Stat(os.Args[1]); err == nil {
-		if loadedConfig, configError := config.GetConfigFromFile(os.Args[1]); configError == nil {
+		if loadedConfig, configError := config.ConfigFromFile(os.Args[1]); configError == nil {
 			cfg = loadedConfig
 
 		} else {

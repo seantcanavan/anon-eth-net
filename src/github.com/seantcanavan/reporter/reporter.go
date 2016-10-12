@@ -18,7 +18,8 @@ type Reporter struct {
 	emailAuth     smtp.Auth
 }
 
-func (r *Reporter) InitializeReporter(cfg *config.Config) {
+func NewReporter(cfg *config.Config) *Reporter {
+	r := Reporter{}
 	r.GmailAddress = cfg.CheckInGmailAddress
 	r.GmailPassword = cfg.CheckInGmailPassword
 	r.DeviceName = cfg.DeviceName
@@ -26,6 +27,7 @@ func (r *Reporter) InitializeReporter(cfg *config.Config) {
 	r.emailServer = "smtp.gmail.com"
 	r.emailPort = "587"
 	r.emailAuth = smtp.PlainAuth("", r.GmailAddress, r.GmailPassword, r.emailServer)
+	return &r
 }
 
 // SendPlainEmail will send the content of the byte array as the body of an

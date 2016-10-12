@@ -4,8 +4,6 @@ INCREMENT_NUMBER=1
 NEW_BUILD_NUMBER=$(shell echo $$(( $(BUILD_NUMBER) + $(INCREMENT_NUMBER) )) )
 PACKAGES=config main updater
 
-
-
 updater:
 	echo "building the updater"
 
@@ -18,10 +16,7 @@ version-update:
 	@echo $(NEW_BUILD_NUMBER) > $(VERSION_FILE)
 
 format:
-	gofmt -w config
-	gofmt -w loader
-	gofmt -w logger
-	gofmt -w main
-	gofmt -w reporter
-	gofmt -w updater
-	gofmt -w utils
+	gofmt -w (go list ./... | grep -v /vendor/)
+
+test:
+	go test (go list ./... | grep -v /vendor/)
