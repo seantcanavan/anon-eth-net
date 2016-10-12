@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bytes"
 	"bufio"
 	"bytes"
 	"fmt"

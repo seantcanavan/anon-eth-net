@@ -2,9 +2,9 @@ package profiler
 
 import (
 	"archive/tar"
-	"compress/gzip"
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -50,7 +50,7 @@ func (sp *SysProfiler) ProfileAsStrings() []string {
 	scanner := bufio.NewScanner(&bytesRepr)
 
 	for scanner.Scan() {
-    	stringSliceRepr = append(stringSliceRepr, scanner.Text())
+		stringSliceRepr = append(stringSliceRepr, scanner.Text())
 	}
 
 	return stringSliceRepr
@@ -189,7 +189,7 @@ func generateEmailBody() []byte {
 
 func cpuAndDiskUtilization() []byte {
 
-	return execCommand(CPU_AND_DISK_UTIL, "iostat",  "1", "10")
+	return execCommand(CPU_AND_DISK_UTIL, "iostat", "1", "10")
 }
 
 func memoryUtilization() []byte {
@@ -223,7 +223,7 @@ func networkDetails() []byte {
 
 	for i := range networkCommands {
 		splitCmd := strings.Split(networkCommands[i], " ")
-		networkBuffer.Write(execCommand(NETWORK_DETAILS + ": " + networkCommands[i], splitCmd[0], splitCmd[1]))
+		networkBuffer.Write(execCommand(NETWORK_DETAILS+": "+networkCommands[i], splitCmd[0], splitCmd[1]))
 	}
 
 	return networkBuffer.Bytes()

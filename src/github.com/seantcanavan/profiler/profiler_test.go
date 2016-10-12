@@ -3,8 +3,8 @@ package profiler
 import (
 	"flag"
 	"fmt"
-	"testing"
 	"os"
+	"testing"
 
 	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/reporter"
