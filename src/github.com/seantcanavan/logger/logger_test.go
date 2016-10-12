@@ -28,6 +28,4 @@ func TestLogger(t *testing.T) {
 	for _, currentLine := range testFileLines {
 		sl1.LogMessage(currentLine)
 	}
-
-	// directoryFiles := utils.DirectoryList(".", logBaseName)
 }

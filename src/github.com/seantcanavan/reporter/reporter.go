@@ -3,7 +3,7 @@ package reporter
 import (
 	"bytes"
 	"net/smtp"
-	"strings"
+	"os"
 
 	"github.com/seantcanavan/config"
 )
@@ -33,7 +33,7 @@ func (r *Reporter) InitializeReporter(cfg *config.Config) {
 // defined by InitializeReporter() which in turn can be defined via a
 // config.json file. A sample is provided in the config package folder.
 func (r *Reporter) SendPlainEmail(subject string, contents []byte) error {
-	return r.prepareAndSendEmail(subject, strings.Split(string(contents), "\n"), nil)
+	return r.prepareAndSendEmail(subject, contents, nil)
 }
 
 // SendEmailAttachment will send the content of the byte array as the body of an
@@ -69,7 +69,7 @@ func (r *Reporter) generateSubject(subject string) string {
 // sendEmail will accept the subject and contents of the email as strings
 // and concatenate them all into a nice clean buffer before sending off the
 // email. Emails are sent asynchronously.
-func (r *Reporter) prepareAndSendEmail(subject string, contents []string attachment *os.File) error {
+func (r *Reporter) prepareAndSendEmail(subject string, contents []byte, attachment *os.File) error {
 
 	var messageBuffer bytes.Buffer
 	messageBuffer.WriteString("From: ")
@@ -81,10 +81,7 @@ func (r *Reporter) prepareAndSendEmail(subject string, contents []string attachm
 	messageBuffer.WriteString("Subject: ")
 	messageBuffer.WriteString(r.generateSubject(subject))
 	messageBuffer.WriteString("\n\n")
-
-	for _, currentLine := range contents {
-		messageBuffer.WriteString(currentLine)
-	}
+	messageBuffer.Write(contents)
 
 	return r.sendEmail(messageBuffer.Bytes())
 }

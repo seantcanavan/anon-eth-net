@@ -7,16 +7,14 @@ import (
 )
 
 func TestSimpleEmail(t *testing.T) {
-	cfg, _ := config.GetConfigFromFile("../config/config.json")
 
-    r := &Reporter{
-		GmailAddress:  cfg.CheckInGmailAddress,
-		GmailPassword: cfg.CheckInGmailPassword,
-		DeviceName:    cfg.DeviceName,
-		DeviceId:      cfg.DeviceId,
+    r := &Reporter{}
+	cfg, err := config.GetConfigFromFile("../config/config.json")
+	if err != nil {
+		return err
 	}
 
-	r.InitializeReporter()
+	r.InitializeReporter(cfg)
 
 	r.SendEmailUpdate("test subject", []string{"test body"})
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/seantcanavan/config"
+	"github.com/seantcanavan/reporter"
 )
 
 func TestReportAsBytes(t *testing.T) {
@@ -14,30 +15,25 @@ func TestReportAsBytes(t *testing.T) {
 }
 
 func TestReportAsFile(t *testing.T) {
-
-	fileName, err := ReportAsFile(false, 0)
+	fileName, err := ReportAsFile(true)
 	if err != nil {
 		t.Error(err)
 	}
-
-	bytes, readErr := ioutil.ReadFile(fileName)
-	if readErr != nil {
-		t.Error(readErr)
-	}
-
-	fmt.Println(string(bytes))
 }
 
 func TestReportAsEmailBody(t *testing.T) {
-
 	conf, err := config.ConfigFromFile("../config/config.json")
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = SendReportAsEmail(conf)
+	rep := reporter.Reporter{}
+	rep.InitializeReporter(conf)
 
+	err = ReportAsBytes()
 	if err != nil {
 		t.Error(err)
 	}
+
+
 }

@@ -2,7 +2,6 @@ package logger
 
 import (
 	"bufio"
-	"bytes"
 	"container/list"
 	"fmt"
 	"os"
@@ -12,8 +11,9 @@ import (
 	"github.com/seantcanavan/utils"
 )
 
-// SeanLogger allows for aggressive log management in scenarios where disk space might be limited.
-// You can limit based on log message count or duration and also prune log files when too many are saved on disk.
+// SeanLogger allows for aggressive log management in scenarios where disk space
+// might be limited. You can limit based on log message count or duration and
+// also prune log files when too many are saved on disk.
 type SeanLogger struct {
 	MaxLogFileCount    uint64        // The maximum number of log files saved to disk before pruning occurs
 	MaxLogMessageCount uint64        // The maximum number of bytes a log file can take up before it's cut off and a new one is created
@@ -28,25 +28,13 @@ type SeanLogger struct {
 	writer             *bufio.Writer // our writer we use to log to the current log file
 }
 
-// LogFileHandle will generate a string name of a file based off of an initial
-// string and append the date to the end to signify when it was created.
-func LogFileHandle(logBaseName string) string {
+const LOG_EXTENSION = ".log"
 
-	dts := utils.FullDateStringSafe()
-
-	var nameBuffer bytes.Buffer
-	nameBuffer.WriteString(logBaseName)
-	nameBuffer.WriteString(" ")
-	nameBuffer.WriteString(dts)
-	nameBuffer.WriteString(".log")
-
-	return nameBuffer.String()
-}
-
-// StartLog initializes all the log tracking variables
+// StartLog initializes all the log tracking variables and should be called
+// after every instantiation of SeanLogger
 func (sl *SeanLogger) StartLog(logBaseName string) error {
 
-	logFileName := LogFileHandle(logBaseName)
+	logFileName := utils.TimeStampFileName(logBaseName, LOG_EXTENSION)
 
 	filePtr, err := os.Create(logFileName)
 	if err != nil {
@@ -89,14 +77,13 @@ func (sl *SeanLogger) LogMessage(message string) {
 // intelligently keeps track of the number of log files that have already been
 // created so that you don't overload your disk with logs and can 'prune' extra
 // logs as necessary.
-func (sl *SeanLogger) newFile() {
+func (sl *SeanLogger) newFile() error {
 
-	logFileName := LogFileHandle(sl.baseLogName)
+	logFileName := utils.TimeStampFileName(sl.baseLogName, LOG_EXTENSION)
 
 	filePtr, err := os.Create(logFileName)
 	if err != nil {
-		sl.handleCreateError()
-		return
+		return err
 	}
 
 	sl.writer.Flush()
@@ -110,20 +97,22 @@ func (sl *SeanLogger) newFile() {
 	sl.logFileNames.PushBack(logFileName)
 
 	if sl.logFileCount >= sl.MaxLogFileCount {
-		sl.pruneFile()
+		if err := sl.pruneFile(); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func (sl *SeanLogger) pruneFile() {
+// pruneFile will remove the oldest file handle from the queue and delete the
+// file from the local file system.
+func (sl *SeanLogger) pruneFile() error {
 
 	oldestLog := sl.logFileNames.Remove(sl.logFileNames.Front())
 	logFileName := reflect.ValueOf(oldestLog).String()
 
 	fmt.Println("Deleting oldest log file: %v", logFileName)
 
-	os.Remove(logFileName)
-}
-
-func (sl *SeanLogger) handleCreateError() {
-	// send last 3 log files, generate status report, email out update
+	return os.Remove(logFileName)
 }
