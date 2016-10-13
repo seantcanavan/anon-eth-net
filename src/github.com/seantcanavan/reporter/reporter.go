@@ -45,11 +45,11 @@ func (r *Reporter) SendPlainEmail(subject string, contents []byte) error {
 // NewReporter() which in turn can be defined via config.json file.
 func (r *Reporter) SendAttachment(subject string, contents []byte, attachmentPath string) error {
 
-	jwEmail := &email.Email {
-		To: []string{r.GmailAddress},
-		From: r.GmailAddress,
+	jwEmail := &email.Email{
+		To:      []string{r.GmailAddress},
+		From:    r.GmailAddress,
 		Subject: r.generateSubject(subject),
-		Text: contents,
+		Text:    contents,
 	}
 
 	if attachmentPath != "" {
@@ -71,29 +71,3 @@ func (r *Reporter) generateSubject(subject string) string {
 	subjectBuffer.WriteString(subject)
 	return subjectBuffer.String()
 }
-
-// sendEmail will accept the subject and contents of the email as strings
-// and concatenate them all into a nice clean buffer before sending off the
-// email. Emails are sent asynchronously.
-// func (r *Reporter) prepareAndSendEmail(subject string, contents []byte, attachment *os.File) error {
-
-// 	var messageBuffer bytes.Buffer
-// 	messageBuffer.WriteString("From: ")
-// 	messageBuffer.WriteString(r.GmailAddress)
-// 	messageBuffer.WriteString("\n")
-// 	messageBuffer.WriteString("To: ")
-// 	messageBuffer.WriteString(r.GmailAddress)
-// 	messageBuffer.WriteString("\n")
-// 	messageBuffer.WriteString("Subject: ")
-// 	messageBuffer.WriteString(r.generateSubject(subject))
-// 	messageBuffer.WriteString("\n\n")
-// 	messageBuffer.Write(contents)
-
-// 	return r.sendEmail(messageBuffer.Bytes())
-// }
-
-// func (r *Reporter) sendEmail(messageContents []byte) error {
-
-// 	return smtp.SendMail(r.emailServer+":"+r.emailPort,
-// 		r.emailAuth, r.GmailAddress, []string{r.GmailAddress}, messageContents)
-// }
