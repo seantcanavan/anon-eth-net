@@ -1,54 +1,40 @@
 package reporter
 
 import (
+	"flag"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/profile"
 )
 
-var repr reporter.Reporter
-var prof profiler.Profiler
+var repr *Reporter
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 	cfg, err := config.ConfigFromFile("../config/config.json")
 	if err != nil {
-		t.Error()
+		return
 	}
 
 	repr = NewReporter(cfg)
-	prof = NewSysProfiler(repr)
-
 	os.Exit(m.Run())
 }
 
 func TestSimpleEmail(t *testing.T) {
-	err := repr.SendPlainEmail("test subject", []byte{"test body"})
+	err := repr.SendPlainEmail("TestSimpleEmail", []byte("TestSimpleEmail"))
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestEmailAttachment(t *testing.T) {
-	fileProfile, err := prof.ProfileAsFile()
-	if err != nil {
-		t.Error(err)
-	}
+	testName := "bklajkjlkja.txt"
+	ioutil.WriteFile(testName, []byte("TestEmailAttachment"), 0744)
+	defer os.Remove(testName)
 
-	err = repr.SendEmailAttachment("test subject", []byte{"test body"}, fileProfile)
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestEmailArchive(t *testing.T) {
-	archiveProfile, err := prof.ProfileAsArchive()
-	if err != nil {
-		t.Error(err)
-	}
-
-	err = repr.SendEmailAttachment("test subject", []byte{"test body"}, archiveProfile)
+	err := repr.SendAttachment("TestEmailAttachment", []byte("TestEmailAttachment"), testName)
 	if err != nil {
 		t.Error(err)
 	}

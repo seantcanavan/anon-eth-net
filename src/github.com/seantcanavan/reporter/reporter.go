@@ -3,8 +3,8 @@ package reporter
 import (
 	"bytes"
 	"net/smtp"
-	"os"
 
+	"github.com/jordan-wright/email"
 	"github.com/seantcanavan/config"
 )
 
@@ -32,27 +32,31 @@ func NewReporter(cfg *config.Config) *Reporter {
 
 // SendPlainEmail will send the content of the byte array as the body of an
 // email along with the provided subject. The default sender and receiver are
-// defined by InitializeReporter() which in turn can be defined via a
+// defined by NewReporter() which in turn can be defined via a
 // config.json file. A sample is provided in the config package folder.
 func (r *Reporter) SendPlainEmail(subject string, contents []byte) error {
-	return r.prepareAndSendEmail(subject, contents, nil)
+	return r.SendAttachment(subject, contents, "")
 }
 
-// SendEmailAttachment will send the content of the byte array as the body of an
-// email along with the provided subject. A pointer to a file is also accepted
-// to be uploaded and sent as an attachment. The default sender and receiver are
-// defined by InitializeReporter() which in turn can be defined via a
-// config.json file. A sample is provided in the config package folder.
-func (r *Reporter) SendEmailAttachment(subject string, contents []byte, attachment *os.File) error {
-	return r.prepareAndSendEmail(subject, contents, attachment)
-}
+//SendAttachment will send the content of the byte array as the body of an email
+// along with the provided subject. The device ID is automatically added to the
+// email subject line in order to help differentiate emails from multiple
+// devices to the same address. The sender and receiver are defined by
+// NewReporter() which in turn can be defined via config.json file.
+func (r *Reporter) SendAttachment(subject string, contents []byte, attachmentPath string) error {
 
-// SendCheckinEmail will send a simple email to the configured email address for
-// the simple purposes of letting the owner know that the computer is alive and
-// everything is still running. Contains a standard report of the computer's
-// status like CPU usage, memory usage, disk usage, running processes, etc.
-func (r *Reporter) SendCheckinEmail() {
-	// r.prepareAndSendEmail("Check In", computerProfile)
+	jwEmail := &email.Email {
+		To: []string{r.GmailAddress},
+		From: r.GmailAddress,
+		Subject: r.generateSubject(subject),
+		Text: contents,
+	}
+
+	if attachmentPath != "" {
+		jwEmail.AttachFile(attachmentPath)
+	}
+
+	return jwEmail.Send(r.emailServer+":"+r.emailPort, r.emailAuth)
 }
 
 // generateSubject will append the device ID to the beginning of the email
@@ -71,25 +75,25 @@ func (r *Reporter) generateSubject(subject string) string {
 // sendEmail will accept the subject and contents of the email as strings
 // and concatenate them all into a nice clean buffer before sending off the
 // email. Emails are sent asynchronously.
-func (r *Reporter) prepareAndSendEmail(subject string, contents []byte, attachment *os.File) error {
+// func (r *Reporter) prepareAndSendEmail(subject string, contents []byte, attachment *os.File) error {
 
-	var messageBuffer bytes.Buffer
-	messageBuffer.WriteString("From: ")
-	messageBuffer.WriteString(r.GmailAddress)
-	messageBuffer.WriteString("\n")
-	messageBuffer.WriteString("To: ")
-	messageBuffer.WriteString(r.GmailAddress)
-	messageBuffer.WriteString("\n")
-	messageBuffer.WriteString("Subject: ")
-	messageBuffer.WriteString(r.generateSubject(subject))
-	messageBuffer.WriteString("\n\n")
-	messageBuffer.Write(contents)
+// 	var messageBuffer bytes.Buffer
+// 	messageBuffer.WriteString("From: ")
+// 	messageBuffer.WriteString(r.GmailAddress)
+// 	messageBuffer.WriteString("\n")
+// 	messageBuffer.WriteString("To: ")
+// 	messageBuffer.WriteString(r.GmailAddress)
+// 	messageBuffer.WriteString("\n")
+// 	messageBuffer.WriteString("Subject: ")
+// 	messageBuffer.WriteString(r.generateSubject(subject))
+// 	messageBuffer.WriteString("\n\n")
+// 	messageBuffer.Write(contents)
 
-	return r.sendEmail(messageBuffer.Bytes())
-}
+// 	return r.sendEmail(messageBuffer.Bytes())
+// }
 
-func (r *Reporter) sendEmail(messageContents []byte) error {
+// func (r *Reporter) sendEmail(messageContents []byte) error {
 
-	return smtp.SendMail(r.emailServer+":"+r.emailPort,
-		r.emailAuth, r.GmailAddress, []string{r.GmailAddress}, messageContents)
-}
+// 	return smtp.SendMail(r.emailServer+":"+r.emailPort,
+// 		r.emailAuth, r.GmailAddress, []string{r.GmailAddress}, messageContents)
+// }
