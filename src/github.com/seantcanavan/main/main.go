@@ -17,12 +17,12 @@ var cfg = &config.Config{}
 func main() {
 
 	if len(os.Args) != 2 {
-		fmt.Println("One and only argument accepted: the file path to config.json to initialize the program")
+		fmt.Println("One and only argument accepted: the file path to config.json to initialize the program.")
 		os.Exit(1)
 	}
 
 	if os.Args[1] == "h" || os.Args[1] == "help" || os.Args[1] == "?" {
-		fmt.Println("One and only argument accepted: the file path to config.json to initialize the program")
+		fmt.Println("One and only argument accepted: the file path to config.json to initialize the program. Please refer to the sample provided config.json file in ./config/config.json to get started.")
 	}
 
 	if _, err := os.Stat(os.Args[1]); err == nil {
