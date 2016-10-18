@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nu7hatch/gouuid"
 	"github.com/seantcanavan/config"
 )
 
@@ -28,16 +29,24 @@ func main() {
 	if _, err := os.Stat(os.Args[1]); err == nil {
 		if loadedConfig, configError := config.ConfigFromFile(os.Args[1]); configError == nil {
 			cfg = loadedConfig
-
 		} else {
 			fmt.Println("Could not successfully load config from file: %v", os.Args[1])
 			os.Exit(1)
 		}
 	} else {
 		fmt.Println("Config file you passed in could not be found: %v", os.Args[1])
+		os.Exit(1)
 	}
 
 	cfg.LocalVersion = getCurrentVersion(cfg.LocalVersionURI)
+
+	if cfg.InitialStartup {
+		initialStartup()
+	}
+
+	if cfg.FirstRunAfterUpdate {
+		firstRunAfterUpdate()
+	}
 
 	go func() {
 		if err := waitForUpdates(); err != nil {
@@ -55,6 +64,13 @@ func main() {
 				fmt.Println("mine() gracefully excited. Well played.")
 			}
 		}()
+	}
+}
+
+func initialStartup() {
+	uuid, err := uuid.NewV4()
+	if err != nil {
+		cfg.DeviceId = ""
 	}
 }
 
@@ -107,10 +123,8 @@ func getCurrentVersion(versionFilePath string) uint64 {
 		if compiledVersion, castError := strconv.ParseUint(s, 10, 64); castError == nil {
 			return compiledVersion
 		}
-		return 0
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func doUpdate() error {

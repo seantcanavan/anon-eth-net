@@ -18,7 +18,6 @@ func Setup() {
     router.HandleFunc("/updateconfig/{" + TIMESTAMP_PARAM + "}", ConfigHandler}
 }
 
-
 func ExecuteHandler(writer http.ResponseWriter, request *http.Request) {
     logger.LogMessage("ExecuteHandler started")
     queryParams := mux.Vars(request)
