@@ -73,9 +73,12 @@ func (l *Loader) RunProcess(name string, command string) {
 		command := commandParts[0]
 		arguments := commandParts[1:]
 		cmd := exec.Command(command, arguments...)
+		fmt.Println("Loader: " + command + " is about to start.")
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			fmt.Println("Error: " + err.Error())
+			fmt.Println("Loader: '" + command + "' exited with error status.")
+			fmt.Println("Loader: '" + command + "' Error= '" + err.Error() + "'")
+			fmt.Println("Loader: '" + command + "' output= '" + string(out) + "'")
 		} else {
 			fmt.Println(string(out))
 		}

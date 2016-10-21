@@ -70,8 +70,12 @@ func main() {
 func initialStartup() {
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		cfg.DeviceId = ""
+		cfg.DeviceId = uuid.String()
 	}
+}
+
+func firstRunAfterUpdate() {
+
 }
 
 // waitForUpdates will continuously check for updated versions of the software

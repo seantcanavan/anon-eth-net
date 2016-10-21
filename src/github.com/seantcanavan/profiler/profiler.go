@@ -148,7 +148,7 @@ func (sp *SysProfiler) SendFileProfileAsAttachment() error {
 	if err != nil {
 		return err
 	}
-	return sp.repr.SendEmailAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
+	return sp.repr.SendAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
 }
 
 // SendArchiveReportAsAttachment will generate each individual piece of the
@@ -161,7 +161,7 @@ func (sp *SysProfiler) SendArchiveProfileAsAttachment() error {
 	if err != nil {
 		return err
 	}
-	return sp.repr.SendEmailAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
+	return sp.repr.SendAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
 }
 
 func beautifyTitle(title string) []byte {

@@ -3,6 +3,7 @@ package reporter
 import (
 	"bytes"
 	"net/smtp"
+	"os"
 
 	"github.com/jordan-wright/email"
 	"github.com/seantcanavan/config"
@@ -35,7 +36,7 @@ func NewReporter(cfg *config.Config) *Reporter {
 // defined by NewReporter() which in turn can be defined via a
 // config.json file. A sample is provided in the config package folder.
 func (r *Reporter) SendPlainEmail(subject string, contents []byte) error {
-	return r.SendAttachment(subject, contents, "")
+	return r.SendAttachment(subject, contents, nil)
 }
 
 //SendAttachment will send the content of the byte array as the body of an email
@@ -43,7 +44,7 @@ func (r *Reporter) SendPlainEmail(subject string, contents []byte) error {
 // email subject line in order to help differentiate emails from multiple
 // devices to the same address. The sender and receiver are defined by
 // NewReporter() which in turn can be defined via config.json file.
-func (r *Reporter) SendAttachment(subject string, contents []byte, attachmentPath string) error {
+func (r *Reporter) SendAttachment(subject string, contents []byte, attachmentPtr *os.File) error {
 
 	jwEmail := &email.Email{
 		To:      []string{r.GmailAddress},
@@ -52,8 +53,8 @@ func (r *Reporter) SendAttachment(subject string, contents []byte, attachmentPat
 		Text:    contents,
 	}
 
-	if attachmentPath != "" {
-		jwEmail.AttachFile(attachmentPath)
+	if attachmentPtr != nil {
+		jwEmail.AttachFile(attachmentPtr.Name())
 	}
 
 	return jwEmail.Send(r.emailServer+":"+r.emailPort, r.emailAuth)

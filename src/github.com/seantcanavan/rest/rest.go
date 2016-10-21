@@ -3,54 +3,89 @@ package rest
 import (
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/seantcanavan/logger"
 )
 
 const TIMESTAMP_PARAM = "timestamp"
 
-func Setup() {
-	router := mux.NewRouter()
-	router.HandleFunc("/", CheckinHandler)
-	router.HandleFunc("/execute/{"+TIMESTAMP_PARAM+"}/{fileurl}", ExecuteHandler)
-	router.HandleFunc("/reboot/{"+TIMESTAMP_PARAM+"}/{delay}", RebootHandler)
-	router.HandleFunc("/sendlogs/{"+TIMESTAMP_PARAM+"}/{emailaddress}", LogHandler)
-	router.HandleFunc("/forceupdate/{"+TIMESTAMP_PARAM+"}/{remoteurl}", UpdateHandler)
-	router.HandleFunc("/updateconfig/{"+TIMESTAMP_PARAM+"}", ConfigHandler)
+type RestHandler struct {
+	router *mux.Router
+	logger *logger.SeanLogger
 }
 
-func ExecuteHandler(writer http.ResponseWriter, request *http.Request) {
-	logger.LogMessage("ExecuteHandler started")
+func NewRestHandler(seanLogger *logger.SeanLogger) *RestHandler {
+	r := RestHandler{}
+	r.logger = seanLogger
+	r.router = mux.NewRouter()
+	r.router.HandleFunc("/", CheckinHandler)
+	r.router.HandleFunc("/execute/{"+TIMESTAMP_PARAM+"}/{fileurl}", r.ExecuteHandler)
+	r.router.HandleFunc("/reboot/{"+TIMESTAMP_PARAM+"}/{delay}", r.RebootHandler)
+	r.router.HandleFunc("/sendlogs/{"+TIMESTAMP_PARAM+"}/{emailaddress}", r.LogHandler)
+	r.router.HandleFunc("/forceupdate/{"+TIMESTAMP_PARAM+"}/{remoteurl}", r.UpdateHandler)
+	r.router.HandleFunc("/updateconfig/{"+TIMESTAMP_PARAM+"}", r.ConfigHandler)
+
+	return &r
+}
+
+func Setup() {
+
+}
+
+func CheckinHandler(writer http.ResponseWriter, request *http.Request) {
+
+}
+
+func (rh *RestHandler) ExecuteHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.logger.LogMessage("ExecuteHandler started")
+	defer rh.logger.LogMessage("ExecuteHandler finished")
+
 	queryParams := mux.Vars(request)
-	if err := verifyTimeStamp(queryParams[TIMESTAMP_PARAM]); err != nil {
+	if err := rh.verifyTimeStamp(queryParams[TIMESTAMP_PARAM]); err != nil {
 
 	}
-
-	defer logger.LogMessage("ExecuteHandler finished")
 }
 
-func RebootHandler(writer http.ResponseWriter, request *http.Request) {
-	logger.LogMessage("RebootHandler started")
-	verifyTimeStamp(queryParams[TIMESTAMP_PARAM])
-	defer logger.LogMessage("RebootHandler finished")
+func (rh *RestHandler) RebootHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.logger.LogMessage("RebootHandler started")
+	defer rh.logger.LogMessage("RebootHandler finished")
+
+	queryParams := mux.Vars(request)
+	if err := rh.verifyTimeStamp(queryParams[TIMESTAMP_PARAM]); err != nil {
+
+	}
 }
 
-func LogHandler(writer http.ResponseWriter, request *http.Request) {
-	logger.LogMessage("LogHandler started")
-	verifyTimeStamp(queryParams[TIMESTAMP_PARAM])
-	defer logger.LogMessage("LogHandler finished")
+func (rh *RestHandler) LogHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.logger.LogMessage("LogHandler started")
+	defer rh.logger.LogMessage("LogHandler finished")
+
+	queryParams := mux.Vars(request)
+	if err := rh.verifyTimeStamp(queryParams[TIMESTAMP_PARAM]); err != nil {
+
+	}
 }
 
-func UpdateHandler(writer http.ResponseWriter, request *http.Request) {
-	logger.LogMessage("UpdateHandler started")
-	verifyTimeStamp(queryParams[TIMESTAMP_PARAM])
-	defer logger.LogMessage("UpdateHandler finished")
+func (rh *RestHandler) UpdateHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.logger.LogMessage("UpdateHandler started")
+	defer rh.logger.LogMessage("UpdateHandler finished")
+
+	queryParams := mux.Vars(request)
+	if err := rh.verifyTimeStamp(queryParams[TIMESTAMP_PARAM]); err != nil {
+
+	}
 }
 
-func ConfigHandler(writer http.ResponseWriter, request *http.Request) {
-	logger.LogMessage("ConfigHandler started")
-	defer logger.LogMessage("ConfigHandler finished")
+func (rh *RestHandler) ConfigHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.logger.LogMessage("ConfigHandler started")
+	defer rh.logger.LogMessage("ConfigHandler finished")
+
+	queryParams := mux.Vars(request)
+	if err := rh.verifyTimeStamp(queryParams[TIMESTAMP_PARAM]); err != nil {
+
+	}
 }
 
-func verifyTimeStamp(incomingTimeStamp string) error {
-
+func  (rh *RestHandler) verifyTimeStamp(incomingTimeStamp string) error {
+	return nil
 }
