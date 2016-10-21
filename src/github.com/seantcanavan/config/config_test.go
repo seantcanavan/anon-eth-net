@@ -6,63 +6,71 @@ import (
 	"github.com/seantcanavan/utils"
 )
 
-func TestSimpleConfigLoadFromFile(t *testing.T) {
-	conf, err := ConfigFromFile("config.json")
+func TestSimplecfgigLoadFromFile(t *testing.T) {
+	cfg, err := ConfigFromFile("config.json")
 
 	if err != nil {
-		t.Errorf("generic unmarshal error: %v", conf)
+		t.Errorf("generic unmarshal error: %v", cfg)
 	}
 
-	if conf.CheckInFrequencySeconds != 3600 {
-		t.Errorf("conf.CheckInFrequencySeconds did not unmarshal correctly: %v", conf.CheckInFrequencySeconds)
+	if cfg.CheckInFrequencySeconds != 3600 {
+		t.Errorf("cfg.CheckInFrequencySeconds did not unmarshal correctly: %v", cfg.CheckInFrequencySeconds)
 	}
 
-	if conf.UpdateFrequencySeconds != 3600 {
-		t.Errorf("conf.UpdateFrequencySeconds did not unmarshal correctly: %v", conf.UpdateFrequencySeconds)
+	if cfg.UpdateFrequencySeconds != 3600 {
+		t.Errorf("cfg.UpdateFrequencySeconds did not unmarshal correctly: %v", cfg.UpdateFrequencySeconds)
 	}
 
-	if conf.RemoteUpdateURI != "https://github.com/seantcanavan/anon-eth-net.git" {
-		t.Errorf("conf.RemoteUpdateURI did not unmarshal correctly: %v", conf.RemoteUpdateURI)
+	if cfg.RemoteUpdateURI != "https://github.com/seantcanavan/anon-eth-net.git" {
+		t.Errorf("cfg.RemoteUpdateURI did not unmarshal correctly: %v", cfg.RemoteUpdateURI)
 	}
 
-	if conf.RemoteVersionURI != "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/main/version.no" {
-		t.Errorf("conf.RemoteVersionURI did not unmarshal correctly: %v", conf.RemoteVersionURI)
+	if cfg.RemoteVersionURI != "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/main/version.no" {
+		t.Errorf("cfg.RemoteVersionURI did not unmarshal correctly: %v", cfg.RemoteVersionURI)
 	}
 
-	if conf.LocalVersionURI != "main/version.no" {
-		t.Errorf("conf.LocalVersionURI did not unmarshal correctly: %v", conf.LocalVersionURI)
+	if cfg.LocalVersionURI != "main/version.no" {
+		t.Errorf("cfg.LocalVersionURI did not unmarshal correctly: %v", cfg.LocalVersionURI)
 	}
 
-	if conf.LocalVersion != 0 {
-		t.Errorf("conf.LocalVersion did not unmarshal correctly: %v", conf.LocalVersion)
+	if cfg.LocalVersion != 0 {
+		t.Errorf("cfg.LocalVersion did not unmarshal correctly: %v", cfg.LocalVersion)
 	}
 
-	if conf.MineEther != false {
-		t.Errorf("conf.MineEther did not unmarshal correctly: %v", conf.MineEther)
+	if cfg.MineEther != false {
+		t.Errorf("cfg.MineEther did not unmarshal correctly: %v", cfg.MineEther)
 	}
 
-	if conf.GPUMine != false {
-		t.Errorf("conf.GPUMine did not unmarshal correctly: %v", conf.MineEther)
+	if cfg.GPUMine != false {
+		t.Errorf("cfg.GPUMine did not unmarshal correctly: %v", cfg.MineEther)
 	}
 
-	if conf.CPUMine != true {
-		t.Errorf("conf.CPUMine did not unmarshal correctly: %v", conf.CPUMine)
+	if cfg.CPUMine != true {
+		t.Errorf("cfg.CPUMine did not unmarshal correctly: %v", cfg.CPUMine)
 	}
 
-	if conf.EtherWallet != "" {
-		t.Errorf("conf.EtherWallet did not unmarshal correctly: %v", conf.EtherWallet)
+	if cfg.EtherWallet != "" {
+		t.Errorf("cfg.EtherWallet did not unmarshal correctly: %v", cfg.EtherWallet)
 	}
 
-	fileLines, fileErr := utils.ReadLines(conf.CheckInGmailCredentialsFile)
+	fileLines, fileErr := utils.ReadLines(cfg.CheckInGmailCredentialsFile)
 	if fileErr != nil {
 		t.Errorf("issue reading in email credentials file")
 	}
 
-	if conf.CheckInGmailAddress != fileLines[0] {
-		t.Errorf("conf.CheckInGmailAddress did not load correctly: %v", conf.CheckInGmailAddress)
+	if cfg.CheckInGmailAddress != fileLines[0] {
+		t.Errorf("cfg.CheckInGmailAddress did not load correctly: %v", cfg.CheckInGmailAddress)
 	}
 
-	if conf.CheckInGmailPassword != fileLines[1] {
-		t.Errorf("conf.CheckInGmailPassword did not load correctly: %v", conf.CheckInGmailPassword)
+	if cfg.CheckInGmailPassword != fileLines[1] {
+		t.Errorf("cfg.CheckInGmailPassword did not load correctly: %v", cfg.CheckInGmailPassword)
+	}
+
+	if cfg.FirstRunAfterUpdate != false {
+		t.Errorf("cfg.FirstRunAfterUpDate did not load correctly: %v", cfg.FirstRunAfterUpdate)
+	}
+
+	if cfg.InitialStartup != false {
+		t.Error("cfg.InitialStartup did not load correctly: %v", cfg.InitialStartup)
 	}
 }

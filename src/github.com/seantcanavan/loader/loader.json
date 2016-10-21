@@ -1,0 +1,7 @@
+{
+	"loader example 01": "python loader_example_01.py",
+	"loader example 02": "python loader_example_02.py",
+	"loader example 03": "ls la",
+	"loader example 04": "ps ef",
+	"loader example 05": "ls"
+}
