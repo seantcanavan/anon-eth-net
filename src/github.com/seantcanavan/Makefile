@@ -27,6 +27,11 @@ test:
 		go test ../../$$p; \
 	done
 
+vet:
+	for p in $(PACKAGES); do \
+		go vet ../../$$p; \
+	done
+
 version-update:
 	@echo "Current build number: $(BUILD_NUMBER)"
 	@echo "New build number: $(NEW_BUILD_NUMBER)"
