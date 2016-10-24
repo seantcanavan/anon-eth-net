@@ -25,13 +25,13 @@ import (
 type SeanLogger struct {
 	MaxLogFileCount    uint64        // The maximum number of log files saved to disk before pruning occurs
 	MaxLogMessageCount uint64        // The maximum number of bytes a log file can take up before it's cut off and a new one is created
-	MaxLogDuration     uint64     // The maximum number of seconds a log can exist for before it's cut off and a new one is created
+	MaxLogDuration     uint64        // The maximum number of seconds a log can exist for before it's cut off and a new one is created
 	baseLogName        string        // The beginning text to append to this log instance for naming and management purposes
 	logFileCount       uint64        // The current number of logs that have been created
 	logFileNames       list.List     // The list of log files we're currently holding on to
 	logMessageCount    uint64        // The current number of messages that have been logged
-	logDuration        uint64         // The duration, in seconds, that this log has been logging for
-	logStamp           uint64         // The time when this log was last written to in unix time
+	logDuration        uint64        // The duration, in seconds, that this log has been logging for
+	logStamp           uint64        // The time when this log was last written to in unix time
 	log                *os.File      // The file that we're logging to
 	writer             *bufio.Writer // our writer we use to log to the current log file
 }
@@ -136,7 +136,7 @@ func HoardingLogger(logBaseName string) (*SeanLogger, error) {
 	return &sl, nil
 }
 
-func (sl *SeanLogger) initLogger(logBaseName string) (error) {
+func (sl *SeanLogger) initLogger(logBaseName string) error {
 
 	logFileName := utils.TimeStampFileName(logBaseName, LOG_EXTENSION)
 
