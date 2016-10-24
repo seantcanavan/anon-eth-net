@@ -38,8 +38,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	cfg.LocalVersion = getCurrentVersion(cfg.LocalVersionURI)
-
 	if cfg.InitialStartup {
 		initialStartup()
 	}
@@ -86,24 +84,20 @@ func waitForUpdates() error {
 	for 1 == 1 {
 		fmt.Println("waiting for updates. sleeping %v seconds", cfg.CheckInFrequencySeconds)
 		time.Sleep(cfg.CheckInFrequencySeconds * time.Second)
-		var s string // hold the value from the http GET
-		if resp, err := http.Get(cfg.RemoteVersionURI); err != nil {
-			return err
-			defer resp.Body.Close()
-			if body, err := ioutil.ReadAll(resp.Body); err == nil {
-				s = string(body[:])
-			} else {
-				return err
-			}
+		local, localError := localVersion(cfg.LocalVersionURI)
+		remote, remoteError := remoteVersion(cfg.RemoteVersionURI)
+
+		if localError != nil {
+			return localError
+		} else if remoteError != nil {
+			return remoteError
 		}
 
-		if remoteVersion, err := strconv.ParseUint(s, 10, 64); err == nil {
-			if remoteVersion > cfg.LocalVersion {
-				fmt.Println("localVersion: %v", cfg.LocalVersion)
-				fmt.Println("remoteVersion: %v", remoteVersion)
-				fmt.Println("Newer remote version available. Performing update.")
-				doUpdate()
-			}
+		if remote > local {
+			fmt.Println("localVersion: %v", cfg.LocalVersion)
+			fmt.Println("remoteVersion: %v", remoteVersion)
+			fmt.Println("Newer remote version available. Performing update.")
+			doUpdate()
 		}
 	}
 	return nil
@@ -118,17 +112,51 @@ func mine() error {
 	return nil
 }
 
-// getCurrentVersion will query the local version file for the build
-// number and return it.
-func getCurrentVersion(versionFilePath string) uint64 {
-	if bytes, err := ioutil.ReadFile(versionFilePath); err == nil {
-		s := string(bytes)
-		s = strings.Trim(s, "\n")
-		if compiledVersion, castError := strconv.ParseUint(s, 10, 64); castError == nil {
-			return compiledVersion
-		}
+// getCurrentVersion will grab the version of this program from the local given
+// file path where the version number should reside as a whole integer number.
+// The default project structure is to have this file be named 'version.no' and
+// be placed within the main package.
+func localVersion(versionFilePath string) (uint64, error) {
+	bytes, err := ioutil.ReadFile(versionFilePath)
+	if err != nil {
+		return 0, err
 	}
-	return 0
+
+	s := string(bytes)
+	s = strings.Trim(s, "\n")
+	compiledVersion, castError := strconv.ParseUint(s, 10, 64)
+	if castError != nil {
+		return 0, castError
+	}
+	return compiledVersion, nil
+}
+
+// getRemoteVersion will grab the version of this program from the remote given
+// file path where the version number should reside as a whole integer number.
+// The default project structure is to have this file be named 'version.no' and
+// queried directly via the github.com API.
+func remoteVersion(versionFilePath string) (uint64, error) {
+	var s string // hold the value from the http GET
+	resp, getError := http.Get(cfg.RemoteVersionURI)
+	if getError != nil {
+		return 0, getError
+	}
+
+	defer resp.Body.Close()
+	body, readError := ioutil.ReadAll(resp.Body)
+	if readError != nil {
+		return 0, readError
+	}
+
+	s = string(body[:])
+	s = strings.Trim(s, "\n")
+
+	remoteVersion, castError := strconv.ParseUint(s, 10, 64)
+	if castError != nil {
+		return 0, castError
+	}
+
+	return remoteVersion, nil
 }
 
 func doUpdate() error {

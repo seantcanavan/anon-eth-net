@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -13,12 +14,16 @@ import (
 
 // The acceptable amount of time between the incoming timestamp and the local timestamp
 const TIMESTAMP_DELTA = 5000
+
 // The key to the query parameter for the incoming timestamp value
 const TIMESTAMP = "timestamp"
+
 // The key to the query parameter for the reboot delay value
 const REBOOT_DELAY = "delay"
+
 // The key to the query parameter for the remote log email address recipient value
 const RECIPIENT_EMAIL = "emailaddress"
+
 // The key to the query parameter for the address where the remote file that is required can be obtained from
 const REMOTE_ADDRESS = "remoteupdateurl"
 
@@ -39,12 +44,12 @@ func NewRestHandler(seanLogger *logger.SeanLogger) *RestHandler {
 	rh := RestHandler{}
 	rh.logger = seanLogger
 	rh.router = mux.NewRouter()
-	rh.router.HandleFunc("/execute/{" + TIMESTAMP + "}/{" + REMOTE_ADDRESS + "}", rh.ExecuteHandler)
-	rh.router.HandleFunc("/reboot/{" + TIMESTAMP + "}/{" + REBOOT_DELAY + "}", rh.RebootHandler)
-	rh.router.HandleFunc("/sendlogs/{" + TIMESTAMP + "}/{" + RECIPIENT_EMAIL + "}", rh.LogHandler)
-	rh.router.HandleFunc("/forceupdate/{" + TIMESTAMP + "}/{" + REMOTE_ADDRESS + "}", rh.UpdateHandler)
-	rh.router.HandleFunc("/updateconfig/{" + TIMESTAMP + "}/{" + REMOTE_ADDRESS + "}", rh.ConfigHandler)
-	rh.router.HandleFunc("checkin/{" + TIMESTAMP + "}/{" + RECIPIENT_EMAIL + "}", rh.CheckinHandler)
+	rh.router.HandleFunc("/execute/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.ExecuteHandler)
+	rh.router.HandleFunc("/reboot/{"+TIMESTAMP+"}/{"+REBOOT_DELAY+"}", rh.RebootHandler)
+	rh.router.HandleFunc("/sendlogs/{"+TIMESTAMP+"}/{"+RECIPIENT_EMAIL+"}", rh.LogHandler)
+	rh.router.HandleFunc("/forceupdate/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.UpdateHandler)
+	rh.router.HandleFunc("/updateconfig/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.ConfigHandler)
+	rh.router.HandleFunc("checkin/{"+TIMESTAMP+"}/{"+RECIPIENT_EMAIL+"}", rh.CheckinHandler)
 	go rh.startupRestServer()
 	return &rh
 }
@@ -57,7 +62,7 @@ func (rh *RestHandler) startupRestServer() error {
 	if err != nil {
 		return err
 	}
-	http.ListenAndServe(":" + strconv.Itoa(port), rh.router)
+	http.ListenAndServe(":"+strconv.Itoa(port), rh.router)
 	return nil
 }
 
@@ -76,17 +81,17 @@ func (rh *RestHandler) CheckinHandler(writer http.ResponseWriter, request *http.
 	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
 		if err = rh.verifyQueryParams(recipientEmail); err == nil {
 			switch request.Method {
-				case "GET":
-					// process GET request - send back a checkin status to the given email address
-					writer.WriteHeader(http.StatusOK)
-				case "POST":
-			    	writer.WriteHeader(http.StatusMethodNotAllowed)
-				case "PUT":
-			    	writer.WriteHeader(http.StatusMethodNotAllowed)
-				case "DELETE":
-			    	writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "GET":
+				// process GET request - send back a checkin status to the given email address
+				writer.WriteHeader(http.StatusOK)
+			case "POST":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "PUT":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "DELETE":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
 			}
-		    return
+			return
 		}
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -109,19 +114,19 @@ func (rh *RestHandler) ExecuteHandler(writer http.ResponseWriter, request *http.
 	remoteFileAddress := queryParams[REMOTE_ADDRESS]
 
 	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
-		if err = rh.verifyQueryParams(queryParams, remoteFileAddress); err == nil {
+		if err = rh.verifyQueryParams(remoteFileAddress); err == nil {
 			switch request.Method {
-				case "GET":
-			    	writer.WriteHeader(http.StatusMethodNotAllowed)
-				case "POST":
-					// process POST request - download the remote file and execute it
-					writer.WriteHeader(http.StatusOK)
-				case "PUT":
-			   		writer.WriteHeader(http.StatusMethodNotAllowed)
-				case "DELETE":
-			    	writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "GET":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "POST":
+				// process POST request - download the remote file and execute it
+				writer.WriteHeader(http.StatusOK)
+			case "PUT":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "DELETE":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
 			}
-		    return
+			return
 		}
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -139,19 +144,20 @@ func (rh *RestHandler) RebootHandler(writer http.ResponseWriter, request *http.R
 	remoteTimestamp := queryParams[TIMESTAMP]
 	rebootDelay := queryParams[REBOOT_DELAY]
 
-	if err := rh.verifyTimeStamp(queryParams[TIMESTAMP]); err == nil {
+	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
 		switch request.Method {
-			case "GET":
-			    writer.WriteHeader(http.StatusMethodNotAllowed)
-			case "POST":
-				// process POST request - reboot the machine after X seconds
-					writer.WriteHeader(http.StatusOK)
-			case "PUT":
-			    writer.WriteHeader(http.StatusMethodNotAllowed)
-			case "DELETE":
-			    writer.WriteHeader(http.StatusMethodNotAllowed)
-			}
-		    return
+		case "GET":
+			writer.WriteHeader(http.StatusMethodNotAllowed)
+		case "POST":
+			// process POST request - reboot the machine after X seconds
+			writer.WriteHeader(http.StatusOK)
+			fmt.Println(rebootDelay)
+		case "PUT":
+			writer.WriteHeader(http.StatusMethodNotAllowed)
+		case "DELETE":
+			writer.WriteHeader(http.StatusMethodNotAllowed)
+		}
+		return
 	}
 	writer.WriteHeader(http.StatusUnauthorized)
 	return
@@ -167,21 +173,20 @@ func (rh *RestHandler) LogHandler(writer http.ResponseWriter, request *http.Requ
 	remoteTimestamp := queryParams[TIMESTAMP]
 	recipientEmail := queryParams[RECIPIENT_EMAIL]
 
-
-	if err := rh.verifyTimeStamp(queryParams[TIMESTAMP]); err == nil {
-		if err = rh.verifyQueryParams(queryParams, recipientEmail); err == nil {
+	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
+		if err = rh.verifyQueryParams(recipientEmail); err == nil {
 			switch request.Method {
-				case "GET":
-					// process GET request - send back the latest logs to the requester
-					writer.WriteHeader(http.StatusOK)
-				case "POST":
-				    writer.WriteHeader(http.StatusMethodNotAllowed)
-				case "PUT":
-				    writer.WriteHeader(http.StatusMethodNotAllowed)
-				case "DELETE":
-				    writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "GET":
+				// process GET request - send back the latest logs to the requester
+				writer.WriteHeader(http.StatusOK)
+			case "POST":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "PUT":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "DELETE":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
 			}
-		    return
+			return
 		}
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -201,21 +206,21 @@ func (rh *RestHandler) UpdateHandler(writer http.ResponseWriter, request *http.R
 	remoteTimestamp := queryParams[TIMESTAMP]
 	remoteFileAddress := queryParams[REMOTE_ADDRESS]
 
-	if err := rh.verifyTimeStamp(queryParams[TIMESTAMP]); err == nil {
-		if err = rh.verifyQueryParams(queryParams, recipientEmail); err == nil {
+	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
+		if err = rh.verifyQueryParams(remoteFileAddress); err == nil {
 			switch request.Method {
-				case "GET":
-					// process GET request - send back the current update url
-					writer.WriteHeader(http.StatusOK)
-				case "POST":
-					// process POST request - use the given URL to perform an update
-					writer.WriteHeader(http.StatusOK)
-				case "PUT":
-				    writer.WriteHeader(http.StatusMethodNotAllowed)
-				case "DELETE":
-				    writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "GET":
+				// process GET request - send back the current update url
+				writer.WriteHeader(http.StatusOK)
+			case "POST":
+				// process POST request - use the given URL to perform an update
+				writer.WriteHeader(http.StatusOK)
+			case "PUT":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "DELETE":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
 			}
-		    return
+			return
 		}
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -232,24 +237,24 @@ func (rh *RestHandler) ConfigHandler(writer http.ResponseWriter, request *http.R
 	defer rh.logger.LogMessage("ConfigHandler finished")
 
 	queryParams := mux.Vars(request)
-	remoteTimestamp = queryParams[TIMESTAMP]
-	remoteFileAddress = queryParams[REMOTE_ADDRESS]
+	remoteTimestamp := queryParams[TIMESTAMP]
+	remoteFileAddress := queryParams[REMOTE_ADDRESS]
 
-	if err := rh.verifyTimeStamp(queryParams[TIMESTAMP]); err == nil {
+	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
 		if err := rh.verifyQueryParams(remoteFileAddress); err == nil {
 			switch request.Method {
-				case "GET":
-					// process GET request - send back the config file
-					writer.WriteHeader(http.StatusOK)
-				case "POST":
-					// process POST request - get the given config file
-					writer.WriteHeader(http.StatusOK)
-				case "PUT":
-				    writer.WriteHeader(http.StatusMethodNotAllowed)
-				case "DELETE":
-				    writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "GET":
+				// process GET request - send back the config file
+				writer.WriteHeader(http.StatusOK)
+			case "POST":
+				// process POST request - get the given config file
+				writer.WriteHeader(http.StatusOK)
+			case "PUT":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
+			case "DELETE":
+				writer.WriteHeader(http.StatusMethodNotAllowed)
 			}
-		    return
+			return
 		}
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -262,7 +267,7 @@ func (rh *RestHandler) ConfigHandler(writer http.ResponseWriter, request *http.R
 // within an acceptable delta of the current time. Requires tight
 // synchronization of both the local time on the local box and the remote time
 // on the remote box.
-func  (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
+func (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
 	rh.logger.LogMessage(fmt.Sprintf("verifyTimeStamp called with remoteTimeStamp: %v", remoteTimeStamp))
 	//verify the timestamp here
 	localTimeStamp := utils.FullDateString()
@@ -278,9 +283,11 @@ func  (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
 // golang strings can't be nil anyways... probably why maps return the empty
 // string then when it's missing. Epiphany successfully experienced.
 func (rh *RestHandler) verifyQueryParams(parameters ...string) error {
-for _, param := range parameters {
-		if param == "" {
-			rh.logger.LogMessage(fmt.Sprintf("verifyQueryParams failed with: %v", param))
+	for _, value := range parameters {
+		if value == "" {
+			rh.logger.LogMessage(fmt.Sprintf("verifyQueryParams failed with: %v", value))
+			return errors.New(fmt.Sprintf("verifyQueryParams did not pass verification. val: %v", value))
 		}
-    }
+	}
+	return nil
 }

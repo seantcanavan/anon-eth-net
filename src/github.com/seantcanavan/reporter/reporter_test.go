@@ -34,7 +34,12 @@ func TestEmailAttachment(t *testing.T) {
 	ioutil.WriteFile(testName, []byte("TestEmailAttachment"), 0744)
 	defer os.Remove(testName)
 
-	err := repr.SendAttachment("TestEmailAttachment", []byte("TestEmailAttachment"), testName)
+	filePtr, openErr := os.Open(testName)
+	if openErr != nil {
+		t.Error(openErr)
+	}
+
+	err := repr.SendAttachment("TestEmailAttachment", []byte("TestEmailAttachment"), filePtr)
 	if err != nil {
 		t.Error(err)
 	}

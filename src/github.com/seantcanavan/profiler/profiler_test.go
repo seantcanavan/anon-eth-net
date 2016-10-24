@@ -2,7 +2,6 @@ package profiler
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"testing"
 
@@ -24,39 +23,6 @@ func TestMain(m *testing.M) {
 	prof = NewSysProfiler(repr)
 
 	os.Exit(m.Run())
-}
-
-func TestProfileAsBytes(t *testing.T) {
-	bytes := prof.ProfileAsBytes()
-	fmt.Println(string(bytes))
-}
-
-func TestProfileAsFile(t *testing.T) {
-	_, err := prof.ProfileAsFile()
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestProfileAsArchive(t *testing.T) {
-	_, err := prof.ProfileAsArchive()
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestSendByteProfileAsEmail(t *testing.T) {
-	err := prof.SendByteProfileAsEmail()
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestSendFileProfileAsAttachment(t *testing.T) {
-	err := prof.SendFileProfileAsAttachment()
-	if err != nil {
-		t.Error(err)
-	}
 }
 
 func TestSendFileArchiveAsAttachment(t *testing.T) {
