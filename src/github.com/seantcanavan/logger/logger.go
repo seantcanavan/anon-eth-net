@@ -216,7 +216,7 @@ func (sl *SeanLogger) pruneFile() error {
 	oldestLog := sl.logFileNames.Remove(sl.logFileNames.Front())
 	logFileName := reflect.ValueOf(oldestLog).String()
 
-	fmt.Println("Deleting oldest log file: %v", logFileName)
+	fmt.Println(fmt.Sprintf("Deleting oldest log file: %v", logFileName))
 
 	return os.Remove(logFileName)
 }

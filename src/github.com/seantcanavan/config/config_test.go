@@ -71,6 +71,6 @@ func TestSimplecfgigLoadFromFile(t *testing.T) {
 	}
 
 	if cfg.InitialStartup != false {
-		t.Error("cfg.InitialStartup did not load correctly: %v", cfg.InitialStartup)
+		t.Errorf("cfg.InitialStartup did not load correctly: %v", cfg.InitialStartup)
 	}
 }

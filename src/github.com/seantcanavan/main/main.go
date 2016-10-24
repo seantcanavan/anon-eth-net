@@ -30,11 +30,11 @@ func main() {
 		if loadedConfig, configError := config.ConfigFromFile(os.Args[1]); configError == nil {
 			cfg = loadedConfig
 		} else {
-			fmt.Println("Could not successfully load config from file: %v", os.Args[1])
+			fmt.Println(fmt.Sprintf("Could not successfully load config from file: %v", os.Args[1]))
 			os.Exit(1)
 		}
 	} else {
-		fmt.Println("Config file you passed in could not be found: %v", os.Args[1])
+		fmt.Println(fmt.Sprintf("Config file you passed in could not be found: %v", os.Args[1]))
 		os.Exit(1)
 	}
 
@@ -48,7 +48,7 @@ func main() {
 
 	go func() {
 		if err := waitForUpdates(); err != nil {
-			fmt.Println("Error occurred while processing updates: %v", err.Error())
+			fmt.Println(fmt.Sprintf("Error occurred while processing updates: %v", err.Error()))
 		} else {
 			fmt.Println("waitForUpdates() gracefully excited. Well played.")
 		}
@@ -57,7 +57,7 @@ func main() {
 	if cfg.MineEther {
 		go func() {
 			if err := mine(); err != nil {
-				fmt.Println("Error occurred during the mining process: %v", err.Error())
+				fmt.Println(fmt.Sprintf("Error occurred during the mining process: %v", err.Error()))
 			} else {
 				fmt.Println("mine() gracefully excited. Well played.")
 			}
@@ -82,7 +82,7 @@ func firstRunAfterUpdate() {
 // to the local build number to see if an update is required.
 func waitForUpdates() error {
 	for 1 == 1 {
-		fmt.Println("waiting for updates. sleeping %v seconds", cfg.CheckInFrequencySeconds)
+		fmt.Println(fmt.Sprintf("waiting for updates. sleeping %v seconds", cfg.CheckInFrequencySeconds))
 		time.Sleep(cfg.CheckInFrequencySeconds * time.Second)
 		local, localError := localVersion(cfg.LocalVersionURI)
 		remote, remoteError := remoteVersion(cfg.RemoteVersionURI)
@@ -94,8 +94,8 @@ func waitForUpdates() error {
 		}
 
 		if remote > local {
-			fmt.Println("localVersion: %v", cfg.LocalVersion)
-			fmt.Println("remoteVersion: %v", remoteVersion)
+			fmt.Println(fmt.Sprintf("localVersion: %v", local))
+			fmt.Println(fmt.Sprintf("remoteVersion: %v", remote))
 			fmt.Println("Newer remote version available. Performing update.")
 			doUpdate()
 		}
