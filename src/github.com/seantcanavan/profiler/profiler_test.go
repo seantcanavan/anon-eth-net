@@ -14,12 +14,12 @@ var prof *SysProfiler
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	cfg, err := config.ConfigFromFile("../config/config.json")
+	err := config.ConfigFromFile(config.LOCAL_EXTERNAL_PATH)
 	if err != nil {
 		return
 	}
 
-	repr = reporter.NewReporter(cfg)
+	repr = reporter.NewReporter()
 	prof = NewSysProfiler(repr)
 
 	os.Exit(m.Run())

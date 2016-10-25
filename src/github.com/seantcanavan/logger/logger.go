@@ -38,6 +38,21 @@ type SeanLogger struct {
 
 const LOG_EXTENSION = ".log"
 
+func LoggerFromConservativeValue(conservativeValue int, logBaseName string) (*SeanLogger, error) {
+	switch conservativeValue {
+	case 0:
+		return HoardingLogger(logBaseName)
+	case 1:
+		return AnticonservativeLogger(logBaseName)
+	case 2:
+		return ConservativeLogger(logBaseName)
+	case 3:
+		return MinimalLogger(logBaseName)
+	default:
+		return nil, fmt.Errorf("The value you gave: %d does not have a logging map available for it. Please check logger/logger.go for valid logging mapping values", conservativeValue)
+	}
+}
+
 func CustomLogger(logBaseName string, maxFileCount uint64, maxMessageCount uint64, maxDuration uint64) (*SeanLogger, error) {
 
 	sl := SeanLogger{}
@@ -100,7 +115,7 @@ func ConservativeLogger(logBaseName string) (*SeanLogger, error) {
 // Recommended for systems with at least 500GB of overall storage. If the logs
 // are not checked or reported via email at least every five days it's possible
 // that data could be missed.
-func AnticonvervativeLogger(logBaseName string) (*SeanLogger, error) {
+func AnticonservativeLogger(logBaseName string) (*SeanLogger, error) {
 
 	sl := SeanLogger{}
 	// public variables

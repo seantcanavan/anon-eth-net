@@ -9,7 +9,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	config, cfgError := config.ConfigFromFile("../config/config.json")
+	cfgError := config.ConfigFromFile(config.LOCAL_EXTERNAL_PATH)
 
 	if cfgError != nil {
 		fmt.Println("test init failure")
@@ -17,14 +17,12 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	cfg = config
-
 	os.Exit(m.Run())
 }
 
 func TestVersionCompare(t *testing.T) {
-	localVersion, localError := localVersion(cfg.LocalVersionURI)
-	remoteVersion, remoteError := remoteVersion(cfg.RemoteVersionURI)
+	localVersion, localError := localVersion(config.Cfg.LocalVersionURI)
+	remoteVersion, remoteError := remoteVersion(config.Cfg.RemoteVersionURI)
 
 	if localError != nil {
 		t.Error(localError)

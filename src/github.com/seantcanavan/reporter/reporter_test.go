@@ -13,12 +13,12 @@ var repr *Reporter
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	cfg, err := config.ConfigFromFile("../config/config.json")
+	err := config.ConfigFromFile(config.LOCAL_EXTERNAL_PATH)
 	if err != nil {
 		return
 	}
 
-	repr = NewReporter(cfg)
+	repr = NewReporter()
 	os.Exit(m.Run())
 }
 

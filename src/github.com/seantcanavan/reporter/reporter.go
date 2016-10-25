@@ -19,12 +19,12 @@ type Reporter struct {
 	emailAuth     smtp.Auth
 }
 
-func NewReporter(cfg *config.Config) *Reporter {
+func NewReporter() *Reporter {
 	r := Reporter{}
-	r.GmailAddress = cfg.CheckInGmailAddress
-	r.GmailPassword = cfg.CheckInGmailPassword
-	r.DeviceName = cfg.DeviceName
-	r.DeviceId = cfg.DeviceId
+	r.GmailAddress = config.Cfg.CheckInGmailAddress
+	r.GmailPassword = config.Cfg.CheckInGmailPassword
+	r.DeviceName = config.Cfg.DeviceName
+	r.DeviceId = config.Cfg.DeviceId
 	r.emailServer = "smtp.gmail.com"
 	r.emailPort = "587"
 	r.emailAuth = smtp.PlainAuth("", r.GmailAddress, r.GmailPassword, r.emailServer)
