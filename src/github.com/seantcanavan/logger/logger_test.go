@@ -9,7 +9,7 @@ import (
 // TestLogger will test all logger functionality
 func TestLogger(t *testing.T) {
 
-	logBaseName := "test01"
+	logBaseName := "logger_package"
 	sampleLogFileName := "logger_test_sample.txt"
 	testFileLines, err := utils.ReadLines(sampleLogFileName)
 

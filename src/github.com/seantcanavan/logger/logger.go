@@ -38,8 +38,8 @@ type SeanLogger struct {
 
 const LOG_EXTENSION = ".log"
 
-func LoggerFromConservativeValue(conservativeValue int, logBaseName string) (*SeanLogger, error) {
-	switch conservativeValue {
+func FromVolatilityValue(volatility int, logBaseName string) (*SeanLogger, error) {
+	switch volatility {
 	case 0:
 		return HoardingLogger(logBaseName)
 	case 1:
@@ -49,7 +49,7 @@ func LoggerFromConservativeValue(conservativeValue int, logBaseName string) (*Se
 	case 3:
 		return MinimalLogger(logBaseName)
 	default:
-		return nil, fmt.Errorf("The value you gave: %d does not have a logging map available for it. Please check logger/logger.go for valid logging mapping values", conservativeValue)
+		return nil, fmt.Errorf("The value you gave: %d does not have a logging map available for it. Please check logger/logger.go for valid logging mapping values", volatility)
 	}
 }
 
@@ -176,11 +176,11 @@ func (sl *SeanLogger) initLogger(logBaseName string) error {
 // max duration of the log file, and the maximum number of overall log files
 // has not been reached. If any of the above parameters have been tripped,
 // log cleanup will occur.
-func (sl *SeanLogger) LogMessage(message string) {
+func (sl *SeanLogger) LogMessage(formatString string, values ...interface{}) {
 
 	now := uint64(time.Now().Unix())
 
-	fmt.Fprintln(sl.writer, message)
+	fmt.Fprintln(sl.writer, fmt.Sprintf(formatString, values...))
 
 	sl.logMessageCount++
 	sl.logDuration += now - sl.logStamp

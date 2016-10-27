@@ -27,6 +27,8 @@ const SEPARATING_SEQUENCE = "\n\n"
 const FILE_CLEANUP_DELAY = 360
 const PROFILE_FILE_EXTENSION = ".rep"
 const PROFILE_EMAIL_SUBJECT = "System Profile"
+const SYS_PROFILE_FILE_NAME = "profile_file"
+const SYS_PROFILE_ARCHIVE_NAME = "profile_archive"
 
 type SysProfiler struct {
 	repr *reporter.Reporter
@@ -79,7 +81,7 @@ func (sp *SysProfiler) ProfileAsBytes() []byte {
 func (sp *SysProfiler) ProfileAsFile() (*os.File, error) {
 
 	bytes := sp.ProfileAsBytes()
-	fileName := utils.TimeStampFileName("sys_profile", PROFILE_FILE_EXTENSION)
+	fileName := utils.TimeStampFileName(SYS_PROFILE_FILE_NAME, PROFILE_FILE_EXTENSION)
 
 	ioutil.WriteFile(fileName, bytes, 0744)
 	filePtr, err := os.Open(fileName)
@@ -97,7 +99,7 @@ func (sp *SysProfiler) ProfileAsFile() (*os.File, error) {
 // clean up disk space.
 func (sp *SysProfiler) ProfileAsArchive() (*os.File, error) {
 
-	tarBall, err := os.Create(utils.TimeStampFileName("sys_archive", ".tar"))
+	tarBall, err := os.Create(utils.TimeStampFileName(SYS_PROFILE_ARCHIVE_NAME, ".tar"))
 	if err != nil {
 		return nil, err
 	}

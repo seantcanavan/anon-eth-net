@@ -13,5 +13,5 @@
   "DeviceName": "LG Smart Fridge",
   "InitialStartup": false,
   "FirstRunAfterUpdate": false,
-  "LoggingVolatility": 3
+  "LogVolatility": 3
 }

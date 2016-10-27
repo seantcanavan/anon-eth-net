@@ -1,5 +1,5 @@
 import time
+import sys
 
 for x in range(0, 10):
-	time.sleep(2)
-	print("loader_example_02.py print statement")
+	print(sys.argv[0] + "\t" + str(x))

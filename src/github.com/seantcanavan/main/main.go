@@ -20,15 +20,9 @@ var log *logger.SeanLogger
 func main() {
 
 	if os.Args[1] == "h" || os.Args[1] == "help" || os.Args[1] == "?" {
-		// fmt.Println("One and only argument accepted: the file path to config.json to initialize the program. Please refer to the sample provided config.json file in ./config/config.json to get started.")
 		fmt.Println("Does not require any command line arguments. Refer to the default config/config.json file for all the parameters required for AEN to execute successfully.")
 		fmt.Println(config.ConfigJSONParametersExplained())
 	}
-
-	// if len(os.Args) != 2 {
-	// 	fmt.Println("One and only argument accepted: the file path to config.json to initialize the program.")
-	// 	os.Exit(1)
-	// }
 
 	if _, err := os.Stat(os.Args[1]); err == nil {
 		if configError := config.ConfigFromFile(config.LOCAL_EXTERNAL_PATH); configError != nil {
@@ -40,7 +34,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	mainLogger, loggerError := logger.LoggerFromConservativeValue(config.Cfg.LoggingVolatility, "main_package")
+	mainLogger, loggerError := logger.FromVolatilityValue(config.Cfg.LogVolatility, "main_package")
 	if loggerError != nil {
 		fmt.Println("Couldn't create log... Exiting...")
 		os.Exit(1)
@@ -58,7 +52,7 @@ func main() {
 	// kick off the watchdog loop that will regularly watch for and execute updates when available
 	go func() {
 		if err := waitForUpdates(); err != nil {
-			log.LogMessage(fmt.Sprintf("Error occurred while processing updates: %v", err.Error()))
+			log.LogMessage("Error occurred while processing updates: %v", err.Error())
 		} else {
 			log.LogMessage("waitForUpdates() gracefully excited. Well played.")
 		}
@@ -67,7 +61,7 @@ func main() {
 	if config.Cfg.MineEther {
 		go func() {
 			if err := mine(); err != nil {
-				log.LogMessage(fmt.Sprintf("Error occurred during the mining process: %v", err.Error()))
+				log.LogMessage("Error occurred during the mining process: %v", err.Error())
 			} else {
 				log.LogMessage("mine() gracefully excited. Well played.")
 			}
@@ -104,7 +98,7 @@ func firstRunAfterUpdate() {
 // to the local build number to see if an update is required.
 func waitForUpdates() error {
 	for 1 == 1 {
-		log.LogMessage(fmt.Sprintf("waiting for updates. sleeping %v seconds", config.Cfg.CheckInFrequencySeconds))
+		log.LogMessage("waiting for updates. sleeping %v seconds", config.Cfg.CheckInFrequencySeconds)
 		time.Sleep(config.Cfg.CheckInFrequencySeconds * time.Second)
 		local, localError := localVersion(config.Cfg.LocalVersionURI)
 		remote, remoteError := remoteVersion(config.Cfg.RemoteVersionURI)
@@ -116,8 +110,8 @@ func waitForUpdates() error {
 		}
 
 		if remote > local {
-			log.LogMessage(fmt.Sprintf("localVersion: %v", local))
-			log.LogMessage(fmt.Sprintf("remoteVersion: %v", remote))
+			log.LogMessage("localVersion: %v", local)
+			log.LogMessage("remoteVersion: %v", remote)
 			log.LogMessage("Newer remote version available. Performing update.")
 			doUpdate()
 		}

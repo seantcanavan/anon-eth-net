@@ -24,6 +24,16 @@ clean:
 	for p in $(PACKAGES); do \
 		go clean ../../$$p; \
 	done
+	-rm ./config/config_package-*.log
+	-rm ./loader/loader_package-*.log
+	-rm ./logger/logger_package-*.log
+	-rm ./main/main_package-*.log
+	-rm ./profiler/profiler_package-*.log
+	-rm ./profiler/profile_file-*.rep
+	-rm ./profiler/profile_archive-*.tar
+	-rm ./reporter/reporter_package-*.log
+	-rm ./rest/rest_package-*.log
+	-rm ./updater/updater_package-*.log
 
 test:
 	for p in $(PACKAGES); do \

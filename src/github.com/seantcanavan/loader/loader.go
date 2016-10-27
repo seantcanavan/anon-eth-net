@@ -2,7 +2,7 @@ package loader
 
 import (
 	"encoding/json"
-	"fmt"
+	// "fmt"
 	"io/ioutil"
 	"os/exec"
 	"strings"
@@ -24,6 +24,12 @@ type Loader struct {
 	exitProcessDelay time.Duration     // the delay after a process exits, either successfully or unsuccessfully, before being started up again
 }
 
+type LoaderProcess struct {
+	Name      string
+	Command   string
+	Arguments string
+}
+
 // NewLoader will initialize a new instance of the Loader struct and load the
 // associated processes from the given file. It will wait the given amount of
 // time after a process exists before restarting it and it will use the given
@@ -31,7 +37,7 @@ type Loader struct {
 // config object more heavily in the future.
 func NewLoader(processesPath string, exitProcessDelay time.Duration) (*Loader, error) {
 	if log == nil {
-		newLogger, logError := logger.LoggerFromConservativeValue(config.Cfg.LoggingVolatility, "loader_package")
+		newLogger, logError := logger.FromVolatilityValue(config.Cfg.LogVolatility, "loader_package")
 		if logError != nil {
 			return nil, logError
 		}
@@ -53,40 +59,36 @@ func NewLoader(processesPath string, exitProcessDelay time.Duration) (*Loader, e
 // continuously ensure that the write processes are running and that AEN is
 // keeping them up and running as much as possible.
 func getProcessMapFromFile(processesPath string) (map[string]string, error) {
-	loadedMap := make(map[string]*json.RawMessage)
-	returnedMap := make(map[string]string)
+	rawJSONMap := make(map[string]*json.RawMessage)
+	processMap := make(map[string]string)
 	fileBytes, readErr := ioutil.ReadFile(processesPath)
 	if readErr != nil {
 		return nil, readErr
 	}
 
-	mapErr1 := json.Unmarshal(fileBytes, &loadedMap)
+	mapErr1 := json.Unmarshal(fileBytes, &rawJSONMap)
 	if mapErr1 != nil {
 		return nil, mapErr1
 	}
 
-	for key, value := range loadedMap {
+	for key, value := range rawJSONMap {
 		var s string
 		mapErr2 := json.Unmarshal(*value, &s)
 		if mapErr2 != nil {
 			return nil, mapErr2
 		}
-		returnedMap[key] = s
+		processMap[key] = s
+		log.LogMessage("Read process name '%v' and command '%v' from file", key, s)
 	}
 
-	for key, value := range returnedMap {
-		fmt.Println("key: " + key)
-		fmt.Println("value: " + value)
-	}
-
-	return returnedMap, nil
+	return processMap, nil
 }
 
 // Start will execute all the processes that have been loaded on the local
 // system. It will run each process in its own go routine.
 func (l *Loader) Start() {
 	for key, value := range l.processes {
-		go l.runProcess(key, string(value))
+		go l.runProcess(key, value)
 	}
 }
 
@@ -103,15 +105,14 @@ func (l *Loader) runProcess(name string, command string) {
 		command := commandParts[0]
 		arguments := commandParts[1:]
 		cmd := exec.Command(command, arguments...)
-		fmt.Println("Loader: " + command + " is about to start.")
+		log.LogMessage("About to execute Name: '%v' Command: '%v' Arguments: '%v'", name, command, arguments)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			fmt.Println("Loader: '" + command + "' exited with error status.")
-			fmt.Println("Loader: '" + command + "' Error= '" + err.Error() + "'")
-			fmt.Println("Loader: '" + command + "' output= '" + string(out) + "'")
+			log.LogMessage("Process exited with error status. Name: '%v' Command: '%v' Arguments: '%v'", name, command, arguments)
 		} else {
-			fmt.Println(string(out))
+			log.LogMessage("Process exited successfully. Name: '%v' Command: '%v' Arguments: '%v'", name, command, arguments)
 		}
+		log.LogMessage("Output:\n%v", string(out))
 		time.Sleep(time.Second * l.exitProcessDelay)
 	}
 }

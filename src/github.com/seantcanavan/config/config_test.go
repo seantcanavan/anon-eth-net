@@ -33,10 +33,6 @@ func TestSimplecfgigLoadFromFile(t *testing.T) {
 		t.Errorf("Cfg.LocalVersionURI did not unmarshal correctly: %v", Cfg.LocalVersionURI)
 	}
 
-	if Cfg.LocalVersion != 0 {
-		t.Errorf("Cfg.LocalVersion did not unmarshal correctly: %v", Cfg.LocalVersion)
-	}
-
 	if Cfg.MineEther != false {
 		t.Errorf("Cfg.MineEther did not unmarshal correctly: %v", Cfg.MineEther)
 	}
@@ -53,6 +49,26 @@ func TestSimplecfgigLoadFromFile(t *testing.T) {
 		t.Errorf("Cfg.EtherWallet did not unmarshal correctly: %v", Cfg.EtherWallet)
 	}
 
+	if Cfg.DeviceId != "519a2a15-afad-4c1a-94a3-71660c83504b" {
+		t.Errorf("Cfg.DeviceId did not unmarshal correctly: %v", Cfg.DeviceId)
+	}
+
+	if Cfg.DeviceName != "LG Smart Fridge" {
+		t.Errorf("Cfg.DeviceName did not unmarshal correctly: %v", Cfg.DeviceName)
+	}
+
+	if Cfg.InitialStartup != false {
+		t.Errorf("Cfg.InitialStartup did not unmarshal correctly: %v", Cfg.InitialStartup)
+	}
+
+	if Cfg.FirstRunAfterUpdate != false {
+		t.Errorf("Cfg.FirstRunAfterUpDate did not unmarshal correctly: %v", Cfg.FirstRunAfterUpdate)
+	}
+
+	if Cfg.LogVolatility != 3 {
+		t.Errorf("Cfg.LogVolatility did not unmarshal correctly: %v", Cfg.LogVolatility)
+	}
+
 	fileLines, fileErr := utils.ReadLines(Cfg.CheckInGmailCredentialsFile)
 	if fileErr != nil {
 		t.Errorf("issue reading in email credentials file")
@@ -66,11 +82,4 @@ func TestSimplecfgigLoadFromFile(t *testing.T) {
 		t.Errorf("Cfg.CheckInGmailPassword did not load correctly: %v", Cfg.CheckInGmailPassword)
 	}
 
-	if Cfg.FirstRunAfterUpdate != false {
-		t.Errorf("Cfg.FirstRunAfterUpDate did not load correctly: %v", Cfg.FirstRunAfterUpdate)
-	}
-
-	if Cfg.InitialStartup != false {
-		t.Errorf("Cfg.InitialStartup did not load correctly: %v", Cfg.InitialStartup)
-	}
 }

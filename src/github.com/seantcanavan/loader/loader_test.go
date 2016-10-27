@@ -17,6 +17,6 @@ func TestProcessMap(t *testing.T) {
 
 	loader.Start()
 	fmt.Println("about to sleep")
-	time.Sleep(time.Second * 30)
+	time.Sleep(time.Second * 2)
 	fmt.Println("done sleeping")
 }
