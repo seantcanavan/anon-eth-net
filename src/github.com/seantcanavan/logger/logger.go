@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"container/list"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"time"
@@ -151,6 +152,24 @@ func HoardingLogger(logBaseName string) (*SeanLogger, error) {
 	return &sl, nil
 }
 
+func (sl *SeanLogger) CurrentLogContents() ([]byte, error) {
+	sl.writer.Flush()
+
+	fileBytes, readErr := ioutil.ReadFile(sl.log.Name())
+	if readErr != nil {
+		return nil, readErr
+	}
+	return fileBytes, nil
+}
+
+func (sl *SeanLogger) CurrentLogName() (string, error) {
+	fileInfo, statErr := sl.log.Stat()
+	if statErr != nil {
+		return "", statErr
+	}
+	return fileInfo.Name(), nil
+}
+
 func (sl *SeanLogger) initLogger(logBaseName string) error {
 
 	logFileName := utils.TimeStampFileName(logBaseName, LOG_EXTENSION)
@@ -181,6 +200,8 @@ func (sl *SeanLogger) LogMessage(formatString string, values ...interface{}) {
 	now := uint64(time.Now().Unix())
 
 	fmt.Fprintln(sl.writer, fmt.Sprintf(formatString, values...))
+
+	sl.writer.Flush()
 
 	sl.logMessageCount++
 	sl.logDuration += now - sl.logStamp

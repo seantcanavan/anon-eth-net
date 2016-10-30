@@ -2,7 +2,6 @@ package loader
 
 import (
 	"encoding/json"
-	// "fmt"
 	"io/ioutil"
 	"os/exec"
 	"strings"
@@ -14,20 +13,22 @@ import (
 
 var log *logger.SeanLogger
 
+const TIME_BETWEEN_SUCCESSIVE_ITERATIONS = 60
+
 // Loader represents a struct that will load a set of processes and watch over
 // them. It knows the name of every process that it should be keeping an eye on
 // as well as how to resurrect that process should it no longer be executing.
 // The idea of the Loader is to make sure that all external process dependencies
 // are executing and are in a healthy state as much as possible.
 type Loader struct {
-	processes        map[string]string // the map of process names to the command that's used to execute them. this data is utilized by the watchdog go routine to make sure that all required processes are running and executing as much as possible.
-	exitProcessDelay time.Duration     // the delay after a process exits, either successfully or unsuccessfully, before being started up again
+	processes []LoaderProcess // the slice of LoaderProcesses which the loader will execute and keep an eye on
 }
 
 type LoaderProcess struct {
 	Name      string
 	Command   string
-	Arguments string
+	Arguments []string
+	Log       *logger.SeanLogger
 }
 
 // NewLoader will initialize a new instance of the Loader struct and load the
@@ -35,7 +36,8 @@ type LoaderProcess struct {
 // time after a process exists before restarting it and it will use the given
 // config reference to initialize the logger. It will probably utilize the
 // config object more heavily in the future.
-func NewLoader(processesPath string, exitProcessDelay time.Duration) (*Loader, error) {
+func NewLoader(processesPath string) (*Loader, error) {
+
 	if log == nil {
 		newLogger, logError := logger.FromVolatilityValue(config.Cfg.LogVolatility, "loader_package")
 		if logError != nil {
@@ -43,24 +45,30 @@ func NewLoader(processesPath string, exitProcessDelay time.Duration) (*Loader, e
 		}
 		log = newLogger
 	}
+
 	l := Loader{}
-	processMap, mapErr := getProcessMapFromFile(processesPath)
-	if mapErr != nil {
-		return nil, mapErr
+	var loadedProcesses []LoaderProcess
+	loadedProcesses, loadErr := getProcessesFromJSONFile(processesPath)
+
+	if loadErr != nil {
+		return nil, loadErr
 	}
-	l.processes = processMap
-	l.exitProcessDelay = exitProcessDelay
+
+	l.processes = loadedProcesses
 	return &l, nil
 }
 
-// getProcessMapFromFile will read in a set of JSON values which define both
+// getProcessesFromJSONFile will read in a set of JSON values which define both
 // the canonical name of the process as well as the command and any associated
-// parameters to successfully execute that command. This map will be used to
-// continuously ensure that the write processes are running and that AEN is
-// keeping them up and running as much as possible.
-func getProcessMapFromFile(processesPath string) (map[string]string, error) {
+// parameters to successfully execute that command. A slice containing a
+// LoaderProcess struct for each individual command to execute will be returned.
+// Each individual LoaderProcess struct and associated process will be monitored
+// and AEN will do its best to keep it running at all times.
+func getProcessesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
+
 	rawJSONMap := make(map[string]*json.RawMessage)
-	processMap := make(map[string]string)
+	var processList []LoaderProcess
+
 	fileBytes, readErr := ioutil.ReadFile(processesPath)
 	if readErr != nil {
 		return nil, readErr
@@ -77,42 +85,68 @@ func getProcessMapFromFile(processesPath string) (map[string]string, error) {
 		if mapErr2 != nil {
 			return nil, mapErr2
 		}
-		processMap[key] = s
-		log.LogMessage("Read process name '%v' and command '%v' from file", key, s)
-	}
 
-	return processMap, nil
-}
+		lp := LoaderProcess{}
+		lp.Name = key
+		commandParts := strings.Split(s, " ")
+		lp.Command = commandParts[0]
+		lp.Arguments = commandParts[1:]
 
-// Start will execute all the processes that have been loaded on the local
-// system. It will run each process in its own go routine.
-func (l *Loader) Start() {
-	for key, value := range l.processes {
-		go l.runProcess(key, value)
-	}
-}
-
-// runProcess handles the individual running of a single conceptual process or
-// program. It will create a process, pass the associated arguments, and
-// initialize it all within go. It will also monitor the stdout and stderr
-// channels for output and return those when the program finishes executing.
-// TODO(Canavan): figure out how to monitor the program output during execution
-// so that it can be actively logged and reported back to the user.
-func (l *Loader) runProcess(name string, command string) {
-	for 1 == 1 {
-		// split the incoming command into its primary command and its parameters which follow after
-		commandParts := strings.Split(command, " ")
-		command := commandParts[0]
-		arguments := commandParts[1:]
-		cmd := exec.Command(command, arguments...)
-		log.LogMessage("About to execute Name: '%v' Command: '%v' Arguments: '%v'", name, command, arguments)
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			log.LogMessage("Process exited with error status. Name: '%v' Command: '%v' Arguments: '%v'", name, command, arguments)
-		} else {
-			log.LogMessage("Process exited successfully. Name: '%v' Command: '%v' Arguments: '%v'", name, command, arguments)
+		logInstance, logError := logger.FromVolatilityValue(config.Cfg.LogVolatility, lp.Name)
+		if logError != nil {
+			log.LogMessage("LoaderProcess unsuccessfully initialized logger: %+v", lp)
+			return nil, logError
 		}
-		log.LogMessage("Output:\n%v", string(out))
-		time.Sleep(time.Second * l.exitProcessDelay)
+
+		lp.Log = logInstance
+		log.LogMessage("Read process successfully from file: %+v", lp)
+		processList = append(processList, lp)
 	}
+	return processList, nil
+}
+
+// StartAsynchronous will execute all the processes that have been loaded into
+// this specific instance of Loader. It will execute them asynchronously and
+// eventually in the future it will hopefully figure out a meaningful way of
+// logging the output of each individual process...
+func (l *Loader) StartAsynchronous() []LoaderProcess {
+	for _, currentProcess := range l.processes {
+		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
+		log.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
+		localProcess := currentProcess
+		go func() {
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				log.LogMessage("LoaderProcess exited with error status: %+v\n %v", localProcess, err.Error())
+			} else {
+				log.LogMessage("LoaderProcess exited successfully: %+v", localProcess)
+				localProcess.Log.LogMessage(string(output))
+			}
+			time.Sleep(time.Second * TIME_BETWEEN_SUCCESSIVE_ITERATIONS)
+		}()
+	}
+	return l.processes
+}
+
+// StartSynchronous will execute all the processes that have been loaded into
+// this specific instance of Loader. It will execute them synchronously and
+// return a slice of pointers to instances of os.File. Each instance of os.File
+// contains the log output from each command that was executed.
+func (l *Loader) StartSynchronous() []LoaderProcess {
+	for _, currentProcess := range l.processes {
+		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
+		log.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			log.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
+			currentProcess.Log.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
+		} else {
+			log.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
+			currentProcess.Log.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
+		}
+
+		log.LogMessage("Command output:\n%v", string(output))
+		currentProcess.Log.LogMessage("Command output: %v", string(output))
+	}
+	return l.processes
 }

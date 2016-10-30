@@ -2,6 +2,7 @@ package profiler
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"testing"
 
@@ -26,8 +27,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestSendFileArchiveAsAttachment(t *testing.T) {
-	err := prof.SendArchiveProfileAsAttachment()
+	filePtr, err := prof.SendArchiveProfileAsAttachment()
 	if err != nil {
 		t.Error(err)
 	}
+	fmt.Println(fmt.Sprintf("Archive successfully created: %v", filePtr.Name()))
 }

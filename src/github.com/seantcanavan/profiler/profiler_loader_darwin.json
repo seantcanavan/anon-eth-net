@@ -1,0 +1,15 @@
+{
+    "CPU and Disk Utilization": "iostat 1 10",
+    "Memory Utilization": "free",
+    "Disk Free Space": "df -h",
+    "Process List": "ps -AlF",
+    "Uptime": "uptime",
+    "Network Details": "",
+    "Kernel Version": "uname -r",
+    "Distro Version": "cat /etc/*-release",
+    "Routing Table": "netstat -r",
+    "Network Interfaces": "netstat -i",
+    "Occupied Ports": "sudo netstat -ntlp | grep LISTEN",
+    "Network Usage Stats": "netstat -s",
+    "Active Connections": "netstat -va"
+}
