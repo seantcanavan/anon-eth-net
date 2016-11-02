@@ -2,28 +2,37 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
-	"strconv"
-	"strings"
-	"time"
+	"runtime"
 
 	"github.com/nu7hatch/gouuid"
 	"github.com/seantcanavan/config"
+	"github.com/seantcanavan/loader"
 	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/updater"
 )
 
-// the local instance of SeanLogger which will only log messages from the main package
-var log *logger.SeanLogger
+// SeanLogger for the main package and any errors it encounters while executing
+var lgr *logger.Logger
+
+// Updater for the main package which will track local and remote versions of the code
+var udr *updater.Updater
+
+// Loader for the main package which will execute all of the third party processes
+var ldr *loader.Loader
 
 func main() {
 
+	// check if the user is confused at first and is so, print the config.json
+	// with code documentation included. and and then exit.
 	if os.Args[1] == "h" || os.Args[1] == "help" || os.Args[1] == "?" {
 		fmt.Println("Does not require any command line arguments. Refer to the default config/config.json file for all the parameters required for AEN to execute successfully.")
 		fmt.Println(config.ConfigJSONParametersExplained())
+		os.Exit(1)
 	}
 
+	// load the main config file from JSON which we'll use throughout execution.
+	// we're exiting under an error condition since it's so early in execution.
 	if _, err := os.Stat(os.Args[1]); err == nil {
 		if configError := config.ConfigFromFile(config.LOCAL_EXTERNAL_PATH); configError != nil {
 			fmt.Println(fmt.Sprintf("Could not successfully load config from file: %v", os.Args[1]))
@@ -34,148 +43,116 @@ func main() {
 		os.Exit(1)
 	}
 
-	mainLogger, loggerError := logger.FromVolatilityValue(config.Cfg.LogVolatility, "main_package")
+	// generate a SeanLogger instance with the predefined volatility value and
+	// name it after the main_package to differentiate it from other packages
+	mainLogger, loggerError := logger.FromVolatilityValue("main_package")
 	if loggerError != nil {
-		fmt.Println("Couldn't create log... Exiting...")
+		fmt.Println("Couldn't create logger... Exiting...")
 		os.Exit(1)
 	}
+
+	// generate a loader instance with the appropriate JSON file based on the
+	// system architecture
+	var mainLoader *loader.Loader
+	var loaderError error
+
+	switch runtime.GOOS {
+	case "windows":
+		mainLoader, loaderError = loader.NewLoader("main_loader_windows.json")
+	case "darwin":
+		mainLoader, loaderError = loader.NewLoader("main_loader_darwin.json")
+	case "linux":
+		mainLoader, loaderError = loader.NewLoader("main_loader_linux.json")
+	default:
+		fmt.Println(fmt.Sprintf("Could not create loader for unsupported operating system: %v", runtime.GOOS))
+		os.Exit(1)
+	}
+
+	if loaderError != nil {
+		fmt.Println("Couldn't create loader... Exiting...")
+		os.Exit(1)
+	}
+
+	mainUpdater, updaterError := updater.NewUpdater()
+	if updaterError != nil {
+		fmt.Println("Couldn't create updater... Exiting...")
+		os.Exit(1)
+	}
+
 	// maintain a local logging reference for anything kicked off by the main package
-	log = mainLogger
+	lgr = mainLogger
+	// maintain a local loader reference for executing processes
+	udr = mainUpdater
+	// maintain a local updater reference for updating the main program
+	ldr = mainLoader
+
 	// if this is our first time ever starting up - run the initial config
 	if config.Cfg.InitialStartup {
-		initialStartup()
+		err := initialStartup()
+		if err != nil {
+			lgr.LogMessage(err.Error())
+		}
 	}
-	// if this is our first time starting up after an update - run the update / cleanup config
+
+	// if this is our first time starting up after an update - run the update config
 	if config.Cfg.FirstRunAfterUpdate {
-		firstRunAfterUpdate()
+		err := firstRunAfterUpdate()
+		if err != nil {
+			lgr.LogMessage(err.Error())
+		}
 	}
+
 	// kick off the watchdog loop that will regularly watch for and execute updates when available
 	go func() {
-		if err := waitForUpdates(); err != nil {
-			log.LogMessage("Error occurred while processing updates: %v", err.Error())
-		} else {
-			log.LogMessage("waitForUpdates() gracefully excited. Well played.")
+		for 1 == 1 {
+			if err := udr.Run(); err != nil {
+				lgr.LogMessage("Error occurred in the Updater module: %v", err.Error())
+			} else {
+				lgr.LogMessage("Updater has exited gracefully. Well played.")
+			}
 		}
 	}()
-	// if the user elects to, mine ethereum as well in our free time
-	if config.Cfg.MineEther {
-		go func() {
-			if err := mine(); err != nil {
-				log.LogMessage("Error occurred during the mining process: %v", err.Error())
-			} else {
-				log.LogMessage("mine() gracefully excited. Well played.")
+
+	go func() {
+		for 1 == 1 {
+			processes := ldr.StartAsynchronous()
+
+			for _, resultProcess := range processes {
+				//process results here
+				logContents, logError := resultProcess.Lgr.CurrentLogContents()
+				if logError == nil {
+					lgr.LogMessage(string(logContents))
+				}
 			}
-		}()
-	}
+		}
+	}()
 }
 
 // initialStartup will be executed only when this program is running for the
 // first time on a new host.
-func initialStartup() {
+func initialStartup() error {
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		// update the UUID if it doesn't exist
-		config.Cfg.DeviceId = uuid.String()
+		return err
 	}
+
+	// update the UUID if it doesn't exist
+	config.Cfg.DeviceId = uuid.String()
+
 	// we're finishing the first run!
 	config.Cfg.InitialStartup = false
+
+	// more stuff later!
+
 	// push the UUID back to the file for next time
-	config.ConfigToFile(config.LOCAL_EXTERNAL_PATH)
+	return config.ConfigToFile(config.LOCAL_EXTERNAL_PATH)
 }
 
 // firstRunAfterUpdate will be executed only when this program is running for
 // the first time after an update has recently been applied. This gives us the
 // opportunity to do some post-update cleanup to make sure everything is in
 // working order.
-func firstRunAfterUpdate() {
+func firstRunAfterUpdate() error {
 	config.Cfg.FirstRunAfterUpdate = false
-	config.ConfigToFile(config.LOCAL_EXTERNAL_PATH)
-}
-
-// waitForUpdates will continuously check for updated versions of the software
-// and update to a newer version if found. Successive version checks will take
-// place after a given number of seconds and compare the remote build number
-// to the local build number to see if an update is required.
-func waitForUpdates() error {
-	for 1 == 1 {
-		log.LogMessage("waiting for updates. sleeping %v seconds", config.Cfg.CheckInFrequencySeconds)
-		time.Sleep(config.Cfg.CheckInFrequencySeconds * time.Second)
-		local, localError := localVersion(config.Cfg.LocalVersionURI)
-		remote, remoteError := remoteVersion(config.Cfg.RemoteVersionURI)
-
-		if localError != nil {
-			return localError
-		} else if remoteError != nil {
-			return remoteError
-		}
-
-		if remote > local {
-			log.LogMessage("localVersion: %v", local)
-			log.LogMessage("remoteVersion: %v", remote)
-			log.LogMessage("Newer remote version available. Performing update.")
-			doUpdate()
-		}
-	}
-	return nil
-}
-
-// mine will kick off all the programs in order to start mining ethereum.
-func mine() error {
-	for 1 == 1 {
-		log.LogMessage("mining...")
-		time.Sleep(10 * time.Second)
-	}
-	return nil
-}
-
-// getCurrentVersion will grab the version of this program from the local given
-// file path where the version number should reside as a whole integer number.
-// The default project structure is to have this file be named 'version.no' and
-// be placed within the main package.
-func localVersion(versionFilePath string) (uint64, error) {
-	bytes, err := ioutil.ReadFile(versionFilePath)
-	if err != nil {
-		return 0, err
-	}
-
-	s := string(bytes)
-	s = strings.Trim(s, "\n")
-	compiledVersion, castError := strconv.ParseUint(s, 10, 64)
-	if castError != nil {
-		return 0, castError
-	}
-	return compiledVersion, nil
-}
-
-// getRemoteVersion will grab the version of this program from the remote given
-// file path where the version number should reside as a whole integer number.
-// The default project structure is to have this file be named 'version.no' and
-// queried directly via the github.com API.
-func remoteVersion(versionFilePath string) (uint64, error) {
-	var s string // hold the value from the http GET
-	resp, getError := http.Get(config.Cfg.RemoteVersionURI)
-	if getError != nil {
-		return 0, getError
-	}
-
-	defer resp.Body.Close()
-	body, readError := ioutil.ReadAll(resp.Body)
-	if readError != nil {
-		return 0, readError
-	}
-
-	s = string(body[:])
-	s = strings.Trim(s, "\n")
-
-	remoteVersion, castError := strconv.ParseUint(s, 10, 64)
-	if castError != nil {
-		return 0, castError
-	}
-
-	return remoteVersion, nil
-}
-
-func doUpdate() error {
-	log.LogMessage("updating...")
-	return nil
+	return config.ConfigToFile(config.LOCAL_EXTERNAL_PATH)
 }

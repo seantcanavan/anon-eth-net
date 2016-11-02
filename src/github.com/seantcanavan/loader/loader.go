@@ -7,11 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/logger"
 )
 
-var log *logger.SeanLogger
+var lgr *logger.Logger
 
 const TIME_BETWEEN_SUCCESSIVE_ITERATIONS = 60
 
@@ -28,7 +27,7 @@ type LoaderProcess struct {
 	Name      string
 	Command   string
 	Arguments []string
-	Log       *logger.SeanLogger
+	Lgr       *logger.Logger
 }
 
 // NewLoader will initialize a new instance of the Loader struct and load the
@@ -38,12 +37,12 @@ type LoaderProcess struct {
 // config object more heavily in the future.
 func NewLoader(processesPath string) (*Loader, error) {
 
-	if log == nil {
-		newLogger, logError := logger.FromVolatilityValue(config.Cfg.LogVolatility, "loader_package")
+	if lgr == nil {
+		newLogger, logError := logger.FromVolatilityValue("loader_package")
 		if logError != nil {
 			return nil, logError
 		}
-		log = newLogger
+		lgr = newLogger
 	}
 
 	l := Loader{}
@@ -92,14 +91,14 @@ func getProcessesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
 		lp.Command = commandParts[0]
 		lp.Arguments = commandParts[1:]
 
-		logInstance, logError := logger.FromVolatilityValue(config.Cfg.LogVolatility, lp.Name)
+		logInstance, logError := logger.FromVolatilityValue(lp.Name)
 		if logError != nil {
-			log.LogMessage("LoaderProcess unsuccessfully initialized logger: %+v", lp)
+			lgr.LogMessage("LoaderProcess unsuccessfully initialized logger: %+v", lp)
 			return nil, logError
 		}
 
-		lp.Log = logInstance
-		log.LogMessage("Read process successfully from file: %+v", lp)
+		lp.Lgr = logInstance
+		lgr.LogMessage("Read process successfully from file: %+v", lp)
 		processList = append(processList, lp)
 	}
 	return processList, nil
@@ -112,15 +111,15 @@ func getProcessesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
 func (l *Loader) StartAsynchronous() []LoaderProcess {
 	for _, currentProcess := range l.processes {
 		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
-		log.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
+		lgr.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
 		localProcess := currentProcess
 		go func() {
 			output, err := cmd.CombinedOutput()
 			if err != nil {
-				log.LogMessage("LoaderProcess exited with error status: %+v\n %v", localProcess, err.Error())
+				lgr.LogMessage("LoaderProcess exited with error status: %+v\n %v", localProcess, err.Error())
 			} else {
-				log.LogMessage("LoaderProcess exited successfully: %+v", localProcess)
-				localProcess.Log.LogMessage(string(output))
+				lgr.LogMessage("LoaderProcess exited successfully: %+v", localProcess)
+				localProcess.Lgr.LogMessage(string(output))
 			}
 			time.Sleep(time.Second * TIME_BETWEEN_SUCCESSIVE_ITERATIONS)
 		}()
@@ -135,18 +134,18 @@ func (l *Loader) StartAsynchronous() []LoaderProcess {
 func (l *Loader) StartSynchronous() []LoaderProcess {
 	for _, currentProcess := range l.processes {
 		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
-		log.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
+		lgr.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			log.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
-			currentProcess.Log.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
+			lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
+			currentProcess.Lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
 		} else {
-			log.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
-			currentProcess.Log.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
+			lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
+			currentProcess.Lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
 		}
 
-		log.LogMessage("Command output:\n%v", string(output))
-		currentProcess.Log.LogMessage("Command output: %v", string(output))
+		lgr.LogMessage("Command output:\n%v", string(output))
+		currentProcess.Lgr.LogMessage("Command output: %v", string(output))
 	}
 	return l.processes
 }

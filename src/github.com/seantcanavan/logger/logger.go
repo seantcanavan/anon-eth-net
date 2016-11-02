@@ -9,10 +9,11 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/utils"
 )
 
-// SeanLogger allows for aggressive log management in scenarios where disk space
+// Logger allows for aggressive log management in scenarios where disk space
 // might be limited. You can limit based on log message count or duration and
 // also prune log files when too many are saved on disk. I don't like the
 // current implementation - it makes too many assumptions about how many
@@ -23,7 +24,7 @@ import (
 // https://stackoverflow.com/questions/20108520/get-amount-of-free-disk-space-using-go
 // This would essentially be the nail in the coffin for windows builds if
 // implemented. RIP Bill Gates.
-type SeanLogger struct {
+type Logger struct {
 	MaxLogFileCount    uint64        // The maximum number of log files saved to disk before pruning occurs
 	MaxLogMessageCount uint64        // The maximum number of bytes a log file can take up before it's cut off and a new one is created
 	MaxLogDuration     uint64        // The maximum number of seconds a log can exist for before it's cut off and a new one is created
@@ -39,7 +40,8 @@ type SeanLogger struct {
 
 const LOG_EXTENSION = ".log"
 
-func FromVolatilityValue(volatility int, logBaseName string) (*SeanLogger, error) {
+func FromVolatilityValue(logBaseName string) (*Logger, error) {
+	volatility := config.Cfg.LogVolatility
 	switch volatility {
 	case 0:
 		return HoardingLogger(logBaseName)
@@ -54,9 +56,9 @@ func FromVolatilityValue(volatility int, logBaseName string) (*SeanLogger, error
 	}
 }
 
-func CustomLogger(logBaseName string, maxFileCount uint64, maxMessageCount uint64, maxDuration uint64) (*SeanLogger, error) {
+func CustomLogger(logBaseName string, maxFileCount uint64, maxMessageCount uint64, maxDuration uint64) (*Logger, error) {
 
-	sl := SeanLogger{}
+	sl := Logger{}
 	// public variables
 	sl.MaxLogFileCount = maxFileCount
 	sl.MaxLogMessageCount = maxMessageCount
@@ -70,14 +72,14 @@ func CustomLogger(logBaseName string, maxFileCount uint64, maxMessageCount uint6
 	return &sl, nil
 }
 
-// MinimalLogger will return a SeanLogger struct which will make sure to be as
+// MinimalLogger will return a Logger struct which will make sure to be as
 // minimal as possible and only hold on to the most recent of log files for a
 // short period of time. Recommended for systems with 100GB or less of overall
 // storage. If the logs are not checked or reported via email daily it's
 // possible that data could be missed.
-func MinimalLogger(logBaseName string) (*SeanLogger, error) {
+func MinimalLogger(logBaseName string) (*Logger, error) {
 
-	sl := SeanLogger{}
+	sl := Logger{}
 	// public variables
 	sl.MaxLogFileCount = 10
 	sl.MaxLogMessageCount = 1000
@@ -91,13 +93,13 @@ func MinimalLogger(logBaseName string) (*SeanLogger, error) {
 	return &sl, nil
 }
 
-// ConservativeLogger will return a SeanLogger struct which will hold on to a
+// ConservativeLogger will return a Logger struct which will hold on to a
 // respectful number of log files and messages. Recommended for systems with
 // at least 250GB of overall storage. If the logs are not checked or reported
 // via email at least every three days it's possible that data could be missed.
-func ConservativeLogger(logBaseName string) (*SeanLogger, error) {
+func ConservativeLogger(logBaseName string) (*Logger, error) {
 
-	sl := SeanLogger{}
+	sl := Logger{}
 	// public variables
 	sl.MaxLogFileCount = 100
 	sl.MaxLogMessageCount = 5000
@@ -112,13 +114,13 @@ func ConservativeLogger(logBaseName string) (*SeanLogger, error) {
 }
 
 // AnticonservativeLogger is not a political message. It will return a
-// SeanLogger struct which will hold a large number of log files and messages.
+// Logger struct which will hold a large number of log files and messages.
 // Recommended for systems with at least 500GB of overall storage. If the logs
 // are not checked or reported via email at least every five days it's possible
 // that data could be missed.
-func AnticonservativeLogger(logBaseName string) (*SeanLogger, error) {
+func AnticonservativeLogger(logBaseName string) (*Logger, error) {
 
-	sl := SeanLogger{}
+	sl := Logger{}
 	// public variables
 	sl.MaxLogFileCount = 1000
 	sl.MaxLogMessageCount = 10000
@@ -132,13 +134,13 @@ func AnticonservativeLogger(logBaseName string) (*SeanLogger, error) {
 	return &sl, nil
 }
 
-// HoardingLogger will return a SeanLogger struct which will hoard a massive
+// HoardingLogger will return a Logger struct which will hoard a massive
 // amount of logs and messages. Recommended for systems with at least 1TB of
 // overall storage. If the logs are not checked or reported via email at least
 // every week it's possible that data could be missed.
-func HoardingLogger(logBaseName string) (*SeanLogger, error) {
+func HoardingLogger(logBaseName string) (*Logger, error) {
 
-	sl := SeanLogger{}
+	sl := Logger{}
 	// public variables
 	sl.MaxLogFileCount = 5000
 	sl.MaxLogMessageCount = 10000
@@ -152,7 +154,7 @@ func HoardingLogger(logBaseName string) (*SeanLogger, error) {
 	return &sl, nil
 }
 
-func (sl *SeanLogger) CurrentLogContents() ([]byte, error) {
+func (sl *Logger) CurrentLogContents() ([]byte, error) {
 	sl.writer.Flush()
 
 	fileBytes, readErr := ioutil.ReadFile(sl.log.Name())
@@ -162,7 +164,7 @@ func (sl *SeanLogger) CurrentLogContents() ([]byte, error) {
 	return fileBytes, nil
 }
 
-func (sl *SeanLogger) CurrentLogName() (string, error) {
+func (sl *Logger) CurrentLogName() (string, error) {
 	fileInfo, statErr := sl.log.Stat()
 	if statErr != nil {
 		return "", statErr
@@ -170,7 +172,7 @@ func (sl *SeanLogger) CurrentLogName() (string, error) {
 	return fileInfo.Name(), nil
 }
 
-func (sl *SeanLogger) initLogger(logBaseName string) error {
+func (sl *Logger) initLogger(logBaseName string) error {
 
 	logFileName := utils.TimeStampFileName(logBaseName, LOG_EXTENSION)
 
@@ -195,7 +197,7 @@ func (sl *SeanLogger) initLogger(logBaseName string) error {
 // max duration of the log file, and the maximum number of overall log files
 // has not been reached. If any of the above parameters have been tripped,
 // log cleanup will occur.
-func (sl *SeanLogger) LogMessage(formatString string, values ...interface{}) {
+func (sl *Logger) LogMessage(formatString string, values ...interface{}) {
 
 	now := uint64(time.Now().Unix())
 
@@ -217,7 +219,7 @@ func (sl *SeanLogger) LogMessage(formatString string, values ...interface{}) {
 // intelligently keeps track of the number of log files that have already been
 // created so that you don't overload your disk with logs and can 'prune' extra
 // logs as necessary.
-func (sl *SeanLogger) newFile() error {
+func (sl *Logger) newFile() error {
 
 	logFileName := utils.TimeStampFileName(sl.baseLogName, LOG_EXTENSION)
 
@@ -247,7 +249,7 @@ func (sl *SeanLogger) newFile() error {
 
 // pruneFile will remove the oldest file handle from the queue and delete the
 // file from the local file system.
-func (sl *SeanLogger) pruneFile() error {
+func (sl *Logger) pruneFile() error {
 
 	oldestLog := sl.logFileNames.Remove(sl.logFileNames.Front())
 	logFileName := reflect.ValueOf(oldestLog).String()

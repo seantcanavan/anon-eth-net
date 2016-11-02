@@ -72,13 +72,13 @@ func (sp *SysProfiler) ProfileAsArchive() (*os.File, error) {
 
 	for _, currentProcess := range profilerProcesses {
 		var logContents []byte
-		logContents, err = currentProcess.Log.CurrentLogContents()
+		logContents, err = currentProcess.Lgr.CurrentLogContents()
 		if err != nil {
 			break
 		}
 
 		var logName string
-		logName, err = currentProcess.Log.CurrentLogName()
+		logName, err = currentProcess.Lgr.CurrentLogName()
 		if err != nil {
 			break
 		}

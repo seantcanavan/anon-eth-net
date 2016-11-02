@@ -20,17 +20,13 @@ type Config struct {
 	UpdateFrequencySeconds      int           `json:"UpdateFrequencySeconds"`      // (R) The frequency with which this program will attempt to update itself. In seconds.
 	RemoteUpdateURI             string        `json:"RemoteUpdateURI"`             // (R) The remote location where new source code can be obtained from for this program.
 	RemoteVersionURI            string        `json:"RemoteVersionURI"`            // (R) The remote URI where the latest version number of this program can be obtained from.
+	LocalVersionURI             string        `json:"LocalVersionURI"`             // (N/A) The local URI where the current running version of this program can be obtained from.
+	LocalVersion                uint64        `json:"LocalVersion"`                // (N/A) The local version of this program that is currently running.
 	LogVolatility               int           `json:"LogVolatility"`               // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
-	EtherWallet                 string        `json:"EtherWallet"`                 // (O) The wallet address of whatever Ethereum wallet you want your mining contributions to go to.
-	MineEther                   bool          `json:"MineEther"`                   // (O) Whether or not this zombie should mine ether.
-	GPUMine                     bool          `json:"GPUMine"`                     // (O) If this zombie is mining ether, should it GPU mine?
-	CPUMine                     bool          `json:"CPUMine"`                     // (O) If this zombie is mining ether, should it CPU mine?
 	DeviceName                  string        `json:"DeviceName"`                  // (O) The canonical DeviceName for the machine currently executing this program.
 	DeviceId                    string        `json:"DeviceId"`                    // (O) The unique ID for the machine currently executing this program.
 	InitialStartup              bool          `json:"InitialStartup"`              // (N/A) Whether or not this is the first time that the program is starting.
 	FirstRunAfterUpdate         bool          `json:"FirstRunAfterUpdate"`         // (N/A) Whether or not this is the first time that the program is running after an update has been executed.
-	LocalVersionURI             string        `json:"LocalVersionURI"`             // (N/A) The local URI where the current running version of this program can be obtained from.
-	LocalVersion                uint64        `json:"LocalVersion"`                // (N/A) The local version of this program that is currently running.
 
 	// You may manually set these values in your code if it remains private to you only. Otherwise you may configure the email credentials file instead for the values to be pulled from.
 	CheckInGmailAddress  string // (O) the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
@@ -44,17 +40,13 @@ func ConfigJSONParametersExplained() string {
 	UpdateFrequencySeconds      int           json:"UpdateFrequencySeconds"      // (R) The frequency with which this program will attempt to update itself. In seconds.
 	RemoteUpdateURI             string        json:"RemoteUpdateURI"             // (R) The remote location where new source code can be obtained from for this program.
 	RemoteVersionURI            string        json:"RemoteVersionURI"            // (R) The remote URI where the latest version number of this program can be obtained from.
+	LocalVersionURI             string        json:"LocalVersionURI"             // (N/A) The local URI where the current running version of this program can be obtained from.
+	LocalVersion                uint64        json:"LocalVersion"                // (N/A) The local version of this program that is currently running.
 	LogVolatility               int           json:"LogVolatility"               // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
-	EtherWallet                 string        json:"EtherWallet"                 // (O) The wallet address of whatever Ethereum wallet you want your mining contributions to go to.
-	MineEther                   bool          json:"MineEther"                   // (O) Whether or not this zombie should mine ether.
-	GPUMine                     bool          json:"GPUMine"                     // (O) If this zombie is mining ether, should it GPU mine?
-	CPUMine                     bool          json:"CPUMine"                     // (O) If this zombie is mining ether, should it CPU mine?
 	DeviceName                  string        json:"DeviceName"                  // (O) The canonical DeviceName for the machine currently executing this program.
 	DeviceId                    string        json:"DeviceId"                    // (O) The unique ID for the machine currently executing this program.
 	InitialStartup              bool          json:"InitialStartup"              // (N/A) Whether or not this is the first time that the program is starting.
 	FirstRunAfterUpdate         bool          json:"FirstRunAfterUpdate"         // (N/A) Whether or not this is the first time that the program is running after an update has been executed.
-	LocalVersionURI             string        json:"LocalVersionURI"             // (N/A) The local URI where the current running version of this program can be obtained from.
-	LocalVersion                uint64        json:"LocalVersion"                // (N/A) The local version of this program that is currently running.
 
 	// You may manually set these values in your code if it remains private to you only. Otherwise you may configure the email credentials file instead for the values to be pulled from.
 	CheckInGmailAddress  string // (O) the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile

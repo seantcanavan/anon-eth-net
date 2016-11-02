@@ -5,13 +5,10 @@
   "RemoteUpdateURI": "https://github.com/seantcanavan/anon-eth-net.git",
   "RemoteVersionURI": "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/main/version.no",
   "LocalVersionURI": "version.no",
-  "MineEther": false,
-  "GPUMine": false,
-  "CPUMine": true,
-  "EtherWallet": "",
-  "DeviceId": "519a2a15-afad-4c1a-94a3-71660c83504b",
+  "LocalVersion": "loadedFromLocalVersionURI",
+  "LogVolatility": 3,
   "DeviceName": "LG Smart Fridge",
+  "DeviceId": "519a2a15-afad-4c1a-94a3-71660c83504b",
   "InitialStartup": false,
-  "FirstRunAfterUpdate": false,
-  "LogVolatility": 3
+  "FirstRunAfterUpdate": false
 }

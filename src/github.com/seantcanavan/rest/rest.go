@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"github.com/facebookgo/freeport"
 	"github.com/gorilla/mux"
 	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/reporter"
 	"github.com/seantcanavan/utils"
 )
 
@@ -27,6 +29,8 @@ const RECIPIENT_EMAIL = "emailaddress"
 // The key to the query parameter for the address where the remote file that is required can be obtained from
 const REMOTE_ADDRESS = "remoteupdateurl"
 
+const PORT_EMAIL_SUBJECT = "REST Service Successfully Started"
+
 // RestHandler contains all the functionality to interact with this remote
 // machine via REST calls. All calls right now require a timestamp that is
 // required to be within an acceptable delta to the running machine's timestamp.
@@ -34,15 +38,17 @@ const REMOTE_ADDRESS = "remoteupdateurl"
 // Eventually encryption will be added to authenticate the remote user to
 // prevent remote code execution.
 type RestHandler struct {
-	router *mux.Router
-	logger *logger.SeanLogger
+	router   *mux.Router
+	logger   *logger.Logger
+	reporter *reporter.Reporter
 }
 
 // NewRestHandler will return a new RestHandler struct with all of the REST
 // endpoints configured. It will also startup the REST server.
-func NewRestHandler(seanLogger *logger.SeanLogger) *RestHandler {
+func NewRestHandler(inputReporter *reporter.Reporter) *RestHandler {
 	rh := RestHandler{}
-	rh.logger = seanLogger
+	// rh.logger = seanLogger
+	rh.reporter = inputReporter
 	rh.router = mux.NewRouter()
 	rh.router.HandleFunc("/execute/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.ExecuteHandler)
 	rh.router.HandleFunc("/reboot/{"+TIMESTAMP+"}/{"+REBOOT_DELAY+"}", rh.RebootHandler)
@@ -56,13 +62,20 @@ func NewRestHandler(seanLogger *logger.SeanLogger) *RestHandler {
 
 // startupRestServer will start up the local REST server where this remote
 // machine will listen for incoming commands on. A free port on this local
-// machine will be automatically detected and used.
+// machine will be automatically detected and used. The randomly chosen
+// available port will be logged locally as well as emailed.
 func (rh *RestHandler) startupRestServer() error {
 	port, err := freeport.Get()
 	if err != nil {
 		return err
 	}
-	http.ListenAndServe(":"+strconv.Itoa(port), rh.router)
+
+	go func() { http.ListenAndServe(":"+strconv.Itoa(port), rh.router) }()
+	rh.logger.LogMessage("REST server successfully started up on port %v", port)
+
+	var contentsBuf bytes.Buffer
+	contentsBuf.WriteString(strconv.Itoa(port))
+	rh.reporter.SendPlainEmail(PORT_EMAIL_SUBJECT, contentsBuf.Bytes())
 	return nil
 }
 
