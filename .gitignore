@@ -28,4 +28,4 @@ _testmain.go
 /bin/
 
 #ignore password files
-src/github.com/seantcanavan/emaillogindetails.txt
+src/github.com/seantcanavan/config/emaillogindetails.txt

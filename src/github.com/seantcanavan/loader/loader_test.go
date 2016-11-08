@@ -9,7 +9,7 @@ import (
 )
 
 func TestProcessMap(t *testing.T) {
-	config.ConfigFromFile(config.LOCAL_EXTERNAL_PATH)
+	config.ConfigFromFile("loader_config.json")
 	loader, err := NewLoader("loader.json")
 	if err != nil {
 		t.Error(err)

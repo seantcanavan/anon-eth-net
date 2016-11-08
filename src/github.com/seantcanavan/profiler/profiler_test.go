@@ -15,7 +15,7 @@ var prof *SysProfiler
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	err := config.ConfigFromFile(config.LOCAL_EXTERNAL_PATH)
+	err := config.ConfigFromFile("profiler_config.json")
 	if err != nil {
 		return
 	}

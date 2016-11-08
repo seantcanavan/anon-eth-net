@@ -1,14 +1,10 @@
-VERSION_FILE="main/version.no"
+VERSION_FILE="updater/version.no"
 BUILD_NUMBER:=$(shell cat ${VERSION_FILE})
 INCREMENT_NUMBER=1
 NEW_BUILD_NUMBER=$(shell echo $$(( $(BUILD_NUMBER) + $(INCREMENT_NUMBER) )) )
 PACKAGES=`go list ./... | grep -v /vendor/`
 
 default: all
-
-all: clean format version-update install;
-
-check: vet test
 
 install:
 	for p in $(PACKAGES); do \
@@ -43,3 +39,11 @@ version-update:
 	@echo "Current build number: $(BUILD_NUMBER)"
 	@echo "New build number: $(NEW_BUILD_NUMBER)"
 	@echo $(NEW_BUILD_NUMBER) > $(VERSION_FILE)
+
+#Aggregate commands
+
+all: clean version-update format vet install test;
+
+prepare-commit: clean version-update format vet install test clean;
+
+test-clean: test clean

@@ -1,4 +1,14 @@
 {
-    "wtf windows 01": "dir",
-    "wtf windows 02": "pwd"
+    "CPU and Disk Utilization": "dir",
+    "Memory Utilization": "dir",
+    "Disk Free Space": "dir",
+    "Process List": "dir",
+    "Uptime": "dir",
+    "Kernel Version": "dir",
+    "Distro Version": "dir",
+    "Routing Table": "dir",
+    "Network Interfaces": "dir",
+    "Occupied Ports": "dir",
+    "Network Usage Stats": "dir",
+    "Active Connections": "dir"
 }

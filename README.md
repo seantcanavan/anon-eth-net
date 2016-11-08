@@ -9,7 +9,7 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 ###Supported platforms wishlist:
 - macOS >= 10.8.X
 - Ubuntu >= 14.04.5  
-
+- Windows >= 7 SP2
 
 ##Mac Setup:
 

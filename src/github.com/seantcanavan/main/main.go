@@ -113,6 +113,7 @@ func main() {
 		}
 	}()
 
+	// kick off the process loader loop that will regularly execute local processes like mining
 	go func() {
 		for 1 == 1 {
 			processes := ldr.StartAsynchronous()

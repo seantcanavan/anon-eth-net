@@ -203,8 +203,6 @@ func (sl *Logger) LogMessage(formatString string, values ...interface{}) {
 
 	fmt.Fprintln(sl.writer, fmt.Sprintf(formatString, values...))
 
-	sl.writer.Flush()
-
 	sl.logMessageCount++
 	sl.logDuration += now - sl.logStamp
 	sl.logStamp = now

@@ -10,7 +10,6 @@ import (
 )
 
 const LOCAL_EXTERNAL_PATH = "../config/config.json"
-const LOCAL_INTERNAL_PATH = "config.json"
 
 var Cfg *Config
 
@@ -64,6 +63,7 @@ func ConfigFromFile(filePath string) error {
 
 	bytes, loadErr := ioutil.ReadFile(filePath)
 	if loadErr != nil {
+		fmt.Println(fmt.Sprintf("Error reading in provided config file from path: %v", filePath))
 		return loadErr
 	}
 
@@ -95,6 +95,7 @@ func ConfigFromFile(filePath string) error {
 // config. This is useful if the program's variables change dynamically because
 // they can be saved permanently to disk for next startup / shutdown / restart.
 func ConfigToFile(filePath string) error {
+
 	bytes, marshalError := json.Marshal(Cfg)
 	if marshalError != nil {
 		return marshalError

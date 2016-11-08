@@ -7,7 +7,7 @@ import (
 )
 
 func TestConfigFromFilePass(t *testing.T) {
-	err := ConfigFromFile(LOCAL_INTERNAL_PATH)
+	err := ConfigFromFile("config.json")
 
 	if err != nil {
 		t.Errorf("generic unmarshal error: %v", err)
@@ -34,12 +34,8 @@ func TestConfigFromFilePass(t *testing.T) {
 		t.Errorf("Cfg.RemoteVersionURI did not unmarshal correctly: %v", Cfg.RemoteVersionURI)
 	}
 
-	if Cfg.LocalVersionURI != "version.no" {
+	if Cfg.LocalVersionURI != "../updater/version.no" {
 		t.Errorf("Cfg.LocalVersionURI did not unmarshal correctly: %v", Cfg.LocalVersionURI)
-	}
-
-	if Cfg.LocalVersion != "loadedFromLocalVersionURI" {
-		t.Errorf("Cfg.LocalVersion did not unmarshal correctly: %v", Cfg.LocalVersion)
 	}
 
 	if Cfg.LogVolatility != 3 {
