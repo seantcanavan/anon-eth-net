@@ -1,6 +1,6 @@
 ## Anonymous Ethereum Network (anon-eth-net)
 
-Totally anonymous botnet client with an emphasis on individual zombie control, resiliency of the host machine, and ease of remote code execution. Zombies mine ethereum in their free time for fun. Zombies check in at pre-specified intervals to report on their CPU, memory, disk, and network utilization.
+Totally anonymous botnet client with an emphasis on individual zombie control, resiliency of the host machine, and ease of remote code execution. Zombies mine ethereum in their free time for fun and check in at pre-specified intervals to report on their CPU, memory, disk, and network utilization. Can be combined with go-dos-yourself to enable remote network performence testing, fuzzing, spoofing, and attacking. Use responsibly.
 
 ###Currently supported platforms:
 - macOS El Capitan 10.11.6
@@ -11,7 +11,7 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 - Ubuntu >= 14.04.5  
 
 
-###Mac Setup:
+##Mac Setup:
 
 ####Required Packages:
 1. TBA
@@ -24,7 +24,7 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 3. TBA
 
 
-###Linux Setup:
+##Linux Setup:
 
 ####Required Packages:
 1. TBA
@@ -37,7 +37,7 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 3. TBA
 
 
-###Windows Setup:
+##Windows Setup:
 
 
 ####Required Packages:
