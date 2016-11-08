@@ -1,30 +1,52 @@
-# anon-eth-net
-Totally anonymous botnet client with an emphasis on individual zombie control, resiliency of the host machine, and ease of remote code execution. Zombies mine ethereum in their free time for fun.
+## Anonymous Ethereum Network (anon-eth-net)
 
-Mac Setup:
-	Required Packages:
-	*
-	*
-	*
+Totally anonymous botnet client with an emphasis on individual zombie control, resiliency of the host machine, and ease of remote code execution. Zombies mine ethereum in their free time for fun. Zombies check in at pre-specified intervals to report on their CPU, memory, disk, and network utilization.
 
-	* Update your sudoers file with the following:
-	<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/sbin/lsof
+###Currently supported platforms:
+- macOS El Capitan 10.11.6
+- Ubuntu 16.04.1
 
-Linux Setup:
-	Required Packages:
-	*
-	*
-	*
+###Supported platforms wishlist:
+- macOS >= 10.8.X
+- Ubuntu >= 14.04.5  
 
 
-	* Update your sudoers file with the following:
-	<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/bin/netstat
+###Mac Setup:
 
-Windows Setup:
-	Required Packages:
-	*
-	*
-	*
+####Required Packages:
+1. TBA
+2. TBA
+3. TBA
 
-	
-	* gl hf
+####Required Setup:
+1. Update your sudoers file with the following: <your-user-name-here> ALL=(ALL) NOPASSWD:/usr/sbin/lsof
+2. TBA
+3. TBA
+
+
+###Linux Setup:
+
+####Required Packages:
+1. TBA
+2. TBA
+3. TBA
+
+####Required Setup:
+1. Update your sudoers file with the following: <your-user-name-here> ALL=(ALL) NOPASSWD:/usr/bin/netstat
+2. TBA
+3. TBA
+
+
+###Windows Setup:
+
+
+####Required Packages:
+1. TBA
+2. TBA
+3. TBA
+
+####Required Setup:
+1. gl hf
+
+
+
