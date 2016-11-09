@@ -15,25 +15,25 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 ##Mac Setup:
 
 ####Required Packages:
-1. Git: brew install git
-2. Go: brew install go
+1. Git: `brew install git`
+2. Go: `brew install go`
 3. TBA
 
 ####Required Setup:
-1. Use 'git clone' to download the repository.
+1. Use `git clone` to download the repository.
 2. Go is already automatically configured on your local macOS path if installed via the brew package manager.
-3. Setup GOBIN and GOPATH system variables for your macOS user. Point to the root of the anon-eth-net clone directory. For GOBIN use the same value as GOPATH but add /bin to the end. GOPATH should be something like /Users/<username>/clone_root_dir/anon-eth-net. You can automatically set the GOPATH variable in your .bash_profile file on each terminal load / system startup:
-  1. nano ~/.bash_profile
+3. Setup GOBIN and GOPATH system variables for your macOS user. Point to the root of the anon-eth-net clone directory. For GOBIN use the same value as GOPATH but add /bin to the end. GOPATH should be something like `/Users/<username>/clone_root_dir/anon-eth-net`. You can automatically set the GOPATH variable in your .bash_profile file on each terminal load / system startup:
+  1. `nano ~/.bash_profile`
   2. Scroll to the bottom and paste the following WITHOUT quotes. You may wrap the folder argument after the equal sign in quotes if you have spaces in your folder names (shame on you).
-  3. export GOPATH=/Users/<username>/<clone_root_dir>/anon-eth-net
-  4. export GOBIN=/Users/<username>/<clone_root_dir>/anon-eth-net/bin
+  3. `export GOPATH=/Users/<username>/<clone_root_dir>/anon-eth-net`
+  4. `export GOBIN=/Users/<username>/<clone_root_dir>/anon-eth-net/bin`
   5. I use a folder called 'workspace' as a former Eclipse user so my paths looks like this:
-  6. export GOPATH=/Users/seantcanavan/workspace/anon-eth-net
-  7. export GOBIN=/Users/seantcanavan/workspace/anon-eth-net/bin
+  6. `export GOPATH=/Users/seantcanavan/workspace/anon-eth-net`
+  7. `export GOBIN=/Users/seantcanavan/workspace/anon-eth-net/bin`
 4. Update your sudoers file with the following: 
-  1. sudo visudo
-  2. <your-user-name-here> ALL=(ALL) NOPASSWD:/usr/sbin/lsof
-  3. Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/user/sbin/lsof
+  1. `sudo visudo`
+  2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/sbin/lsof`
+  3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/user/sbin/lsof`
 5. TBA
 6. TBA
 
@@ -41,25 +41,25 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 ##Linux Setup:
 
 ####Required Packages:
-1. Git: sudo apt-get install git
-2. Go: sudo apt-get install golang-go
+1. Git: `sudo apt-get install git`
+2. Go: `sudo apt-get install golang-go`
 3. TBA - probably glide for better package management
 
 ####Required Setup:
-1. Use 'git clone' to download the repository.
+1. Use `git clone` to download the repository.
 2. Go is already automatically configured in your local Ubuntu path if installed via the synaptic package manager.
-3. Setup GOBIN and GOPATH system variables for your Ubuntu user. Point to the root of the anon-eth-net clone directory. For GOBIN use the same value as GOPATH but add /bin to the end. GOPATH should be something like /home/<username>/clone_root_dir/anon-eth-net. You can automatically set the GOPATH variable in your .bashrc file on each terminal load / system startup:
-  1. nano ~/.bashrc
+3. Setup GOBIN and GOPATH system variables for your Ubuntu user. Point to the root of the anon-eth-net clone directory. For GOBIN use the same value as GOPATH but add /bin to the end. GOPATH should be something like `/home/<username>/clone_root_dir/anon-eth-net`. You can automatically set the GOPATH variable in your .bashrc file on each terminal load / system startup:
+  1. `nano ~/.bashrc`
   2. Scroll to the bottom and paste the following WITHOUT quotes. You may wrap the folder argument after the equal sign in quotes if you have spaces in your folder names (shame on you).
-  3. export GOPATH=/home/<username>/<clone_root_dir>/anon-eth-net
-  4. export GOBIN=/home/<username>/<clone_root_dir>/anon-eth-net/bin
+  3. `export GOPATH=/home/<username>/<clone_root_dir>/anon-eth-net`
+  4. `export GOBIN=/home/<username>/<clone_root_dir>/anon-eth-net/bin`
   5. I use a folder called 'workspace' as a former Eclipse user so my paths looks like this:
-  6. export GOPATH=/home/seantcanavan/workspace/anon-eth-net
-  7. export GOBIN=/home/seantcanavan/workspace/anon-eth-net/bin 
+  6. `export GOPATH=/home/seantcanavan/workspace/anon-eth-net`
+  7. `export GOBIN=/home/seantcanavan/workspace/anon-eth-net/bin` 
 4. Update your sudoers file with the following: 
-  1. sudo visudo
-  2. <your-user-name-here> ALL=(ALL) NOPASSWD:/usr/bin/netstat
-  3. Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/usr/bin/netstat
+  1. `sudo visudo`
+  2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/bin/netstat`
+  3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/usr/bin/netstat`
 5. TBA
 6. TBA
 
