@@ -2,6 +2,7 @@ package loader
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os/exec"
 	"strings"
@@ -137,13 +138,16 @@ func (l *Loader) StartSynchronous() []LoaderProcess {
 		lgr.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
+			fmt.Println(fmt.Sprintf("LoaderProcess exited with error status: %+v", currentProcess))
 			lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
 			currentProcess.Lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
 		} else {
+			fmt.Println(fmt.Sprintf("LoaderProcess exited successfully: %+v", currentProcess))
 			lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
 			currentProcess.Lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
 		}
 
+		fmt.Println(fmt.Sprintf("Command output:\n%v", string(output)))
 		lgr.LogMessage("Command output:\n%v", string(output))
 		currentProcess.Lgr.LogMessage("Command output: %v", string(output))
 	}

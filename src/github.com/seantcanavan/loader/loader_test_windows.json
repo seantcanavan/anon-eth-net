@@ -1,0 +1,5 @@
+{
+	"windows dir example": "cmd /C dir",
+	"windows cd example": "cmd /C cd ..",
+	"windows pwd example": "cmd /C pwd"
+}
