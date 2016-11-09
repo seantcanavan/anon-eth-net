@@ -34,8 +34,9 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
   1. `sudo visudo`
   2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/sbin/lsof`
   3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/user/sbin/lsof`
-5. TBA
-6. TBA
+5. Create `emaillogindetails.txt` inside `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/config/`.
+6. Add your gmail address to line 1 and gmail password to line 2 of `emaillogindetails.txt`. Make sure that insecure app access is also enabled for the gmail account.
+7. TBA
 
 
 ##Linux Setup:
@@ -60,9 +61,9 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
   1. `sudo visudo`
   2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/bin/netstat`
   3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/usr/bin/netstat`
-5. TBA
-6. TBA
-
+5. Create `emaillogindetails.txt` inside `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/config/`.
+6. Add your gmail address to line 1 and gmail password to line 2 of `emaillogindetails.txt`. Make sure that insecure app access is also enabled for the gmail account.
+7. TBA
 
 ##Windows Setup:
 
@@ -73,8 +74,10 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 3. TBA - probably glide for better package management
 
 ####Required Setup:
-1. Use 'git clone' to download the repository.
+1. Use `git clone` to download the repository.
 2. Configure your local system to make sure that the Go installation path is on the system path.
-3. Setup GOBIN and GOPATH system variables for your windows users. Point to the root of the anon-eth-net clone directory. For GOBIN use the same value as GOPATH but add \bin to the end. GOPATH should be something like C:\users\<username>\clone_root_dir\anon-eth-net.
-4. Create 'emaillogindetails.txt' inside anon-eth-net\src\github.com\seantcanavan\config\emaillogindetails.txt.
-5. Add your gmail address to line 1 and gmail password to line 2 of emaillogindetails.txt. Make sure that insecure app access is also enabled for the gmail account.
+3. Setup GOBIN and GOPATH system variables for your windows users. Point to the root of the anon-eth-net clone directory. For GOBIN use the same value as GOPATH but add \bin to the end. GOPATH should be something like `C:\users\<username>\clone_root_dir\anon-eth-net`.
+4. Create `emaillogindetails.txt` inside `<clone_root_dir>\anon-eth-net\src\github.com\seantcanavan\config\`.
+5. Add your gmail address to line 1 and gmail password to line 2 of `emaillogindetails.txt`. Make sure that insecure app access is also enabled for the gmail account.
+6. TBA
+7. TBA
