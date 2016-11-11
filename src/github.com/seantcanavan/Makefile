@@ -6,16 +6,6 @@ PACKAGES=`go list ./... | grep -v /vendor/`
 
 default: all
 
-install:
-	for p in $(PACKAGES); do \
-		go install ../../$$p; \
-	done
-
-format:
-	for p in $(PACKAGES); do \
-		gofmt -w ../../$$p; \
-	done
-
 clean:
 	for p in $(PACKAGES); do \
 		go clean ../../$$p; \
@@ -24,6 +14,16 @@ clean:
 	find . -name "*.log" -type f -delete
 	find . -name "*.rep" -type f -delete
 	find . -name "*.tar" -type f -delete
+
+format:
+	for p in $(PACKAGES); do \
+		gofmt -w ../../$$p; \
+	done
+
+install:
+	for p in $(PACKAGES); do \
+		go install ../../$$p; \
+	done
 
 test:
 	for p in $(PACKAGES); do \
