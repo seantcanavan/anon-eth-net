@@ -9,26 +9,29 @@ import (
 	"github.com/seantcanavan/config"
 )
 
+var Rpr *Reporter
+
 type Reporter struct {
-	GmailAddress  string
-	GmailPassword string
-	DeviceName    string
-	DeviceId      string
+	gmailAddress  string
+	gmailPassword string
+	deviceName    string
+	deviceId      string
 	emailServer   string
 	emailPort     string
 	emailAuth     smtp.Auth
 }
 
-func NewReporter() *Reporter {
+func NewReporter() error {
 	r := Reporter{}
-	r.GmailAddress = config.Cfg.CheckInGmailAddress
-	r.GmailPassword = config.Cfg.CheckInGmailPassword
-	r.DeviceName = config.Cfg.DeviceName
-	r.DeviceId = config.Cfg.DeviceId
+	r.gmailAddress = config.Cfg.CheckInGmailAddress
+	r.gmailPassword = config.Cfg.CheckInGmailPassword
+	r.deviceName = config.Cfg.DeviceName
+	r.deviceId = config.Cfg.DeviceId
 	r.emailServer = "smtp.gmail.com"
 	r.emailPort = "587"
-	r.emailAuth = smtp.PlainAuth("", r.GmailAddress, r.GmailPassword, r.emailServer)
-	return &r
+	r.emailAuth = smtp.PlainAuth("", r.gmailAddress, r.gmailPassword, r.emailServer)
+	Rpr = &r
+	return nil
 }
 
 // SendPlainEmail will send the content of the byte array as the body of an
@@ -45,10 +48,9 @@ func (r *Reporter) SendPlainEmail(subject string, contents []byte) error {
 // devices to the same address. The sender and receiver are defined by
 // NewReporter() which in turn can be defined via config.json file.
 func (r *Reporter) SendAttachment(subject string, contents []byte, attachmentPtr *os.File) error {
-
 	jwEmail := &email.Email{
-		To:      []string{r.GmailAddress},
-		From:    r.GmailAddress,
+		To:      []string{r.gmailAddress},
+		From:    r.gmailAddress,
 		Subject: r.generateSubject(subject),
 		Text:    contents,
 	}
@@ -64,10 +66,9 @@ func (r *Reporter) SendAttachment(subject string, contents []byte, attachmentPtr
 // subject for easier sorting / searching through the list of emails to help
 // keep track of emails by device.
 func (r *Reporter) generateSubject(subject string) string {
-
 	var subjectBuffer bytes.Buffer
 	subjectBuffer.WriteString("[")
-	subjectBuffer.WriteString(r.DeviceId)
+	subjectBuffer.WriteString(r.deviceId)
 	subjectBuffer.WriteString("] ")
 	subjectBuffer.WriteString(subject)
 	return subjectBuffer.String()

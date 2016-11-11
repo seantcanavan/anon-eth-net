@@ -2,7 +2,7 @@ package loader
 
 import (
 	"encoding/json"
-	"fmt"
+	// "fmt"
 	"io/ioutil"
 	"os/exec"
 	"strings"
@@ -110,11 +110,11 @@ func getProcessesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
 // eventually in the future it will hopefully figure out a meaningful way of
 // logging the output of each individual process...
 func (l *Loader) StartAsynchronous() []LoaderProcess {
-	for _, currentProcess := range l.processes {
-		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
-		lgr.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
-		localProcess := currentProcess
-		go func() {
+	for index := range l.processes {
+		go func(currentProcess *LoaderProcess) {
+			cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
+			lgr.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
+			localProcess := currentProcess
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				lgr.LogMessage("LoaderProcess exited with error status: %+v\n %v", localProcess, err.Error())
@@ -123,7 +123,7 @@ func (l *Loader) StartAsynchronous() []LoaderProcess {
 				localProcess.Lgr.LogMessage(string(output))
 			}
 			time.Sleep(time.Second * TIME_BETWEEN_SUCCESSIVE_ITERATIONS)
-		}()
+		}(&l.processes[index]) // passing the current process using index
 	}
 	return l.processes
 }
@@ -138,16 +138,16 @@ func (l *Loader) StartSynchronous() []LoaderProcess {
 		lgr.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			fmt.Println(fmt.Sprintf("LoaderProcess exited with error status: %+v", currentProcess))
+			// fmt.Println(fmt.Sprintf("LoaderProcess exited with error status: %+v", currentProcess))
 			lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
 			currentProcess.Lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
 		} else {
-			fmt.Println(fmt.Sprintf("LoaderProcess exited successfully: %+v", currentProcess))
+			// fmt.Println(fmt.Sprintf("LoaderProcess exited successfully: %+v", currentProcess))
 			lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
 			currentProcess.Lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
 		}
 
-		fmt.Println(fmt.Sprintf("Command output:\n%v", string(output)))
+		// fmt.Println(fmt.Sprintf("Command output:\n%v", string(output)))
 		lgr.LogMessage("Command output:\n%v", string(output))
 		currentProcess.Lgr.LogMessage("Command output: %v", string(output))
 	}

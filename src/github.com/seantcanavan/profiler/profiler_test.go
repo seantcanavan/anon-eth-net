@@ -10,9 +10,6 @@ import (
 	"github.com/seantcanavan/reporter"
 )
 
-var repr *reporter.Reporter
-var prof *SysProfiler
-
 func TestMain(m *testing.M) {
 	flag.Parse()
 	err := config.ConfigFromFile("profiler_config.json")
@@ -20,14 +17,12 @@ func TestMain(m *testing.M) {
 		return
 	}
 
-	repr = reporter.NewReporter()
-	prof = NewSysProfiler(repr)
-
+	reporter.NewReporter()
 	os.Exit(m.Run())
 }
 
 func TestSendFileArchiveAsAttachment(t *testing.T) {
-	filePtr, err := prof.SendArchiveProfileAsAttachment()
+	filePtr, err := SendArchiveProfileAsAttachment()
 	if err != nil {
 		t.Error(err)
 	}

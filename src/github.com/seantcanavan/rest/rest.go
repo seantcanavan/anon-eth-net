@@ -29,6 +29,7 @@ const RECIPIENT_EMAIL = "emailaddress"
 // The key to the query parameter for the address where the remote file that is required can be obtained from
 const REMOTE_ADDRESS = "remoteupdateurl"
 
+// The subject of the email to send out after a successfuly REST port has been negotiated
 const PORT_EMAIL_SUBJECT = "REST Service Successfully Started"
 
 // RestHandler contains all the functionality to interact with this remote
@@ -40,15 +41,15 @@ const PORT_EMAIL_SUBJECT = "REST Service Successfully Started"
 type RestHandler struct {
 	router   *mux.Router
 	logger   *logger.Logger
-	reporter *reporter.Reporter
 }
 
 // NewRestHandler will return a new RestHandler struct with all of the REST
 // endpoints configured. It will also startup the REST server.
-func NewRestHandler(inputReporter *reporter.Reporter) *RestHandler {
+func NewRestHandler() *RestHandler {
+	// generate a reporter to use
+
 	rh := RestHandler{}
 	// rh.logger = seanLogger
-	rh.reporter = inputReporter
 	rh.router = mux.NewRouter()
 	rh.router.HandleFunc("/execute/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.ExecuteHandler)
 	rh.router.HandleFunc("/reboot/{"+TIMESTAMP+"}/{"+REBOOT_DELAY+"}", rh.RebootHandler)
@@ -70,12 +71,12 @@ func (rh *RestHandler) startupRestServer() error {
 		return err
 	}
 
-	go func() { http.ListenAndServe(":"+strconv.Itoa(port), rh.router) }()
+	go http.ListenAndServe(":"+strconv.Itoa(port), rh.router)
 	rh.logger.LogMessage("REST server successfully started up on port %v", port)
 
 	var contentsBuf bytes.Buffer
 	contentsBuf.WriteString(strconv.Itoa(port))
-	rh.reporter.SendPlainEmail(PORT_EMAIL_SUBJECT, contentsBuf.Bytes())
+	reporter.Rpr.SendPlainEmail(PORT_EMAIL_SUBJECT, contentsBuf.Bytes())
 	return nil
 }
 
@@ -278,7 +279,7 @@ func (rh *RestHandler) verifyQueryParams(parameters ...string) error {
 	for _, value := range parameters {
 		if value == "" {
 			rh.logger.LogMessage(fmt.Sprintf("verifyQueryParams failed with: %v", value))
-			return errors.New(fmt.Sprintf("verifyQueryParams did not pass verification. val: %v", value))
+			return errors.New(fmt.Sprintf("verifyQueryParams failed with: %v", value))
 		}
 	}
 	return nil

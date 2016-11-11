@@ -35,7 +35,6 @@ func FullDateStringSafe() string {
 // be safe for a file. The given fileBaseName will be used to append to the
 // beginning of the file name to give some control over the file name.
 func TimeStampFileName(fileBaseName string, fileExtension string) string {
-
 	dts := FullDateStringSafe()
 
 	var nameBuffer bytes.Buffer
@@ -50,7 +49,6 @@ func TimeStampFileName(fileBaseName string, fileExtension string) string {
 // ReadLines reads in a file by path and returns a slice of strings
 // credit to: https://stackoverflow.com/a/18479916/584947
 func ReadLines(path string) ([]string, error) {
-
 	file, err := os.Open(path)
 
 	if err != nil {
@@ -71,7 +69,6 @@ func ReadLines(path string) ([]string, error) {
 // DirectoryList returns a list of entries in the given directory. It filters
 // optionally for the given filter.
 func DirectoryList(directoryName string, filter string) []string {
-
 	fileList := []string{}
 	_ = filepath.Walk(directoryName, func(path string, f os.FileInfo, err error) error {
 		if filter != "" {

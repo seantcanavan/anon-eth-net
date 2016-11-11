@@ -3,7 +3,7 @@
   "CheckInFrequencySeconds": 3600,
   "UpdateFrequencySeconds": 3600,
   "RemoteUpdateURI": "https://github.com/seantcanavan/anon-eth-net.git",
-  "RemoteVersionURI": "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/main/version.no",
+  "RemoteVersionURI": "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/updater/version.no",
   "LocalVersionURI": "../updater/version.no",
   "LogVolatility": 3,
   "DeviceName": "LG Smart Fridge",

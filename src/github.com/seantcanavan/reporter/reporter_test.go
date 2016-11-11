@@ -18,7 +18,10 @@ func TestMain(m *testing.M) {
 		return
 	}
 
-	repr = NewReporter()
+	err = NewReporter()
+	if err != nil {
+		return
+	}
 	os.Exit(m.Run())
 }
 

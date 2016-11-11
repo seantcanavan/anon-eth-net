@@ -21,22 +21,12 @@ const PROFILE_EMAIL_SUBJECT = "System Profile"
 const SYS_PROFILE_FILE_NAME = "profile_file"
 const SYS_PROFILE_ARCHIVE_NAME = "profile_archive"
 
-type SysProfiler struct {
-	repr *reporter.Reporter
-}
-
-func NewSysProfiler(repr *reporter.Reporter) *SysProfiler {
-	SysProfiler := SysProfiler{}
-	SysProfiler.repr = repr
-	return &SysProfiler
-}
-
 // ProfileAsArchive will generate an individual file for each
 // system resources and then compress them all together. Returns a pointer to
 // the compressed file containing all of the profile pieces inside of it.
 // Automatically deletes the individual files after they've been compressed to
 // clean up disk space.
-func (sp *SysProfiler) ProfileAsArchive() (*os.File, error) {
+func ProfileAsArchive() (*os.File, error) {
 
 	var profileLoader *loader.Loader
 
@@ -115,12 +105,12 @@ func (sp *SysProfiler) ProfileAsArchive() (*os.File, error) {
 // resulting pieces into a single archive for compressing and convenience
 // purposes. The original pieces will be automatically cleaned up the archive
 // is generated.
-func (sp *SysProfiler) SendArchiveProfileAsAttachment() (*os.File, error) {
-	filePtr, err := sp.ProfileAsArchive()
+func SendArchiveProfileAsAttachment() (*os.File, error) {
+	filePtr, err := ProfileAsArchive()
 	if err != nil {
 		return nil, err
 	}
-	return filePtr, sp.repr.SendAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
+	return filePtr, reporter.Rpr.SendAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
 }
 
 func beautifyTitle(title string) []byte {

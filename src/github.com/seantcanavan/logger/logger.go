@@ -13,6 +13,8 @@ import (
 	"github.com/seantcanavan/utils"
 )
 
+const LOG_EXTENSION = ".log"
+
 // Logger allows for aggressive log management in scenarios where disk space
 // might be limited. You can limit based on log message count or duration and
 // also prune log files when too many are saved on disk. I don't like the
@@ -37,8 +39,6 @@ type Logger struct {
 	log                *os.File      // The file that we're logging to
 	writer             *bufio.Writer // our writer we use to log to the current log file
 }
-
-const LOG_EXTENSION = ".log"
 
 func FromVolatilityValue(logBaseName string) (*Logger, error) {
 	volatility := config.Cfg.LogVolatility
