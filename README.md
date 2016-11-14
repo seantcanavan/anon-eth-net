@@ -7,9 +7,9 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 - Ubuntu 16.04.1
 - Windows 10 (work in progress)
 
-###Supported platforms wishlist:
+###Supported platforms wish list:
 - macOS >= 10.8.X
-- Ubuntu >= 14.04.5  
+- Ubuntu >= 14.04.5
 - Windows >= 7 SP2
 
 ##Mac Setup:
@@ -30,7 +30,7 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
   5. I use a folder called 'workspace' as a former Eclipse user so my paths looks like this:
   6. `export GOPATH=/Users/seantcanavan/workspace/anon-eth-net`
   7. `export GOBIN=/Users/seantcanavan/workspace/anon-eth-net/bin`
-4. Update your sudoers file with the following: 
+4. Update your sudoers file with the following:
   1. `sudo visudo`
   2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/sbin/lsof`
   3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/user/sbin/lsof`
@@ -56,8 +56,8 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
   4. `export GOBIN=/home/<username>/<clone_root_dir>/anon-eth-net/bin`
   5. I use a folder called 'workspace' as a former Eclipse user so my paths looks like this:
   6. `export GOPATH=/home/seantcanavan/workspace/anon-eth-net`
-  7. `export GOBIN=/home/seantcanavan/workspace/anon-eth-net/bin` 
-4. Update your sudoers file with the following: 
+  7. `export GOBIN=/home/seantcanavan/workspace/anon-eth-net/bin`
+4. Update your sudoers file with the following:
   1. `sudo visudo`
   2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/bin/netstat`
   3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/usr/bin/netstat`
