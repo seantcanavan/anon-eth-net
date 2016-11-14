@@ -40,11 +40,11 @@ func TestConfigFromFilePass(t *testing.T) {
 		t.Errorf("Cfg.RemoteUpdateURI did not unmarshal correctly: %v", Cfg.RemoteUpdateURI)
 	}
 
-	if Cfg.RemoteVersionURI != "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/updater/version.no" {
+	if Cfg.RemoteVersionURI != "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/assets/version.no" {
 		t.Errorf("Cfg.RemoteVersionURI did not unmarshal correctly: %v", Cfg.RemoteVersionURI)
 	}
 
-	if Cfg.LocalVersionURI != "../updater/version.no" {
+	if Cfg.LocalVersionURI != "../assets/version.no" {
 		t.Errorf("Cfg.LocalVersionURI did not unmarshal correctly: %v", Cfg.LocalVersionURI)
 	}
 

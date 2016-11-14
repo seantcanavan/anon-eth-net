@@ -6,7 +6,7 @@
     "Uptime": "uptime",
     "Kernel Version": "uname -r",
     "Distro Version": "system_profiler SPSoftwareDataType",
-    "Routing Table": "netstat -r",
+    "Routing Table": "netstat -nr",
     "Network Interfaces": "netstat -i",
     "Occupied Ports": "sudo lsof -i -n -P",
     "Network Usage Stats": "netstat -s",

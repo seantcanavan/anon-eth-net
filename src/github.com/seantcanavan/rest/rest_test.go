@@ -1,12 +1,14 @@
 package rest
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
-	// "time"
+	"time"
 
 	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/utils"
@@ -28,7 +30,8 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestSimpleRestBringupPass(t *testing.T) {
+func TestSimpleRestBringUpPass(t *testing.T) {
+	now := time.Now().Unix()
 	fmt.Println(config.Cfg.LogVolatility)
 	restHandler, restErr := NewRestHandler()
 	if restErr != nil {
@@ -36,7 +39,19 @@ func TestSimpleRestBringupPass(t *testing.T) {
 	}
 
 	port := restHandler.Port
-	response, err := http.Get("http://localhost:" + strconv.Itoa(port) + "/checkin/")
+
+	var addressBuf bytes.Buffer
+
+	addressBuf.WriteString("http://localhost:")
+	addressBuf.WriteString(strconv.Itoa(port))
+	addressBuf.WriteString("/checkin/")
+	addressBuf.WriteString(strconv.FormatInt(now, 10))
+	addressBuf.WriteString("/")
+	addressBuf.WriteString(strings.Split(config.Cfg.CheckInGmailAddress, "@")[0])
+
+	fmt.Println(fmt.Sprintf("TestSimpleRestBringUpPass: %v", addressBuf.String()))
+
+	response, err := http.Get(addressBuf.String())
 	if err != nil {
 		t.Error(err)
 	}

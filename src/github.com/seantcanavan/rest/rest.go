@@ -1,20 +1,21 @@
 package rest
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/facebookgo/freeport"
 	"github.com/gorilla/mux"
 	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/profiler"
 	"github.com/seantcanavan/reporter"
-	"github.com/seantcanavan/utils"
 )
 
-// The acceptable amount of time between the incoming timestamp and the local timestamp
-const TIMESTAMP_DELTA = 5000
+// The acceptable amount of time between the incoming timestamp and the local timestamp in seconds
+const TIMESTAMP_DELTA_SECONDS = 10
 
 // The key to the query parameter for the incoming timestamp value
 const TIMESTAMP = "timestamp"
@@ -23,7 +24,7 @@ const TIMESTAMP = "timestamp"
 const REBOOT_DELAY = "delay"
 
 // The key to the query parameter for the remote log email address recipient value
-const RECIPIENT_EMAIL = "emailaddress"
+const RECIPIENT_GMAIL = "emailaddress"
 
 // The key to the query parameter for the address where the remote file that is required can be obtained from
 const REMOTE_ADDRESS = "remoteupdateurl"
@@ -56,15 +57,29 @@ func NewRestHandler() (*RestHandler, error) {
 
 	rh.lgr = lgr
 	rh.rtr = mux.NewRouter()
-	rh.rtr.HandleFunc("/execute/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.ExecuteHandler)
-	rh.rtr.HandleFunc("/reboot/{"+TIMESTAMP+"}/{"+REBOOT_DELAY+"}", rh.RebootHandler)
-	rh.rtr.HandleFunc("/sendlogs/{"+TIMESTAMP+"}/{"+RECIPIENT_EMAIL+"}", rh.LogHandler)
-	rh.rtr.HandleFunc("/forceupdate/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.UpdateHandler)
-	rh.rtr.HandleFunc("/updateconfig/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.ConfigHandler)
-	rh.rtr.HandleFunc("checkin/{"+TIMESTAMP+"}/{"+RECIPIENT_EMAIL+"}", rh.CheckinHandler)
+	rh.rtr.HandleFunc(buildRestPath("execute", TIMESTAMP, REMOTE_ADDRESS), rh.ExecuteHandler)
+	rh.rtr.HandleFunc(buildRestPath("reboot", TIMESTAMP, REBOOT_DELAY), rh.RebootHandler)
+	rh.rtr.HandleFunc(buildRestPath("sendlogs", TIMESTAMP, RECIPIENT_GMAIL), rh.LogHandler)
+	rh.rtr.HandleFunc(buildRestPath("forceupdate", TIMESTAMP, REMOTE_ADDRESS), rh.UpdateHandler)
+	rh.rtr.HandleFunc(buildRestPath("updateconfig", TIMESTAMP, REMOTE_ADDRESS), rh.ConfigHandler)
+	rh.rtr.HandleFunc(buildRestPath("checkin", TIMESTAMP, RECIPIENT_GMAIL), rh.CheckinHandler)
 
 	rh.startupRestServer()
 	return &rh, nil
+}
+
+func buildRestPath(root string, arguments ...string) string {
+	var routeBuf bytes.Buffer
+	routeBuf.WriteString("/")
+	routeBuf.WriteString(root)
+
+	for _, arg := range arguments {
+		routeBuf.WriteString("/")
+		routeBuf.WriteString("{")
+		routeBuf.WriteString(arg)
+		routeBuf.WriteString("}")
+	}
+	return routeBuf.String()
 }
 
 // startupRestServer will start up the local REST server where this remote
@@ -94,13 +109,14 @@ func (rh *RestHandler) CheckinHandler(writer http.ResponseWriter, request *http.
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
-	recipientEmail := queryParams[RECIPIENT_EMAIL]
+	recipientEmail := queryParams[RECIPIENT_GMAIL]
 
 	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
 		if err = rh.verifyQueryParams(recipientEmail); err == nil {
 			switch request.Method {
 			case "GET":
 				// process GET request - send back a checkin status to the given email address
+				profiler.SendArchiveProfileAsAttachment()
 				writer.WriteHeader(http.StatusOK)
 			default:
 				writer.WriteHeader(http.StatusMethodNotAllowed)
@@ -176,7 +192,7 @@ func (rh *RestHandler) LogHandler(writer http.ResponseWriter, request *http.Requ
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
-	recipientEmail := queryParams[RECIPIENT_EMAIL]
+	recipientEmail := queryParams[RECIPIENT_GMAIL]
 
 	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
 		if err = rh.verifyQueryParams(recipientEmail); err == nil {
@@ -260,17 +276,43 @@ func (rh *RestHandler) ConfigHandler(writer http.ResponseWriter, request *http.R
 	return
 }
 
+// TimeDiffSeconds returns the difference between the input time and the current
+// time in seconds. Returns error if the input time stamp cannot be correctly
+// converted to a time instance.
+func (rh *RestHandler) TimeDiffSeconds(unixTimeStamp string) (*UnixTimeDiff, error) {
+	unixDiff := UnixTimeDiff{}
+	otherTime, err := strconv.ParseInt(unixTimeStamp, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	unixDiff.then = otherTime
+	unixDiff.now = time.Now().Unix()
+	unixDiff.diff = unixDiff.now - unixDiff.then
+	unixDiff.rawdiff = unixDiff.diff
+
+	if unixDiff.diff < 0 {
+		unixDiff.future = true
+		unixDiff.diff = unixDiff.diff * -1
+	}
+
+	return &unixDiff, nil
+}
+
 // verifyTimeStamp will verify the incoming timestamp from the remote machine is
 // within an acceptable delta of the current time. Requires tight
 // synchronization of both the local time on the local box and the remote time
 // on the remote box.
 func (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
-	rh.lgr.LogMessage(fmt.Sprintf("verifyTimeStamp called with remoteTimeStamp: %v", remoteTimeStamp))
-	//verify the timestamp here
-	localTimeStamp := utils.FullDateString()
-	// rh.lgr.LogMessage("verifyTimeStamp failed. localTimeStamp: %v. remoteTimeStamp: %v", localTimeStamp, remoteTimeStamp)
-	// return errors.New("timestamp verification failed. check local and remote lock sync settings.")
-	rh.lgr.LogMessage(fmt.Sprintf("verifyTimeStamp succeeded with localTimeStamp: %v", localTimeStamp))
+	rh.lgr.LogMessage("verifyTimeStamp called with remoteTimeStamp: %v", remoteTimeStamp)
+
+	// get the difference between then and now in seconds from unix time stamps
+	diff, diffErr := rh.TimeDiffSeconds(remoteTimeStamp)
+	if diffErr != nil || diff.diff >= TIMESTAMP_DELTA_SECONDS {
+		return fmt.Errorf("verifyTimeStamp failed with diff: %v", diff.pprint())
+	}
+
+	rh.lgr.LogMessage("verifyTimeStamp succeeded with diff: %v", diff.pprint())
 	return nil
 }
 
@@ -282,9 +324,29 @@ func (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
 func (rh *RestHandler) verifyQueryParams(parameters ...string) error {
 	for _, value := range parameters {
 		if value == "" {
-			rh.lgr.LogMessage(fmt.Sprintf("verifyQueryParams failed with: %v", value))
-			return errors.New(fmt.Sprintf("verifyQueryParams failed with: %v", value))
+			rh.lgr.LogMessage("verifyQueryParams failed with: %v", value)
+			return fmt.Errorf("verifyQueryParams failed with: %v", value)
 		}
 	}
 	return nil
+}
+
+type UnixTimeDiff struct {
+	now     int64
+	then    int64
+	diff    int64
+	rawdiff int64
+	future  bool
+}
+
+func (utd UnixTimeDiff) pprint() string {
+	var prettyBuf bytes.Buffer
+
+	prettyBuf.WriteString("UnixTimeDiff:\n")
+	prettyBuf.WriteString(fmt.Sprintf("now: %d", utd.now))
+	prettyBuf.WriteString(fmt.Sprintf("then: %d", utd.then))
+	prettyBuf.WriteString(fmt.Sprintf("diff: %d", utd.diff))
+	prettyBuf.WriteString(fmt.Sprintf("rawdiff: %d", utd.rawdiff))
+	prettyBuf.WriteString(fmt.Sprintf("future: %t", utd.future))
+	return prettyBuf.String()
 }
