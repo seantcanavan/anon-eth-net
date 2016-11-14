@@ -199,9 +199,13 @@ func (sl *Logger) initLogger(logBaseName string) error {
 // log cleanup will occur.
 func (sl *Logger) LogMessage(formatString string, values ...interface{}) {
 
+	// what time is it right now?
 	now := uint64(time.Now().Unix())
 
+	// write the logging message to the current log file
 	fmt.Fprintln(sl.writer, fmt.Sprintf(formatString, values...))
+	// write the logging message to std.out for local watchers
+	fmt.Println(fmt.Sprintf(formatString, values...))
 
 	sl.logMessageCount++
 	sl.logDuration += now - sl.logStamp

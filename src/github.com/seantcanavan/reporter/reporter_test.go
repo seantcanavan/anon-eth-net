@@ -2,31 +2,36 @@ package reporter
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/seantcanavan/config"
+	"github.com/seantcanavan/utils"
 )
 
-var repr *Reporter
-
 func TestMain(m *testing.M) {
+
 	flag.Parse()
-	err := config.ConfigFromFile(config.LOCAL_EXTERNAL_PATH)
-	if err != nil {
+
+	assetPath, assetErr := utils.AssetPath("config.json")
+	if assetErr != nil {
+		fmt.Println(assetErr)
 		return
 	}
 
-	err = NewReporter()
+	err := config.FromFile(assetPath)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
+
 	os.Exit(m.Run())
 }
 
 func TestSimpleEmail(t *testing.T) {
-	err := repr.SendPlainEmail("TestSimpleEmail", []byte("TestSimpleEmail"))
+	err := SendPlainEmail("TestSimpleEmail", []byte("TestSimpleEmail"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -42,7 +47,7 @@ func TestEmailAttachment(t *testing.T) {
 		t.Error(openErr)
 	}
 
-	err := repr.SendAttachment("TestEmailAttachment", []byte("TestEmailAttachment"), filePtr)
+	err := SendAttachment("TestEmailAttachment", []byte("TestEmailAttachment"), filePtr)
 	if err != nil {
 		t.Error(err)
 	}

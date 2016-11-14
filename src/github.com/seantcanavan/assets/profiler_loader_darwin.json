@@ -1,6 +1,6 @@
 {
     "CPU and Disk Utilization": "iostat 1 10",
-    "Memory Utilization": "top -l 1 -s 0 | grep PhysMem",
+    "Memory Utilization": "top -l 1 -s 0",
     "Disk Free Space": "df -h",
     "Process List": "ps -Al",
     "Uptime": "uptime",
@@ -8,7 +8,7 @@
     "Distro Version": "system_profiler SPSoftwareDataType",
     "Routing Table": "netstat -r",
     "Network Interfaces": "netstat -i",
-    "Occupied Ports": "sudo lsof -i -n -P | grep TCP",
+    "Occupied Ports": "sudo lsof -i -n -P",
     "Network Usage Stats": "netstat -s",
     "Active Connections": "netstat -va"
 }

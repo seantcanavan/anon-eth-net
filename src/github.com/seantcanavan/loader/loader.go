@@ -48,7 +48,7 @@ func NewLoader(processesPath string) (*Loader, error) {
 
 	l := Loader{}
 	var loadedProcesses []LoaderProcess
-	loadedProcesses, loadErr := getProcessesFromJSONFile(processesPath)
+	loadedProcesses, loadErr := processesFromJSONFile(processesPath)
 
 	if loadErr != nil {
 		return nil, loadErr
@@ -64,7 +64,7 @@ func NewLoader(processesPath string) (*Loader, error) {
 // LoaderProcess struct for each individual command to execute will be returned.
 // Each individual LoaderProcess struct and associated process will be monitored
 // and AEN will do its best to keep it running at all times.
-func getProcessesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
+func processesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
 
 	rawJSONMap := make(map[string]*json.RawMessage)
 	var processList []LoaderProcess

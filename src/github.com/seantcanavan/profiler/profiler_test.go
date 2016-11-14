@@ -7,17 +7,23 @@ import (
 	"testing"
 
 	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/reporter"
+	"github.com/seantcanavan/utils"
 )
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	err := config.ConfigFromFile("profiler_config.json")
+
+	assetPath, assetErr := utils.AssetPath("config.json")
+	if assetErr != nil {
+		fmt.Println(assetErr)
+		return
+	}
+
+	err := config.FromFile(assetPath)
 	if err != nil {
 		return
 	}
 
-	reporter.NewReporter()
 	os.Exit(m.Run())
 }
 

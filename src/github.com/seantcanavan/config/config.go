@@ -9,8 +9,6 @@ import (
 	"github.com/seantcanavan/utils"
 )
 
-const LOCAL_EXTERNAL_PATH = "../config/config.json"
-
 var Cfg *Config
 
 type Config struct {
@@ -59,7 +57,7 @@ func ConfigJSONParametersExplained() string {
 // code. A sample config file is provided, config.json, which tells you all of
 // the possible fields to include as well as hopefully enough of a clue as to
 // what their use is.
-func ConfigFromFile(filePath string) error {
+func FromFile(filePath string) error {
 
 	bytes, loadErr := ioutil.ReadFile(filePath)
 	if loadErr != nil {
@@ -75,7 +73,12 @@ func ConfigFromFile(filePath string) error {
 		return jsonErr
 	}
 
-	fileLines, emailErr := utils.ReadLines(newConfig.CheckInGmailCredentialsFile)
+	configAssetPath, assetErr := utils.AssetPath(newConfig.CheckInGmailCredentialsFile)
+	if assetErr != nil {
+		return assetErr
+	}
+
+	fileLines, emailErr := utils.ReadLines(configAssetPath)
 	if emailErr != nil {
 		fmt.Println(fmt.Sprintf("Email credentials file issue: %v", emailErr))
 		return emailErr
@@ -94,7 +97,7 @@ func ConfigFromFile(filePath string) error {
 // ConfigToFile will overwrite the local config file with the given instance of
 // config. This is useful if the program's variables change dynamically because
 // they can be saved permanently to disk for next startup / shutdown / restart.
-func ConfigToFile(filePath string) error {
+func ToFile(filePath string) error {
 
 	bytes, marshalError := json.Marshal(Cfg)
 	if marshalError != nil {

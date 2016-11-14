@@ -7,13 +7,23 @@ import (
 )
 
 func TestConfigFromFilePass(t *testing.T) {
-	err := ConfigFromFile("config.json")
-
-	if err != nil {
-		t.Errorf("generic unmarshal error: %v", err)
+	assetPath, assetErr := utils.AssetPath("config.json")
+	if assetErr != nil {
+		t.Error(assetErr)
 	}
 
-	fileLines, fileErr := utils.ReadLines(Cfg.CheckInGmailCredentialsFile)
+	err := FromFile(assetPath)
+
+	if err != nil {
+		t.Errorf("error loading config from file: %v", err)
+	}
+
+	gmailAsset, gmailAssetErr := utils.AssetPath(Cfg.CheckInGmailCredentialsFile)
+	if gmailAssetErr != nil {
+		t.Error(gmailAssetErr)
+	}
+
+	fileLines, fileErr := utils.ReadLines(gmailAsset)
 	if fileErr != nil {
 		t.Errorf("issue reading in email credentials file")
 	}

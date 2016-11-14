@@ -10,8 +10,13 @@ import (
 func TestLogger(t *testing.T) {
 
 	logBaseName := "logger_package"
-	sampleLogFileName := "logger_test_sample.txt"
-	testFileLines, err := utils.ReadLines(sampleLogFileName)
+
+	logNameAsset, assetErr := utils.AssetPath("logger_test_sample.txt")
+	if assetErr != nil {
+		t.Error(assetErr)
+	}
+
+	testFileLines, err := utils.ReadLines(logNameAsset)
 
 	if err != nil {
 		t.Error(err)

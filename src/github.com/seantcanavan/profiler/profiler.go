@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"runtime"
+	// "runtime"
 
 	"github.com/seantcanavan/loader"
 	"github.com/seantcanavan/reporter"
@@ -37,17 +37,12 @@ func ProfileAsArchive() (*os.File, error) {
 		return nil, err
 	}
 
-	switch runtime.GOOS {
-	case "windows":
-		profileLoader, err = loader.NewLoader("profiler_loader_windows.json")
-	case "darwin":
-		profileLoader, err = loader.NewLoader("profiler_loader_darwin.json")
-	case "linux":
-		profileLoader, err = loader.NewLoader("profiler_loader_linux.json")
-	default:
-		return nil, fmt.Errorf("Could not create profile for unsupported operating system: %v", runtime.GOOS)
+	loaderAssetPath, assetErr := utils.SysAssetPath("profiler_loader.json")
+	if assetErr != nil {
+		return nil, assetErr
 	}
 
+	profileLoader, err = loader.NewLoader(loaderAssetPath)
 	if err != nil {
 		return nil, fmt.Errorf("Loader returned error while trying to generate Profile: %v", err)
 	}
@@ -110,7 +105,7 @@ func SendArchiveProfileAsAttachment() (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	return filePtr, reporter.Rpr.SendAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
+	return filePtr, reporter.SendAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
 }
 
 func beautifyTitle(title string) []byte {

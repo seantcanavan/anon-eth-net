@@ -10,6 +10,7 @@ import (
 	"github.com/seantcanavan/loader"
 	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/updater"
+	"github.com/seantcanavan/utils"
 )
 
 // SeanLogger for the main package and any errors it encounters while executing
@@ -33,16 +34,19 @@ func main() {
 
 	// load the main config file from JSON which we'll use throughout execution.
 	// we're exiting under an error condition since it's so early in execution.
-	if _, err := os.Stat(os.Args[1]); err == nil {
-		if configError := config.ConfigFromFile(config.LOCAL_EXTERNAL_PATH); configError != nil {
-			fmt.Println(fmt.Sprintf("Could not successfully load config from file: %v", os.Args[1]))
-			os.Exit(1)
-		}
-	} else {
-		fmt.Println(fmt.Sprintf("Config file you passed in could not be found: %v", os.Args[1]))
+	assetPath, assetErr := utils.AssetPath("config.json")
+	if assetErr != nil {
+		fmt.Println(fmt.Sprintf("Could not successfully locate config asset: %v", assetPath))
+		fmt.Println(fmt.Sprintf("Could not successfully locate config asset from argument: %v", os.Args[1]))
 		os.Exit(1)
 	}
 
+	configErr := config.FromFile(assetPath)
+	if configErr != nil {
+		fmt.Println(fmt.Sprintf("Could not successfully load config from: %v", assetPath))
+		fmt.Println(fmt.Sprintf("Could not successfully load config from argument: %v", os.Args[1]))
+		os.Exit(1)
+	}
 	// generate a SeanLogger instance with the predefined volatility value and
 	// name it after the main_package to differentiate it from other packages
 	mainLogger, loggerError := logger.FromVolatilityValue("main_package")
@@ -146,7 +150,12 @@ func initialStartup() error {
 	// more stuff later!
 
 	// push the UUID back to the file for next time
-	return config.ConfigToFile(config.LOCAL_EXTERNAL_PATH)
+	assetPath, assetErr := utils.AssetPath("config.json")
+	if assetErr != nil {
+		return assetErr
+	}
+
+	return config.ToFile(assetPath)
 }
 
 // firstRunAfterUpdate will be executed only when this program is running for
@@ -155,5 +164,9 @@ func initialStartup() error {
 // working order.
 func firstRunAfterUpdate() error {
 	config.Cfg.FirstRunAfterUpdate = false
-	return config.ConfigToFile(config.LOCAL_EXTERNAL_PATH)
+	assetPath, assetErr := utils.AssetPath("config.json")
+	if assetErr != nil {
+		return assetErr
+	}
+	return config.ToFile(assetPath)
 }

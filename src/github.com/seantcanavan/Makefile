@@ -1,4 +1,4 @@
-VERSION_FILE="updater/version.no"
+VERSION_FILE="assets/version.no"
 BUILD_NUMBER:=$(shell cat ${VERSION_FILE})
 INCREMENT_NUMBER=1
 NEW_BUILD_NUMBER=$(shell echo $$(( $(BUILD_NUMBER) + $(INCREMENT_NUMBER) )) )

@@ -6,10 +6,67 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// the root asset directory where all the external files used are stored
+const ASSET_ROOT_DIR = "../assets/"
+
+// GetAssetPath will return the relative path to the file represented by
+// assetName otherwise it will return an error if the file doesn't exist.
+func AssetPath(assetName string) (string, error) {
+
+	relativePath := ASSET_ROOT_DIR + assetName
+
+	if _, err := os.Stat(relativePath); os.IsNotExist(err) {
+		return "", err
+	}
+
+	return relativePath, nil
+}
+
+// GetSysAssetPath will return the relative path to the file represented by
+// assetName but also add in the GOOS after the filename and before the
+// extension. This allows loading system-specific files with one command instead
+// of a complicated switch statement every time.
+func SysAssetPath(assetName string) (string, error) {
+
+	var relativeName bytes.Buffer
+	var extIndex int
+
+	fileExt := filepath.Ext(assetName)
+
+	if fileExt != "" {
+		// if there is an extension, insert right before it
+		extIndex = strings.Index(assetName, fileExt)
+	} else {
+		// if there is no extension, insert at the end of the name
+		extIndex = len(assetName)
+	}
+
+	relativeName.WriteString(ASSET_ROOT_DIR)
+	relativeName.WriteString(assetName[0:extIndex])
+
+	switch runtime.GOOS {
+	case "windows", "darwin", "linux":
+		relativeName.WriteString("_")
+		relativeName.WriteString(runtime.GOOS)
+	default:
+		return "", fmt.Errorf("Invalid GOOS for asset string: %v", runtime.GOOS)
+	}
+
+	relativeName.WriteString(assetName[extIndex:])
+	path := relativeName.String()
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return "", fmt.Errorf("Relative file does not exist: %v", path)
+	}
+
+	return relativeName.String(), nil
+}
 
 // FullDateString will return the current time formatted as a string.
 func FullDateString() string {

@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
@@ -39,26 +38,33 @@ const PORT_EMAIL_SUBJECT = "REST Service Successfully Started"
 // Eventually encryption will be added to authenticate the remote user to
 // prevent remote code execution.
 type RestHandler struct {
-	router   *mux.Router
-	logger   *logger.Logger
+	rtr  *mux.Router
+	lgr  *logger.Logger
+	Port int
 }
 
 // NewRestHandler will return a new RestHandler struct with all of the REST
 // endpoints configured. It will also startup the REST server.
-func NewRestHandler() *RestHandler {
-	// generate a reporter to use
+func NewRestHandler() (*RestHandler, error) {
 
 	rh := RestHandler{}
-	// rh.logger = seanLogger
-	rh.router = mux.NewRouter()
-	rh.router.HandleFunc("/execute/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.ExecuteHandler)
-	rh.router.HandleFunc("/reboot/{"+TIMESTAMP+"}/{"+REBOOT_DELAY+"}", rh.RebootHandler)
-	rh.router.HandleFunc("/sendlogs/{"+TIMESTAMP+"}/{"+RECIPIENT_EMAIL+"}", rh.LogHandler)
-	rh.router.HandleFunc("/forceupdate/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.UpdateHandler)
-	rh.router.HandleFunc("/updateconfig/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.ConfigHandler)
-	rh.router.HandleFunc("checkin/{"+TIMESTAMP+"}/{"+RECIPIENT_EMAIL+"}", rh.CheckinHandler)
-	go rh.startupRestServer()
-	return &rh
+
+	lgr, lgrErr := logger.FromVolatilityValue("rest_package")
+	if lgrErr != nil {
+		return nil, lgrErr
+	}
+
+	rh.lgr = lgr
+	rh.rtr = mux.NewRouter()
+	rh.rtr.HandleFunc("/execute/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.ExecuteHandler)
+	rh.rtr.HandleFunc("/reboot/{"+TIMESTAMP+"}/{"+REBOOT_DELAY+"}", rh.RebootHandler)
+	rh.rtr.HandleFunc("/sendlogs/{"+TIMESTAMP+"}/{"+RECIPIENT_EMAIL+"}", rh.LogHandler)
+	rh.rtr.HandleFunc("/forceupdate/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.UpdateHandler)
+	rh.rtr.HandleFunc("/updateconfig/{"+TIMESTAMP+"}/{"+REMOTE_ADDRESS+"}", rh.ConfigHandler)
+	rh.rtr.HandleFunc("checkin/{"+TIMESTAMP+"}/{"+RECIPIENT_EMAIL+"}", rh.CheckinHandler)
+
+	rh.startupRestServer()
+	return &rh, nil
 }
 
 // startupRestServer will start up the local REST server where this remote
@@ -71,12 +77,10 @@ func (rh *RestHandler) startupRestServer() error {
 		return err
 	}
 
-	go http.ListenAndServe(":"+strconv.Itoa(port), rh.router)
-	rh.logger.LogMessage("REST server successfully started up on port %v", port)
-
-	var contentsBuf bytes.Buffer
-	contentsBuf.WriteString(strconv.Itoa(port))
-	reporter.Rpr.SendPlainEmail(PORT_EMAIL_SUBJECT, contentsBuf.Bytes())
+	rh.Port = port
+	go http.ListenAndServe(":"+strconv.Itoa(port), rh.rtr)
+	rh.lgr.LogMessage("REST server successfully started up on port %v", port)
+	reporter.SendPlainEmail(PORT_EMAIL_SUBJECT, []byte(strconv.Itoa(port)))
 	return nil
 }
 
@@ -85,8 +89,8 @@ func (rh *RestHandler) startupRestServer() error {
 // like the machine to perform a check-in. A check-in will send all pertinent data
 // regarding the current operating status of this remote machine.
 func (rh *RestHandler) CheckinHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.logger.LogMessage("CheckinHandler started")
-	defer rh.logger.LogMessage("CheckinHandler finished")
+	rh.lgr.LogMessage("CheckinHandler started")
+	defer rh.lgr.LogMessage("CheckinHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -116,8 +120,8 @@ func (rh *RestHandler) CheckinHandler(writer http.ResponseWriter, request *http.
 // Python files. Should we do a JSON config instead to allow call command,
 // parameters, and a location to the file to download all cleanly in one?
 func (rh *RestHandler) ExecuteHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.logger.LogMessage("ExecuteHandler started")
-	defer rh.logger.LogMessage("ExecuteHandler finished")
+	rh.lgr.LogMessage("ExecuteHandler started")
+	defer rh.lgr.LogMessage("ExecuteHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -143,8 +147,8 @@ func (rh *RestHandler) ExecuteHandler(writer http.ResponseWriter, request *http.
 
 // RebootHandler will handle receiving and verifying reboot commands via REST.
 func (rh *RestHandler) RebootHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.logger.LogMessage("RebootHandler started")
-	defer rh.logger.LogMessage("RebootHandler finished")
+	rh.lgr.LogMessage("RebootHandler started")
+	defer rh.lgr.LogMessage("RebootHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -167,8 +171,8 @@ func (rh *RestHandler) RebootHandler(writer http.ResponseWriter, request *http.R
 // LogHandler will handle receiving and verifying log retrival commands? via
 // REST.
 func (rh *RestHandler) LogHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.logger.LogMessage("LogHandler started")
-	defer rh.logger.LogMessage("LogHandler finished")
+	rh.lgr.LogMessage("LogHandler started")
+	defer rh.lgr.LogMessage("LogHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -196,8 +200,8 @@ func (rh *RestHandler) LogHandler(writer http.ResponseWriter, request *http.Requ
 // Update commands will allow the remote user to force a local update given a
 // specific remote URL - should probably be git for now.
 func (rh *RestHandler) UpdateHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.logger.LogMessage("UpdateHandler started")
-	defer rh.logger.LogMessage("UpdateHandler finished")
+	rh.lgr.LogMessage("UpdateHandler started")
+	defer rh.lgr.LogMessage("UpdateHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -228,8 +232,8 @@ func (rh *RestHandler) UpdateHandler(writer http.ResponseWriter, request *http.R
 // Config commands will allow the remote user to set or get the local config
 // file that anon-eth-net uses when started up.
 func (rh *RestHandler) ConfigHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.logger.LogMessage("ConfigHandler started")
-	defer rh.logger.LogMessage("ConfigHandler finished")
+	rh.lgr.LogMessage("ConfigHandler started")
+	defer rh.lgr.LogMessage("ConfigHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -261,12 +265,12 @@ func (rh *RestHandler) ConfigHandler(writer http.ResponseWriter, request *http.R
 // synchronization of both the local time on the local box and the remote time
 // on the remote box.
 func (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
-	rh.logger.LogMessage(fmt.Sprintf("verifyTimeStamp called with remoteTimeStamp: %v", remoteTimeStamp))
+	rh.lgr.LogMessage(fmt.Sprintf("verifyTimeStamp called with remoteTimeStamp: %v", remoteTimeStamp))
 	//verify the timestamp here
 	localTimeStamp := utils.FullDateString()
-	// rh.logger.LogMessage("verifyTimeStamp failed. localTimeStamp: %v. remoteTimeStamp: %v", localTimeStamp, remoteTimeStamp)
+	// rh.lgr.LogMessage("verifyTimeStamp failed. localTimeStamp: %v. remoteTimeStamp: %v", localTimeStamp, remoteTimeStamp)
 	// return errors.New("timestamp verification failed. check local and remote lock sync settings.")
-	rh.logger.LogMessage(fmt.Sprintf("verifyTimeStamp succeeded with localTimeStamp: %v", localTimeStamp))
+	rh.lgr.LogMessage(fmt.Sprintf("verifyTimeStamp succeeded with localTimeStamp: %v", localTimeStamp))
 	return nil
 }
 
@@ -278,7 +282,7 @@ func (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
 func (rh *RestHandler) verifyQueryParams(parameters ...string) error {
 	for _, value := range parameters {
 		if value == "" {
-			rh.logger.LogMessage(fmt.Sprintf("verifyQueryParams failed with: %v", value))
+			rh.lgr.LogMessage(fmt.Sprintf("verifyQueryParams failed with: %v", value))
 			return errors.New(fmt.Sprintf("verifyQueryParams failed with: %v", value))
 		}
 	}
