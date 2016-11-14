@@ -1,6 +1,6 @@
 ## Anonymous Ethereum Network (anon-eth-net)
 
-Totally anonymous botnet client with an emphasis on individual zombie control, resiliency of the host machine, and ease of remote code execution. Zombies mine ethereum in their free time for fun and check in at pre-specified intervals to report on their CPU, memory, disk, and network utilization. Can be combined with go-dos-yourself to enable remote network performence testing, fuzzing, spoofing, and attacking. Use responsibly.
+Totally anonymous botnet client with an emphasis on individual zombie control, resiliency of the host machine, and ease of remote code execution. Zombies mine ethereum in their free time for fun and check in at pre-specified intervals to report on their CPU, memory, disk, and network utilization. Can be combined with go-dos-yourself to enable remote network performance testing, fuzzing, spoofing, and attacking. Use responsibly.
 
 ###Currently supported platforms:
 - macOS El Capitan 10.11.6
@@ -34,7 +34,7 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
   1. `sudo visudo`
   2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/sbin/lsof`
   3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/user/sbin/lsof`
-5. Create `emaillogindetails.txt` inside `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/config/`.
+5. Create `emaillogindetails.txt` inside `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/assets/`.
 6. Add your gmail address to line 1 and gmail password to line 2 of `emaillogindetails.txt`. Make sure that insecure app access is also enabled for the gmail account.
 7. TBA
 
@@ -61,7 +61,7 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
   1. `sudo visudo`
   2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/bin/netstat`
   3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/usr/bin/netstat`
-5. Create `emaillogindetails.txt` inside `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/config/`.
+5. Create `emaillogindetails.txt` inside `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/assets/`.
 6. Add your gmail address to line 1 and gmail password to line 2 of `emaillogindetails.txt`. Make sure that insecure app access is also enabled for the gmail account.
 7. TBA
 
@@ -77,7 +77,7 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 1. Use `git clone` to download the repository.
 2. Configure your local system to make sure that the Go installation path is on the system path.
 3. Setup GOBIN and GOPATH system variables for your windows users. Point to the root of the anon-eth-net clone directory. For GOBIN use the same value as GOPATH but add \bin to the end. GOPATH should be something like `C:\users\<username>\clone_root_dir\anon-eth-net`.
-4. Create `emaillogindetails.txt` inside `<clone_root_dir>\anon-eth-net\src\github.com\seantcanavan\config\`.
+4. Create `emaillogindetails.txt` inside `<clone_root_dir>\anon-eth-net\src\github.com\seantcanavan\assets\`.
 5. Add your gmail address to line 1 and gmail password to line 2 of `emaillogindetails.txt`. Make sure that insecure app access is also enabled for the gmail account.
 6. TBA
 7. TBA
