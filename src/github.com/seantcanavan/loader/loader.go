@@ -28,8 +28,8 @@ type LoaderProcess struct {
 	Name      string
 	Command   string
 	Arguments []string
-	Start	  int64
-	End    	  int64
+	Start     int64
+	End       int64
 	Lgr       *logger.Logger
 }
 

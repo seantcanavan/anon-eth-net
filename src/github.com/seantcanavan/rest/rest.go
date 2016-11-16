@@ -117,6 +117,7 @@ func (rh *RestHandler) checkinHandler(writer http.ResponseWriter, request *http.
 			switch request.Method {
 			case "GET":
 				// process GET request - send back a checkin status to the given email address
+				// TODO: utilize the email address from the URL query and send to the profiler
 				profiler.SendArchiveProfileAsAttachment()
 				writer.WriteHeader(http.StatusOK)
 			default:
@@ -149,6 +150,9 @@ func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.
 			switch request.Method {
 			case "POST":
 				// process POST request - download the remote file and execute it
+				// download the body and save it as a JSON configuration file
+				// instantiate a new instance of loader and point it to the JSON configuration
+				// go!
 				writer.WriteHeader(http.StatusOK)
 			default:
 				writer.WriteHeader(http.StatusMethodNotAllowed)
@@ -169,11 +173,14 @@ func (rh *RestHandler) rebootHandler(writer http.ResponseWriter, request *http.R
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
-	// rebootDelay := queryParams[REBOOT_DELAY]
+	rebootDelay := queryParams[REBOOT_DELAY]
 
 	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
 		switch request.Method {
 		case "POST":
+			intDelay, _ := strconv.Atoi(rebootDelay)
+			time.Sleep(time.Duration(intDelay) * time.Second)
+			// start a new loader, call utils.SysAssetPath("loader_reboot.json")
 			// process POST request - reboot the machine after X seconds
 			writer.WriteHeader(http.StatusOK)
 		default:
@@ -185,7 +192,7 @@ func (rh *RestHandler) rebootHandler(writer http.ResponseWriter, request *http.R
 	return
 }
 
-// logHandler will handle receiving and verifying log retrival commands? via
+// logHandler will handle receiving and verifying log retrieval commands? via
 // REST.
 func (rh *RestHandler) logHandler(writer http.ResponseWriter, request *http.Request) {
 	rh.lgr.LogMessage("logHandler started")
@@ -200,6 +207,9 @@ func (rh *RestHandler) logHandler(writer http.ResponseWriter, request *http.Requ
 			switch request.Method {
 			case "GET":
 				// process GET request - send back the latest logs to the requester
+				// collate all the logs
+				// zip them up
+				// send them via the reporter
 				writer.WriteHeader(http.StatusOK)
 			default:
 				writer.WriteHeader(http.StatusMethodNotAllowed)
@@ -261,9 +271,15 @@ func (rh *RestHandler) configHandler(writer http.ResponseWriter, request *http.R
 			switch request.Method {
 			case "GET":
 				// process GET request - send back the config file
+				// bytes:= ioutil.ReadFile(utils.AssetPath(config.json))
+				// writer.Body.Write(bytes)
 				writer.WriteHeader(http.StatusOK)
 			case "POST":
 				// process POST request - get the given config file
+				// get the asset path
+				// create a new temp file
+				// load a config from that file, test for errors
+				// if no errors, overwrite the existing config
 				writer.WriteHeader(http.StatusOK)
 			default:
 				writer.WriteHeader(http.StatusMethodNotAllowed)

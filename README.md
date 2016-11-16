@@ -34,6 +34,8 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
   1. `sudo visudo`
   2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/sbin/lsof`
   3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/user/sbin/lsof`
+  4. `<your-user-name-here> ALL=(ALL) NOPASSWD:/sbin/shutdown`
+  5. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/sbin/shutdown
 5. Create `emaillogindetails.txt` inside `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/assets/`.
 6. Add your gmail address to line 1 and gmail password to line 2 of `emaillogindetails.txt`. Make sure that insecure app access is also enabled for the gmail account.
 7. TBA
