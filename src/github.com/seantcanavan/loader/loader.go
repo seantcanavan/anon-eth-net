@@ -28,6 +28,8 @@ type LoaderProcess struct {
 	Name      string
 	Command   string
 	Arguments []string
+	Start	  int64
+	End    	  int64
 	Lgr       *logger.Logger
 }
 
@@ -117,18 +119,19 @@ func (l *Loader) StartAsynchronous() []LoaderProcess {
 	for index := range l.processes {
 		go func(currentProcess *LoaderProcess) {
 			defer waitGroup.Done()
-			defer lgr.LogMessage("Removing one process from the Asynchronous WaitGroup")
+			defer lgr.LogMessage("Removing %v process from the Asynchronous WaitGroup. Execution took %d", currentProcess.Name, currentProcess.End-currentProcess.Start)
 			cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
 			lgr.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
 			localProcess := currentProcess
+			currentProcess.Start = time.Now().Unix()
 			output, err := cmd.CombinedOutput()
+			currentProcess.End = time.Now().Unix()
 			if err != nil {
 				lgr.LogMessage("LoaderProcess exited with error status: %+v\n %v", localProcess, err.Error())
 			} else {
 				lgr.LogMessage("LoaderProcess exited successfully: %+v", localProcess)
 				localProcess.Lgr.LogMessage(string(output))
 			}
-			time.Sleep(time.Second * TIME_BETWEEN_SUCCESSIVE_ITERATIONS)
 		}(&l.processes[index]) // passing the current process using index
 	}
 	waitGroup.Wait()
@@ -143,7 +146,9 @@ func (l *Loader) StartSynchronous() []LoaderProcess {
 	for _, currentProcess := range l.processes {
 		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
 		lgr.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
+		currentProcess.Start = time.Now().Unix()
 		output, err := cmd.CombinedOutput()
+		currentProcess.End = time.Now().Unix()
 		if err != nil {
 			lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
 			currentProcess.Lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
