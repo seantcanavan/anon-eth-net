@@ -44,7 +44,7 @@ func TestConfigFromFilePass(t *testing.T) {
 		t.Errorf("Cfg.RemoteVersionURI did not unmarshal correctly: %v", Cfg.RemoteVersionURI)
 	}
 
-	if Cfg.LocalVersionURI != "../assets/version.no" {
+	if Cfg.LocalVersionURI != "version.no" {
 		t.Errorf("Cfg.LocalVersionURI did not unmarshal correctly: %v", Cfg.LocalVersionURI)
 	}
 

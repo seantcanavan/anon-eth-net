@@ -9,6 +9,7 @@ import (
 
 	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/utils"
 )
 
 type Updater struct {
@@ -32,7 +33,13 @@ func NewUpdater() (*Updater, error) {
 func (udr *Updater) Run() error {
 	udr.lgr.LogMessage("waiting for updates. sleeping %v seconds", config.Cfg.CheckInFrequencySeconds)
 	time.Sleep(config.Cfg.CheckInFrequencySeconds * time.Second)
-	local, localError := udr.localVersion(config.Cfg.LocalVersionURI)
+
+	localAsset, localErr := utils.AssetPath(config.Cfg.LocalVersionURI)
+	if localErr != nil {
+		return localErr
+	}
+
+	local, localError := udr.localVersion(localAsset)
 	remote, remoteError := udr.remoteVersion(config.Cfg.RemoteVersionURI)
 
 	if localError != nil {

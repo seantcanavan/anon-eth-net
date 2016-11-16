@@ -27,7 +27,7 @@ install:
 
 test:
 	for p in $(PACKAGES); do \
-		go test ../../$$p; \
+		go test -v ../../$$p; \
 	done
 
 vet:

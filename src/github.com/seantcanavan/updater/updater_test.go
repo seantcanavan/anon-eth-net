@@ -34,7 +34,12 @@ func TestVersionCompare(t *testing.T) {
 		t.Error(udrError)
 	}
 
-	localVersion, localError := udr.localVersion(config.Cfg.LocalVersionURI)
+	localAsset, assetErr := utils.AssetPath(config.Cfg.LocalVersionURI)
+	if assetErr != nil {
+		t.Error(assetErr)
+	}
+
+	localVersion, localError := udr.localVersion(localAsset)
 	remoteVersion, remoteError := udr.remoteVersion(config.Cfg.RemoteVersionURI)
 
 	if localError != nil {
