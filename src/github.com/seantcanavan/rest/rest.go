@@ -15,7 +15,8 @@ import (
 )
 
 // The acceptable amount of time between the incoming timestamp and the local timestamp in seconds
-const TIMESTAMP_DELTA_SECONDS = 10
+// Microsoft recommends a maximum of 5 minutes:https://technet.microsoft.com/en-us/library/jj852172(v=ws.11).aspx
+const TIMESTAMP_DELTA_SECONDS = 300
 
 // The key to the query parameter for the incoming timestamp value
 const TIMESTAMP = "timestamp"
