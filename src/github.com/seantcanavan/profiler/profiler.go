@@ -47,7 +47,7 @@ func ProfileAsArchive() (*os.File, error) {
 		return nil, fmt.Errorf("Loader returned error while trying to generate Profile: %v", err)
 	}
 
-	profilerProcesses := profileLoader.StartSynchronous()
+	profilerProcesses := profileLoader.StartAsynchronous()
 
 	gzipWriter := gzip.NewWriter(tarBall)
 	tarWriter := tar.NewWriter(gzipWriter)

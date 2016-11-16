@@ -1,8 +1,6 @@
 package loader
 
 import (
-	// "fmt"
-	// "runtime"
 	"testing"
 
 	"github.com/seantcanavan/config"
@@ -32,5 +30,5 @@ func TestProcessMap(t *testing.T) {
 		t.Error(loaderErr)
 	}
 
-	loader.StartSynchronous()
+	loader.StartAsynchronous()
 }

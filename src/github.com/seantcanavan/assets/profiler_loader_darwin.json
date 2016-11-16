@@ -1,5 +1,5 @@
 {
-    "CPU and Disk Utilization": "iostat 1 10",
+    "CPU and Disk Utilization": "iostat 1 20",
     "Memory Utilization": "top -l 1 -s 0",
     "Disk Free Space": "df -h",
     "Process List": "ps -Al",

@@ -57,12 +57,12 @@ func NewRestHandler() (*RestHandler, error) {
 
 	rh.lgr = lgr
 	rh.rtr = mux.NewRouter()
-	rh.rtr.HandleFunc(buildRestPath("execute", TIMESTAMP, REMOTE_ADDRESS), rh.ExecuteHandler)
-	rh.rtr.HandleFunc(buildRestPath("reboot", TIMESTAMP, REBOOT_DELAY), rh.RebootHandler)
-	rh.rtr.HandleFunc(buildRestPath("sendlogs", TIMESTAMP, RECIPIENT_GMAIL), rh.LogHandler)
-	rh.rtr.HandleFunc(buildRestPath("forceupdate", TIMESTAMP, REMOTE_ADDRESS), rh.UpdateHandler)
-	rh.rtr.HandleFunc(buildRestPath("updateconfig", TIMESTAMP, REMOTE_ADDRESS), rh.ConfigHandler)
-	rh.rtr.HandleFunc(buildRestPath("checkin", TIMESTAMP, RECIPIENT_GMAIL), rh.CheckinHandler)
+	rh.rtr.HandleFunc(buildRestPath("execute", TIMESTAMP, REMOTE_ADDRESS), rh.executeHandler)
+	rh.rtr.HandleFunc(buildRestPath("reboot", TIMESTAMP, REBOOT_DELAY), rh.rebootHandler)
+	rh.rtr.HandleFunc(buildRestPath("sendlogs", TIMESTAMP, RECIPIENT_GMAIL), rh.logHandler)
+	rh.rtr.HandleFunc(buildRestPath("forceupdate", TIMESTAMP, REMOTE_ADDRESS), rh.updateHandler)
+	rh.rtr.HandleFunc(buildRestPath("updateconfig", TIMESTAMP, REMOTE_ADDRESS), rh.configHandler)
+	rh.rtr.HandleFunc(buildRestPath("checkin", TIMESTAMP, RECIPIENT_GMAIL), rh.checkinHandler)
 
 	rh.startupRestServer()
 	return &rh, nil
@@ -99,13 +99,13 @@ func (rh *RestHandler) startupRestServer() error {
 	return nil
 }
 
-// CheckinHandler will handle receiving and verifying check-in commands via REST.
+// checkinHandler will handle receiving and verifying check-in commands via REST.
 // Check-in commands will notify the remote machine that the remote user would
 // like the machine to perform a check-in. A check-in will send all pertinent data
 // regarding the current operating status of this remote machine.
-func (rh *RestHandler) CheckinHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("CheckinHandler started")
-	defer rh.lgr.LogMessage("CheckinHandler finished")
+func (rh *RestHandler) checkinHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.lgr.LogMessage("checkinHandler started")
+	defer rh.lgr.LogMessage("checkinHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -130,14 +130,14 @@ func (rh *RestHandler) CheckinHandler(writer http.ResponseWriter, request *http.
 	return
 }
 
-// ExecuteHandler will handle receiving and verifying execute commands via REST.
+// executeHandler will handle receiving and verifying execute commands via REST.
 // Execute commands will allow the local machine to execute the code contained
 // at the remote location. Currently considering supporting executables and
 // Python files. Should we do a JSON config instead to allow call command,
 // parameters, and a location to the file to download all cleanly in one?
-func (rh *RestHandler) ExecuteHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("ExecuteHandler started")
-	defer rh.lgr.LogMessage("ExecuteHandler finished")
+func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.lgr.LogMessage("executeHandler started")
+	defer rh.lgr.LogMessage("executeHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -161,10 +161,10 @@ func (rh *RestHandler) ExecuteHandler(writer http.ResponseWriter, request *http.
 	return
 }
 
-// RebootHandler will handle receiving and verifying reboot commands via REST.
-func (rh *RestHandler) RebootHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("RebootHandler started")
-	defer rh.lgr.LogMessage("RebootHandler finished")
+// rebootHandler will handle receiving and verifying reboot commands via REST.
+func (rh *RestHandler) rebootHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.lgr.LogMessage("rebootHandler started")
+	defer rh.lgr.LogMessage("rebootHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -184,11 +184,11 @@ func (rh *RestHandler) RebootHandler(writer http.ResponseWriter, request *http.R
 	return
 }
 
-// LogHandler will handle receiving and verifying log retrival commands? via
+// logHandler will handle receiving and verifying log retrival commands? via
 // REST.
-func (rh *RestHandler) LogHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("LogHandler started")
-	defer rh.lgr.LogMessage("LogHandler finished")
+func (rh *RestHandler) logHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.lgr.LogMessage("logHandler started")
+	defer rh.lgr.LogMessage("logHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -212,12 +212,12 @@ func (rh *RestHandler) LogHandler(writer http.ResponseWriter, request *http.Requ
 	return
 }
 
-// UpdateHandler will handle receiving and verifying update commands via REST.
+// updateHandler will handle receiving and verifying update commands via REST.
 // Update commands will allow the remote user to force a local update given a
 // specific remote URL - should probably be git for now.
-func (rh *RestHandler) UpdateHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("UpdateHandler started")
-	defer rh.lgr.LogMessage("UpdateHandler finished")
+func (rh *RestHandler) updateHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.lgr.LogMessage("updateHandler started")
+	defer rh.lgr.LogMessage("updateHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
@@ -244,12 +244,12 @@ func (rh *RestHandler) UpdateHandler(writer http.ResponseWriter, request *http.R
 	return
 }
 
-// ConfigHandler will handle receiving and verifying config commands via REST.
+// configHandler will handle receiving and verifying config commands via REST.
 // Config commands will allow the remote user to set or get the local config
 // file that anon-eth-net uses when started up.
-func (rh *RestHandler) ConfigHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("ConfigHandler started")
-	defer rh.lgr.LogMessage("ConfigHandler finished")
+func (rh *RestHandler) configHandler(writer http.ResponseWriter, request *http.Request) {
+	rh.lgr.LogMessage("configHandler started")
+	defer rh.lgr.LogMessage("configHandler finished")
 
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]

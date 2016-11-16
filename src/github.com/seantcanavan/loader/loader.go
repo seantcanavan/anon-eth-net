@@ -2,10 +2,10 @@ package loader
 
 import (
 	"encoding/json"
-	// "fmt"
 	"io/ioutil"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/seantcanavan/logger"
@@ -110,8 +110,14 @@ func processesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
 // eventually in the future it will hopefully figure out a meaningful way of
 // logging the output of each individual process...
 func (l *Loader) StartAsynchronous() []LoaderProcess {
+	var waitGroup sync.WaitGroup
+	lgr.LogMessage("Adding %d processes to the Asynchronous WaitGroup", len(l.processes))
+	waitGroup.Add(len(l.processes))
+
 	for index := range l.processes {
 		go func(currentProcess *LoaderProcess) {
+			defer waitGroup.Done()
+			defer lgr.LogMessage("Removing one process from the Asynchronous WaitGroup")
 			cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
 			lgr.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
 			localProcess := currentProcess
@@ -125,6 +131,7 @@ func (l *Loader) StartAsynchronous() []LoaderProcess {
 			time.Sleep(time.Second * TIME_BETWEEN_SUCCESSIVE_ITERATIONS)
 		}(&l.processes[index]) // passing the current process using index
 	}
+	waitGroup.Wait()
 	return l.processes
 }
 
@@ -138,16 +145,12 @@ func (l *Loader) StartSynchronous() []LoaderProcess {
 		lgr.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			// fmt.Println(fmt.Sprintf("LoaderProcess exited with error status: %+v", currentProcess))
 			lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
 			currentProcess.Lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
 		} else {
-			// fmt.Println(fmt.Sprintf("LoaderProcess exited successfully: %+v", currentProcess))
 			lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
 			currentProcess.Lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
 		}
-
-		// fmt.Println(fmt.Sprintf("Command output:\n%v", string(output)))
 		lgr.LogMessage("Command output:\n%v", string(output))
 		currentProcess.Lgr.LogMessage("Command output: %v", string(output))
 	}

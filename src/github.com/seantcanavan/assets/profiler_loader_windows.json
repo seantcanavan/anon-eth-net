@@ -1,14 +1,14 @@
 {
-    "CPU and Disk Utilization": "dir",
-    "Memory Utilization": "dir",
-    "Disk Free Space": "dir",
-    "Process List": "dir",
+    "CPU and Disk Utilization": "pwd",
+    "Memory Utilization": "pwd",
+    "Disk Free Space": "cd ..",
+    "Process List": "cd ..",
     "Uptime": "dir",
     "Kernel Version": "dir",
-    "Distro Version": "dir",
-    "Routing Table": "dir",
-    "Network Interfaces": "dir",
-    "Occupied Ports": "dir",
+    "Distro Version": "pwd",
+    "Routing Table": "pwd",
+    "Network Interfaces": "cd ..",
+    "Occupied Ports": "cd ..",
     "Network Usage Stats": "dir",
     "Active Connections": "dir"
 }
