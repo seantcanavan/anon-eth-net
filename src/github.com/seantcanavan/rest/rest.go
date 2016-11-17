@@ -4,14 +4,17 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/facebookgo/freeport"
 	"github.com/gorilla/mux"
+	"github.com/seantcanavan/loader"
 	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/profiler"
 	"github.com/seantcanavan/reporter"
+	"github.com/seantcanavan/utils"
 )
 
 // The acceptable amount of time between the incoming timestamp and the local timestamp in seconds
@@ -30,8 +33,29 @@ const RECIPIENT_GMAIL = "emailaddress"
 // The key to the query parameter for the address where the remote file that is required can be obtained from
 const REMOTE_ADDRESS = "remoteupdateurl"
 
+// The key to the query parameter for the file type to execute for execute handler
+const FILE_TYPE = "filetype"
+
 // The subject of the email to send out after a successfuly REST port has been negotiated
 const PORT_EMAIL_SUBJECT = "REST Service Successfully Started"
+
+// The REST path name which calls the execute handler
+const EXECUTE_REST_PATH = "execute"
+
+// The REST path name which calls the reboot handler
+const REBOOT_REST_PATH = "reboot"
+
+// The REST path name which calls the log handler
+const LOG_REST_PATH = "logs"
+
+// The REST path name which calls the update handler
+const UPDATE_REST_PATH = "update"
+
+// The REST path name which calls the config handler
+const CONFIG_REST_PATH = "config"
+
+// The REST path name which calls the check in handler
+const CHECKIN_REST_PATH = "checkin"
 
 // RestHandler contains all the functionality to interact with this remote
 // machine via REST calls. All calls right now require a timestamp that is
@@ -58,18 +82,18 @@ func NewRestHandler() (*RestHandler, error) {
 
 	rh.lgr = lgr
 	rh.rtr = mux.NewRouter()
-	rh.rtr.HandleFunc(buildRestPath("execute", TIMESTAMP, REMOTE_ADDRESS), rh.executeHandler)
-	rh.rtr.HandleFunc(buildRestPath("reboot", TIMESTAMP, REBOOT_DELAY), rh.rebootHandler)
-	rh.rtr.HandleFunc(buildRestPath("sendlogs", TIMESTAMP, RECIPIENT_GMAIL), rh.logHandler)
-	rh.rtr.HandleFunc(buildRestPath("forceupdate", TIMESTAMP, REMOTE_ADDRESS), rh.updateHandler)
-	rh.rtr.HandleFunc(buildRestPath("updateconfig", TIMESTAMP, REMOTE_ADDRESS), rh.configHandler)
-	rh.rtr.HandleFunc(buildRestPath("checkin", TIMESTAMP, RECIPIENT_GMAIL), rh.checkinHandler)
+	rh.rtr.HandleFunc(buildGorillaPath(EXECUTE_REST_PATH, TIMESTAMP, FILE_TYPE), rh.executeHandler)
+	rh.rtr.HandleFunc(buildGorillaPath(REBOOT_REST_PATH, TIMESTAMP, REBOOT_DELAY), rh.rebootHandler)
+	rh.rtr.HandleFunc(buildGorillaPath(LOG_REST_PATH, TIMESTAMP, RECIPIENT_GMAIL), rh.logHandler)
+	rh.rtr.HandleFunc(buildGorillaPath(UPDATE_REST_PATH, TIMESTAMP, REMOTE_ADDRESS), rh.updateHandler)
+	rh.rtr.HandleFunc(buildGorillaPath(CONFIG_REST_PATH, TIMESTAMP, REMOTE_ADDRESS), rh.configHandler)
+	rh.rtr.HandleFunc(buildGorillaPath(CHECKIN_REST_PATH, TIMESTAMP, RECIPIENT_GMAIL), rh.checkinHandler)
 
 	rh.startupRestServer()
 	return &rh, nil
 }
 
-func buildRestPath(root string, arguments ...string) string {
+func buildGorillaPath(root string, arguments ...string) string {
 	var routeBuf bytes.Buffer
 	routeBuf.WriteString("/")
 	routeBuf.WriteString(root)
@@ -80,6 +104,24 @@ func buildRestPath(root string, arguments ...string) string {
 		routeBuf.WriteString(arg)
 		routeBuf.WriteString("}")
 	}
+	return routeBuf.String()
+}
+
+func buildRestPath(protocol, host, port, root string, arguments ...string) string {
+	var routeBuf bytes.Buffer
+	routeBuf.WriteString(protocol)
+	routeBuf.WriteString("://")
+	routeBuf.WriteString(host)
+	routeBuf.WriteString(":")
+	routeBuf.WriteString(port)
+	routeBuf.WriteString("/")
+	routeBuf.WriteString(root)
+
+	for _, arg := range arguments {
+		routeBuf.WriteString("/")
+		routeBuf.WriteString(arg)
+	}
+
 	return routeBuf.String()
 }
 
@@ -100,35 +142,73 @@ func (rh *RestHandler) startupRestServer() error {
 	return nil
 }
 
+// writeResponseAndLog will write the appropriate HTTP status code to the writer
+// and also log an appropriate success or failure message to the logger in this
+// RestHandler instance.
+func (rh *RestHandler) writeResponseAndLog(httpStatusCode int, writer http.ResponseWriter, request *http.Request) {
+	var statusBuffer bytes.Buffer
+
+	switch httpStatusCode {
+	case http.StatusUnauthorized:
+		statusBuffer.WriteString("http.StatusUnauthorized")
+	case http.StatusBadRequest:
+		statusBuffer.WriteString("http.StatusBadRequest")
+	case http.StatusOK:
+		statusBuffer.WriteString("http.StatusOK")
+	case http.StatusMethodNotAllowed:
+		statusBuffer.WriteString("http.StatusMethodNotAllowed")
+	default:
+		statusBuffer.WriteString(fmt.Sprintf("Unknown HTTP status code: %d", httpStatusCode))
+
+		writer.WriteHeader(httpStatusCode)
+
+		statusBuffer.WriteString("for writer:")
+		statusBuffer.WriteString(fmt.Sprintf("%+v", writer))
+		statusBuffer.WriteString("and request:")
+		statusBuffer.WriteString(fmt.Sprintf("%+v", &request))
+		rh.lgr.LogMessage(statusBuffer.String())
+	}
+}
+
 // checkinHandler will handle receiving and verifying check-in commands via REST.
 // Check-in commands will notify the remote machine that the remote user would
 // like the machine to perform a check-in. A check-in will send all pertinent data
 // regarding the current operating status of this remote machine.
 func (rh *RestHandler) checkinHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("checkinHandler started")
-	defer rh.lgr.LogMessage("checkinHandler finished")
 
+	var err error
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
 	recipientEmail := queryParams[RECIPIENT_GMAIL]
 
-	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
-		if err = rh.verifyQueryParams(recipientEmail); err == nil {
-			switch request.Method {
-			case "GET":
-				// process GET request - send back a checkin status to the given email address
-				// TODO: utilize the email address from the URL query and send to the profiler
-				profiler.SendArchiveProfileAsAttachment()
-				writer.WriteHeader(http.StatusOK)
-			default:
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			}
-			return
-		}
-		writer.WriteHeader(http.StatusBadRequest)
+	rh.lgr.LogMessage("checkinHandler - remoteTimestamp: %v recipientEmail: %v", remoteTimestamp, recipientEmail)
+	defer rh.lgr.LogMessage("checkinHandler finished")
+
+	err = rh.verifyTimeStamp(remoteTimestamp)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusUnauthorized, writer, request)
 		return
 	}
-	writer.WriteHeader(http.StatusUnauthorized)
+
+	err = rh.verifyQueryParams(recipientEmail)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusBadRequest, writer, request)
+		return
+	}
+
+	switch request.Method {
+	case "GET":
+		archive, err := profiler.SendArchiveProfileAsAttachment()
+		if err != nil {
+			rh.lgr.LogMessage("checkinHandler failed to email system profile: %v", err.Error())
+			rh.writeResponseAndLog(http.StatusInternalServerError, writer, request)
+		} else {
+			defer os.Remove(archive.Name())
+			rh.writeResponseAndLog(http.StatusOK, writer, request)
+		}
+	default:
+		rh.writeResponseAndLog(http.StatusMethodNotAllowed, writer, request)
+	}
 	return
 }
 
@@ -138,120 +218,170 @@ func (rh *RestHandler) checkinHandler(writer http.ResponseWriter, request *http.
 // Python files. Should we do a JSON config instead to allow call command,
 // parameters, and a location to the file to download all cleanly in one?
 func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("executeHandler started")
-	defer rh.lgr.LogMessage("executeHandler finished")
 
+	var err error
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
-	remoteFileAddress := queryParams[REMOTE_ADDRESS]
+	fileType := queryParams[FILE_TYPE]
 
-	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
-		if err = rh.verifyQueryParams(remoteFileAddress); err == nil {
-			switch request.Method {
-			case "POST":
-				// process POST request - download the remote file and execute it
-				// download the body and save it as a JSON configuration file
-				// instantiate a new instance of loader and point it to the JSON configuration
-				// go!
-				writer.WriteHeader(http.StatusOK)
-			default:
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			}
-			return
-		}
-		writer.WriteHeader(http.StatusBadRequest)
+	rh.lgr.LogMessage("executeHandler - remoteTimestamp: %v fileType: %v", remoteTimestamp, fileType)
+	defer rh.lgr.LogMessage("executeHandler finished")
+
+	err = rh.verifyTimeStamp(remoteTimestamp)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusUnauthorized, writer, request)
 		return
 	}
-	writer.WriteHeader(http.StatusUnauthorized)
+
+	err = rh.verifyQueryParams(fileType)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusBadRequest, writer, request)
+		return
+	}
+
+	switch request.Method {
+	case "POST":
+		switch fileType {
+		case "python":
+			// save the bytes to a local file and execute the python interpreter
+			rh.lgr.LogMessage("executeHandler is executing remote python file")
+			rh.writeResponseAndLog(http.StatusOK, writer, request)
+		case "binary":
+			// save the bytes to a local file and execute the binary
+			rh.lgr.LogMessage("executeHandler is executing remote binary file")
+			rh.writeResponseAndLog(http.StatusOK, writer, request)
+		case "script":
+			// save the bytes to a local file and execute the script
+			rh.lgr.LogMessage("executeHandler is executing remote script file")
+			rh.writeResponseAndLog(http.StatusOK, writer, request)
+		default:
+			rh.writeResponseAndLog(http.StatusBadRequest, writer, request)
+		}
+	default:
+		rh.writeResponseAndLog(http.StatusMethodNotAllowed, writer, request)
+	}
 	return
 }
 
 // rebootHandler will handle receiving and verifying reboot commands via REST.
 func (rh *RestHandler) rebootHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("rebootHandler started")
-	defer rh.lgr.LogMessage("rebootHandler finished")
 
+	var err error
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
 	rebootDelay := queryParams[REBOOT_DELAY]
 
-	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
-		switch request.Method {
-		case "POST":
-			intDelay, _ := strconv.Atoi(rebootDelay)
-			time.Sleep(time.Duration(intDelay) * time.Second)
-			// start a new loader, call utils.SysAssetPath("loader_reboot.json")
-			// process POST request - reboot the machine after X seconds
-			writer.WriteHeader(http.StatusOK)
-		default:
-			writer.WriteHeader(http.StatusMethodNotAllowed)
-		}
+	rh.lgr.LogMessage("rebootHandler - remoteTimestamp: %v rebootDelay: %v", remoteTimestamp, rebootDelay)
+	defer rh.lgr.LogMessage("rebootHandler finished")
+
+	err = rh.verifyTimeStamp(remoteTimestamp)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusUnauthorized, writer, request)
 		return
 	}
-	writer.WriteHeader(http.StatusUnauthorized)
+
+	err = rh.verifyQueryParams(rebootDelay)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusBadRequest, writer, request)
+		return
+	}
+
+	switch request.Method {
+	case "GET":
+		intDelay, intErr := strconv.Atoi(rebootDelay)
+		if intErr != nil {
+			rh.lgr.LogMessage("could not convert reboot parameter to an int: %v", intErr.Error())
+			rh.writeResponseAndLog(http.StatusInternalServerError, writer, request)
+		} else {
+			rh.lgr.LogMessage("sleeping for %d seconds before rebooting", intDelay)
+			time.Sleep(time.Duration(intDelay) * time.Second)
+			assetPath, assetErr := utils.SysAssetPath("loader_reboot.json")
+			if assetErr != nil {
+				rh.lgr.LogMessage("could not successfully locate reboot loader JSON file: %v", assetErr.Error())
+				rh.writeResponseAndLog(http.StatusInternalServerError, writer, request)
+			} else {
+				rebootLoader, loaderError := loader.NewLoader(assetPath)
+				if loaderError != nil {
+					rh.lgr.LogMessage("could not initialize new reboot loader: %v", loaderError.Error())
+					rh.writeResponseAndLog(http.StatusInternalServerError, writer, request)
+				} else {
+					rh.writeResponseAndLog(http.StatusOK, writer, request)
+					defer rebootLoader.StartSynchronous()
+				}
+			}
+
+		}
+	default:
+		writer.WriteHeader(http.StatusMethodNotAllowed)
+	}
 	return
 }
 
 // logHandler will handle receiving and verifying log retrieval commands? via
 // REST.
 func (rh *RestHandler) logHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("logHandler started")
-	defer rh.lgr.LogMessage("logHandler finished")
 
+	var err error
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
 	recipientEmail := queryParams[RECIPIENT_GMAIL]
 
-	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
-		if err = rh.verifyQueryParams(recipientEmail); err == nil {
-			switch request.Method {
-			case "GET":
-				// process GET request - send back the latest logs to the requester
-				// collate all the logs
-				// zip them up
-				// send them via the reporter
-				writer.WriteHeader(http.StatusOK)
-			default:
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			}
-			return
-		}
-		writer.WriteHeader(http.StatusBadRequest)
+	rh.lgr.LogMessage("logHandler - remoteTimestamp: %v recipientEmail: %v", remoteTimestamp, recipientEmail)
+	defer rh.lgr.LogMessage("logHandler finished")
+
+	err = rh.verifyTimeStamp(remoteTimestamp)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusUnauthorized, writer, request)
 		return
 	}
-	writer.WriteHeader(http.StatusUnauthorized)
-	return
+
+	err = rh.verifyQueryParams(recipientEmail)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusBadRequest, writer, request)
+		return
+	}
+
+	switch request.Method {
+	case "GET":
+		rh.lgr.LogMessage("collating logs and sending to gmail address: %v", recipientEmail)
+		rh.writeResponseAndLog(http.StatusOK, writer, request)
+	default:
+		rh.writeResponseAndLog(http.StatusMethodNotAllowed, writer, request)
+	}
 }
 
 // updateHandler will handle receiving and verifying update commands via REST.
 // Update commands will allow the remote user to force a local update given a
 // specific remote URL - should probably be git for now.
 func (rh *RestHandler) updateHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("updateHandler started")
-	defer rh.lgr.LogMessage("updateHandler finished")
 
+	var err error
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
 	remoteFileAddress := queryParams[REMOTE_ADDRESS]
 
-	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
-		if err = rh.verifyQueryParams(remoteFileAddress); err == nil {
-			switch request.Method {
-			case "GET":
-				// process GET request - send back the current update url
-				writer.WriteHeader(http.StatusOK)
-			case "POST":
-				// process POST request - use the given URL to perform an update
-				writer.WriteHeader(http.StatusOK)
-			default:
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			}
-			return
-		}
-		writer.WriteHeader(http.StatusBadRequest)
+	rh.lgr.LogMessage("updateHandler - remoteTimestamp: %v remoteFileAddress: %v", remoteTimestamp, remoteFileAddress)
+	defer rh.lgr.LogMessage("updateHandler finished")
+
+	err = rh.verifyTimeStamp(remoteTimestamp)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusUnauthorized, writer, request)
 		return
 	}
-	writer.WriteHeader(http.StatusUnauthorized)
+
+	err = rh.verifyQueryParams(remoteFileAddress)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusBadRequest, writer, request)
+		return
+	}
+
+	switch request.Method {
+	case "GET":
+		rh.lgr.LogMessage("commencing manual update using remote address: %v", remoteFileAddress)
+		rh.writeResponseAndLog(http.StatusOK, writer, request)
+	default:
+		rh.writeResponseAndLog(http.StatusMethodNotAllowed, writer, request)
+	}
 	return
 }
 
@@ -259,37 +389,28 @@ func (rh *RestHandler) updateHandler(writer http.ResponseWriter, request *http.R
 // Config commands will allow the remote user to set or get the local config
 // file that anon-eth-net uses when started up.
 func (rh *RestHandler) configHandler(writer http.ResponseWriter, request *http.Request) {
-	rh.lgr.LogMessage("configHandler started")
-	defer rh.lgr.LogMessage("configHandler finished")
 
+	var err error
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
-	remoteFileAddress := queryParams[REMOTE_ADDRESS]
 
-	if err := rh.verifyTimeStamp(remoteTimestamp); err == nil {
-		if err := rh.verifyQueryParams(remoteFileAddress); err == nil {
-			switch request.Method {
-			case "GET":
-				// process GET request - send back the config file
-				// bytes:= ioutil.ReadFile(utils.AssetPath(config.json))
-				// writer.Body.Write(bytes)
-				writer.WriteHeader(http.StatusOK)
-			case "POST":
-				// process POST request - get the given config file
-				// get the asset path
-				// create a new temp file
-				// load a config from that file, test for errors
-				// if no errors, overwrite the existing config
-				writer.WriteHeader(http.StatusOK)
-			default:
-				writer.WriteHeader(http.StatusMethodNotAllowed)
-			}
-			return
-		}
-		writer.WriteHeader(http.StatusBadRequest)
+	rh.lgr.LogMessage("configHandler - remoteTimestamp: %v", remoteTimestamp)
+	defer rh.lgr.LogMessage("configHandler finished")
+
+	err = rh.verifyTimeStamp(remoteTimestamp)
+	if err != nil {
+		rh.writeResponseAndLog(http.StatusUnauthorized, writer, request)
 		return
 	}
-	writer.WriteHeader(http.StatusUnauthorized)
+
+	switch request.Method {
+	case "GET":
+		rh.lgr.LogMessage("received remote request for the current config. returning via REST")
+		rh.writeResponseAndLog(http.StatusOK, writer, request)
+	case "POST":
+		rh.lgr.LogMessage("received remote request to save a new config. downloading via REST")
+		rh.writeResponseAndLog(http.StatusOK, writer, request)
+	}
 	return
 }
 
