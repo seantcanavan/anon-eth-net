@@ -154,6 +154,13 @@ func HoardingLogger(logBaseName string) (*Logger, error) {
 	return &sl, nil
 }
 
+// Flush manually flushes the IO buffer to the local disk to ensure that any
+// cached log messages are permanently stored onto the local disk. Useful to
+// call before a logger goes out of scope.
+func (sl *Logger) Flush() {
+	sl.writer.Flush()
+}
+
 func (sl *Logger) CurrentLogContents() ([]byte, error) {
 	sl.writer.Flush()
 

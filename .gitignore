@@ -22,7 +22,8 @@ _testmain.go
 *.exe
 *.test
 *.prof
-
+*.tar
+*.log
 
 #compiled binaries
 /bin/

@@ -30,6 +30,7 @@ type LoaderProcess struct {
 	Arguments []string
 	Start     int64
 	End       int64
+	Duration  int64
 	Lgr       *logger.Logger
 }
 
@@ -119,22 +120,26 @@ func (l *Loader) StartAsynchronous() []LoaderProcess {
 	for index := range l.processes {
 		go func(currentProcess *LoaderProcess) {
 			defer waitGroup.Done()
-			defer lgr.LogMessage("Removing %v process from the Asynchronous WaitGroup. Execution took %d", currentProcess.Name, currentProcess.End-currentProcess.Start)
 			cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
 			lgr.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
 			localProcess := currentProcess
 			currentProcess.Start = time.Now().Unix()
 			output, err := cmd.CombinedOutput()
 			currentProcess.End = time.Now().Unix()
+			currentProcess.Duration = currentProcess.End - currentProcess.Start
 			if err != nil {
 				lgr.LogMessage("LoaderProcess exited with error status: %+v\n %v", localProcess, err.Error())
 			} else {
 				lgr.LogMessage("LoaderProcess exited successfully: %+v", localProcess)
-				localProcess.Lgr.LogMessage(string(output))
 			}
+			currentProcess.Lgr.LogMessage("LoaderProcess: %+v", currentProcess)
+			currentProcess.Lgr.LogMessage("Command output:\n%v", string(output))
+			currentProcess.Lgr.Flush()
+			lgr.LogMessage("Removing '%v' process from the Asynchronous WaitGroup. Execution took: %v", currentProcess.Name, currentProcess.Duration)
 		}(&l.processes[index]) // passing the current process using index
 	}
 	waitGroup.Wait()
+	lgr.Flush()
 	return l.processes
 }
 
@@ -149,15 +154,16 @@ func (l *Loader) StartSynchronous() []LoaderProcess {
 		currentProcess.Start = time.Now().Unix()
 		output, err := cmd.CombinedOutput()
 		currentProcess.End = time.Now().Unix()
+		currentProcess.Duration = currentProcess.End - currentProcess.Start
 		if err != nil {
 			lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
-			currentProcess.Lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
 		} else {
 			lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
-			currentProcess.Lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
 		}
-		lgr.LogMessage("Command output:\n%v", string(output))
-		currentProcess.Lgr.LogMessage("Command output: %v", string(output))
+		currentProcess.Lgr.LogMessage("LoaderProcess: %+v", currentProcess)
+		currentProcess.Lgr.LogMessage("Command output:\n%v", string(output))
+		currentProcess.Lgr.Flush()
 	}
+	lgr.Flush()
 	return l.processes
 }
