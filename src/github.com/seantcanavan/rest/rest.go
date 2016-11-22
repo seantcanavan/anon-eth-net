@@ -159,15 +159,17 @@ func (rh *RestHandler) writeResponseAndLog(httpStatusCode int, writer http.Respo
 		statusBuffer.WriteString("http.StatusMethodNotAllowed")
 	default:
 		statusBuffer.WriteString(fmt.Sprintf("Unknown HTTP status code: %d", httpStatusCode))
-
-		writer.WriteHeader(httpStatusCode)
-
-		statusBuffer.WriteString("for writer:")
-		statusBuffer.WriteString(fmt.Sprintf("%+v", writer))
-		statusBuffer.WriteString("and request:")
-		statusBuffer.WriteString(fmt.Sprintf("%+v", &request))
-		rh.lgr.LogMessage(statusBuffer.String())
 	}
+
+	writer.WriteHeader(httpStatusCode)
+
+	statusBuffer.WriteString(" for writer:")
+	statusBuffer.WriteString(fmt.Sprintf("%+v", writer))
+	statusBuffer.WriteString("and request:")
+	statusBuffer.WriteString(fmt.Sprintf("%+v", &request))
+	statusBuffer.WriteString("\n")
+	rh.lgr.LogMessage(statusBuffer.String())
+	rh.lgr.Flush()
 }
 
 // checkinHandler will handle receiving and verifying check-in commands via REST.
@@ -224,7 +226,7 @@ func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.
 	remoteTimestamp := queryParams[TIMESTAMP]
 	fileType := queryParams[FILE_TYPE]
 
-	rh.lgr.LogMessage("executeHandler - remoteTimestamp: %v fileType: %v", remoteTimestamp, fileType)
+	rh.lgr.LogMessage("remoteTimestamp: %v fileType: %v", remoteTimestamp, fileType)
 	defer rh.lgr.LogMessage("executeHandler finished")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
@@ -447,10 +449,10 @@ func (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
 	// get the difference between then and now in seconds from unix time stamps
 	diff, diffErr := rh.TimeDiffSeconds(remoteTimeStamp)
 	if diffErr != nil || diff.diff >= TIMESTAMP_DELTA_SECONDS {
-		return fmt.Errorf("verifyTimeStamp failed with diff: %v", diff.pprint())
+		return fmt.Errorf("verifyTimeStamp failed with diff: %v", diff.diff)
 	}
 
-	rh.lgr.LogMessage("verifyTimeStamp succeeded with diff: %v", diff.pprint())
+	rh.lgr.LogMessage("verifyTimeStamp succeeded with diff: %v", diff.diff)
 	return nil
 }
 
@@ -481,10 +483,10 @@ func (utd UnixTimeDiff) pprint() string {
 	var prettyBuf bytes.Buffer
 
 	prettyBuf.WriteString("UnixTimeDiff:\n")
-	prettyBuf.WriteString(fmt.Sprintf("now: %d", utd.now))
-	prettyBuf.WriteString(fmt.Sprintf("then: %d", utd.then))
-	prettyBuf.WriteString(fmt.Sprintf("diff: %d", utd.diff))
-	prettyBuf.WriteString(fmt.Sprintf("rawdiff: %d", utd.rawdiff))
-	prettyBuf.WriteString(fmt.Sprintf("future: %t", utd.future))
+	prettyBuf.WriteString(fmt.Sprintf("now: %d\t", utd.now))
+	prettyBuf.WriteString(fmt.Sprintf("then: %d\t", utd.then))
+	prettyBuf.WriteString(fmt.Sprintf("diff: %d\t", utd.diff))
+	prettyBuf.WriteString(fmt.Sprintf("rawdiff: %d\t", utd.rawdiff))
+	prettyBuf.WriteString(fmt.Sprintf("future: %t\n", utd.future))
 	return prettyBuf.String()
 }

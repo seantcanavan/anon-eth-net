@@ -80,7 +80,7 @@ func TestCheckinHandlerPass(t *testing.T) {
 func TestExecuteHandlerPass(t *testing.T) {
 	path = buildRestPath(protocol, host, portString, EXECUTE_REST_PATH, nowString, "python")
 
-	response, err = http.Get(path)
+	response, err := http.Get(path)
 	if err != nil {
 		t.Error(err)
 	}
@@ -121,12 +121,6 @@ func TestExecuteHandlerPass(t *testing.T) {
 	}
 }
 
-// uncomment to test manually - don't want to reboot the computer every time
-// this test is executed
-// func TestRebootHandler(t *testing.T) {
-// 	path = buildRestPath(protocol, host, portString, REBOOT_REST_PATH, nowString, "10")
-// }
-
 func TestLogHandlerPass(t *testing.T) {
 	path = buildRestPath(protocol, host, portString, LOG_REST_PATH, nowString, "samplegmail")
 }
@@ -138,3 +132,20 @@ func TestUpdateHandlerPass(t *testing.T) {
 func TestConfigHandlerPass(t *testing.T) {
 	path = buildRestPath(protocol, host, portString, CONFIG_REST_PATH, nowString)
 }
+
+// uncomment to test manually - don't want to reboot the computer every time
+// this test is executed
+// func TestRebootHandler(t *testing.T) {
+// 	path = buildRestPath(protocol, host, portString, REBOOT_REST_PATH, nowString, "10")
+
+// 	response, err := http.Get(path)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	if response.StatusCode != http.StatusOK {
+// 		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
+// 	}
+
+// 	fmt.Println("The computer should restart now...")
+// }
