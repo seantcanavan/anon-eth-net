@@ -21,7 +21,7 @@ const TIME_BETWEEN_SUCCESSIVE_ITERATIONS = 60
 // The idea of the Loader is to make sure that all external process dependencies
 // are executing and are in a healthy state as much as possible.
 type Loader struct {
-	processes []LoaderProcess // the slice of LoaderProcesses which the loader will execute and keep an eye on
+	Processes []LoaderProcess // the slice of LoaderProcesses which the loader will execute and keep an eye on
 }
 
 type LoaderProcess struct {
@@ -34,11 +34,9 @@ type LoaderProcess struct {
 	Lgr       *logger.Logger
 }
 
-// NewLoader will initialize a new instance of the Loader struct and load the
-// associated processes from the given file. It will wait the given amount of
-// time after a process exists before restarting it and it will use the given
-// config reference to initialize the logger. It will probably utilize the
-// config object more heavily in the future.
+// NewLoader will initialize a new instance of the Loader struct and execute the
+// associated processes from the given file with the appropriate parameters.
+// Each individual process will have its own logs.
 func NewLoader(processesPath string) (*Loader, error) {
 
 	if lgr == nil {
@@ -57,7 +55,7 @@ func NewLoader(processesPath string) (*Loader, error) {
 		return nil, loadErr
 	}
 
-	l.processes = loadedProcesses
+	l.Processes = loadedProcesses
 	return &l, nil
 }
 
@@ -114,10 +112,10 @@ func processesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
 // logging the output of each individual process...
 func (l *Loader) StartAsynchronous() []LoaderProcess {
 	var waitGroup sync.WaitGroup
-	lgr.LogMessage("Adding %d processes to the Asynchronous WaitGroup", len(l.processes))
-	waitGroup.Add(len(l.processes))
+	lgr.LogMessage("Adding %d processes to the Asynchronous WaitGroup", len(l.Processes))
+	waitGroup.Add(len(l.Processes))
 
-	for index := range l.processes {
+	for index := range l.Processes {
 		go func(currentProcess *LoaderProcess) {
 			defer waitGroup.Done()
 			cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
@@ -136,11 +134,11 @@ func (l *Loader) StartAsynchronous() []LoaderProcess {
 			currentProcess.Lgr.LogMessage("Command output:\n%v", string(output))
 			currentProcess.Lgr.Flush()
 			lgr.LogMessage("Removing '%v' process from the Asynchronous WaitGroup. Execution took: %v", currentProcess.Name, currentProcess.Duration)
-		}(&l.processes[index]) // passing the current process using index
+		}(&l.Processes[index]) // passing the current process using index
 	}
 	waitGroup.Wait()
 	lgr.Flush()
-	return l.processes
+	return l.Processes
 }
 
 // StartSynchronous will execute all the processes that have been loaded into
@@ -148,7 +146,7 @@ func (l *Loader) StartAsynchronous() []LoaderProcess {
 // return a slice of pointers to instances of os.File. Each instance of os.File
 // contains the log output from each command that was executed.
 func (l *Loader) StartSynchronous() []LoaderProcess {
-	for _, currentProcess := range l.processes {
+	for _, currentProcess := range l.Processes {
 		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
 		lgr.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
 		currentProcess.Start = time.Now().Unix()
@@ -165,5 +163,5 @@ func (l *Loader) StartSynchronous() []LoaderProcess {
 		currentProcess.Lgr.Flush()
 	}
 	lgr.Flush()
-	return l.processes
+	return l.Processes
 }

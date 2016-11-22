@@ -179,6 +179,10 @@ func (sl *Logger) CurrentLogName() (string, error) {
 	return fileInfo.Name(), nil
 }
 
+func (sl *Logger) CurrentLogFile() *os.File {
+	return sl.log
+}
+
 func (sl *Logger) initLogger(logBaseName string) error {
 
 	logFileName := utils.TimeStampFileName(logBaseName, LOG_EXTENSION)

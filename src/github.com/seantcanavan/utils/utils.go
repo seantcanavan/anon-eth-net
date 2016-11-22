@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -137,4 +139,24 @@ func DirectoryList(directoryName string, filter string) []string {
 	})
 
 	return fileList
+}
+
+// credit to: https://gist.github.com/jniltinho/9788121
+func ExternalIPAddress() (string, error) {
+
+	var ipBuffer bytes.Buffer
+
+	resp, err := http.Get("http://myexternalip.com/raw")
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+
+	_, copyErr := io.Copy(&ipBuffer, resp.Body)
+	if copyErr != nil {
+		return "", copyErr
+	}
+
+	return strings.Trim(ipBuffer.String(), "\n"), nil
 }
