@@ -21,7 +21,7 @@ import (
 )
 
 // The acceptable amount of time between the incoming timestamp and the local timestamp in seconds
-// Microsoft recommends a maximum of 5 minutes:https://technet.microsoft.com/en-us/library/jj852172(v=ws.11).aspx
+// Microsoft recommends a maximum of 5 minutes: https://technet.microsoft.com/en-us/library/jj852172(v=ws.11).aspx
 const TIMESTAMP_DELTA_SECONDS = 300
 
 // The key to the query parameter for the incoming timestamp value
@@ -32,9 +32,6 @@ const REBOOT_DELAY = "delay"
 
 // The key to the query parameter for the remote log email address recipient value
 const RECIPIENT_GMAIL = "emailaddress"
-
-// The key to the query parameter for the address where the remote file that is required can be obtained from
-const REMOTE_ADDRESS = "remoteupdateurl"
 
 // The key to the query parameter for the file type to execute for execute handler
 const FILE_TYPE = "filetype"
@@ -71,7 +68,7 @@ const REST_LOADER_SUBJECT = "Rest Execute Handler Results"
 type RestHandler struct {
 	rtr       *mux.Router
 	lgr       *logger.Logger
-	Port      int
+	Port      string
 	Endpoints map[string]string
 }
 
@@ -89,8 +86,8 @@ func NewRestHandler() (*RestHandler, error) {
 	rh.Endpoints = make(map[string]string)
 	rh.Endpoints[LOG_REST_PATH] = buildGorillaPath(LOG_REST_PATH, TIMESTAMP, RECIPIENT_GMAIL)
 	rh.Endpoints[REBOOT_REST_PATH] = buildGorillaPath(REBOOT_REST_PATH, TIMESTAMP, REBOOT_DELAY)
-	rh.Endpoints[UPDATE_REST_PATH] = buildGorillaPath(UPDATE_REST_PATH, TIMESTAMP, REMOTE_ADDRESS)
-	rh.Endpoints[CONFIG_REST_PATH] = buildGorillaPath(CONFIG_REST_PATH, TIMESTAMP, REMOTE_ADDRESS)
+	rh.Endpoints[UPDATE_REST_PATH] = buildGorillaPath(UPDATE_REST_PATH, TIMESTAMP)
+	rh.Endpoints[CONFIG_REST_PATH] = buildGorillaPath(CONFIG_REST_PATH, TIMESTAMP)
 	rh.Endpoints[CHECKIN_REST_PATH] = buildGorillaPath(CHECKIN_REST_PATH, TIMESTAMP, RECIPIENT_GMAIL)
 	rh.Endpoints[EXECUTE_REST_PATH] = buildGorillaPath(EXECUTE_REST_PATH, TIMESTAMP, FILE_TYPE)
 
@@ -149,8 +146,19 @@ func (rh *RestHandler) startupRestServer() error {
 		return err
 	}
 
-	rh.Port = port
-	go http.ListenAndServe(":"+strconv.Itoa(port), rh.rtr)
+	rh.Port = strconv.Itoa(port)
+
+	pKeyPath, pKeyPathErr := utils.AssetPath("server.pkey")
+	if pKeyPathErr != nil {
+		return pKeyPathErr
+	}
+
+	certPath, certPathErr := utils.AssetPath("server.cert")
+	if certPathErr != nil {
+		return certPathErr
+	}
+
+	go http.ListenAndServeTLS(":"+rh.Port, certPath, pKeyPath, rh.rtr)
 	rh.lgr.LogMessage("REST server successfully started up on port %v", port)
 
 	externalIp, extIpErr := utils.ExternalIPAddress()
@@ -160,10 +168,10 @@ func (rh *RestHandler) startupRestServer() error {
 	}
 
 	var baseRestPath bytes.Buffer
-	baseRestPath.WriteString("http://")
+	baseRestPath.WriteString("https://")
 	baseRestPath.WriteString(externalIp)
 	baseRestPath.WriteString(":")
-	baseRestPath.WriteString(strconv.Itoa(rh.Port))
+	baseRestPath.WriteString(rh.Port)
 
 	var emailBody bytes.Buffer
 
@@ -285,8 +293,8 @@ func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.
 	case "POST":
 		switch fileType {
 		case "python", "binary", "script":
-			// save the bytes to a local file and execute the python interpreter
 			rh.lgr.LogMessage("executeHandler is executing remote %v file", fileType)
+			// save the bytes to a local file and execute the file in the appropriate manner
 			loaderError := rh.executeLoader(fileType, string(bodyContents))
 			if loaderError != nil {
 				rh.writeResponseAndLog(loaderError.Error(), http.StatusBadRequest, writer, request)
@@ -393,7 +401,7 @@ func (rh *RestHandler) rebootHandler(writer http.ResponseWriter, request *http.R
 		} else {
 			rh.lgr.LogMessage("sleeping for %d seconds before rebooting", intDelay)
 			time.Sleep(time.Duration(intDelay) * time.Second)
-			assetPath, assetErr := utils.SysAssetPath("loader_reboot.json")
+			assetPath, assetErr := utils.SysAssetPath("reboot_loader.json")
 			if assetErr != nil {
 				rh.lgr.LogMessage("could not successfully locate reboot loader JSON file: %v", assetErr.Error())
 				rh.writeResponseAndLog(assetErr.Error(), http.StatusInternalServerError, writer, request)
@@ -410,7 +418,7 @@ func (rh *RestHandler) rebootHandler(writer http.ResponseWriter, request *http.R
 
 		}
 	default:
-		writer.WriteHeader(http.StatusMethodNotAllowed)
+		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
 	}
 	return
 }
@@ -456,9 +464,8 @@ func (rh *RestHandler) updateHandler(writer http.ResponseWriter, request *http.R
 	var err error
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
-	remoteFileAddress := queryParams[REMOTE_ADDRESS]
 
-	rh.lgr.LogMessage("updateHandler - remoteTimestamp: %v remoteFileAddress: %v", remoteTimestamp, remoteFileAddress)
+	rh.lgr.LogMessage("updateHandler - remoteTimestamp: %v", remoteTimestamp)
 	defer rh.lgr.LogMessage("updateHandler finished\n")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
@@ -467,15 +474,12 @@ func (rh *RestHandler) updateHandler(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err = rh.verifyQueryParams(remoteFileAddress)
-	if err != nil {
-		rh.writeResponseAndLog(err.Error(), http.StatusBadRequest, writer, request)
-		return
-	}
-
 	switch request.Method {
 	case "GET":
-		rh.lgr.LogMessage("commencing manual update using remote address: %v", remoteFileAddress)
+		rh.lgr.LogMessage("need to return the current update URL")
+		rh.writeResponseAndLog("", http.StatusOK, writer, request)
+	case "POST":
+		rh.lgr.LogMessage("need to retrieve the URL that was posted and update config with it")
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	default:
 		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
@@ -508,6 +512,8 @@ func (rh *RestHandler) configHandler(writer http.ResponseWriter, request *http.R
 	case "POST":
 		rh.lgr.LogMessage("received remote request to save a new config. downloading via REST")
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
+	default:
+		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
 	}
 	return
 }

@@ -12,12 +12,20 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 - Ubuntu >= 14.04.5
 - Windows >= 7 SP2
 
+###Glossary of Terms:
+1. <clone_root_dir> : This is the folder that you've cloned this project into or the folder one up the directory tree from `anon-eth-net` after `git clone` is executed.
+2. <username> : This is your local username specific to your operating system and the user you are currently logged in as. Each individual operating system stores it in a different location but the name should be familiar. The folder named after your username will contain all your personal files.
+  1. Mac: `/Users/` contains all the user folders
+  2. Windows: `C:\Users\` contains all the user folders
+  3. Ubuntu: `/home/` contains all the user folders
+3. emaillogindetails.txt : This is a two line file. Line one contains a valid gmail login and line two contains the password associated with that account. You create this and no one else sees it. Insecure app access must be enabled on the gmail account: https://support.google.com/accounts/answer/6010255?hl=en. The purpose of this file is to enable automated gmail reports sent by all machines this software is installed on. The gmail address acts as a centralized database of logs for every single instance of anon-eth-net. This is how it remains 'anonymous'. You never need to log into the remote machine once it's setup and you can use a VPN to access a totally anonymous gmail address.
+
 ##Mac Setup:
 
 ####Required Packages:
 1. Git: `brew install git`
 2. Go: `brew install go`
-3. TBA
+3. TBA - probably glide for better package management
 
 ####Required Setup:
 1. Use `git clone` to download the repository.
@@ -32,13 +40,17 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
   7. `export GOBIN=/Users/seantcanavan/workspace/anon-eth-net/bin`
 4. Update your sudoers file with the following:
   1. `sudo visudo`
-  2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/sbin/lsof`
+  2. `<username> ALL=(ALL) NOPASSWD:/usr/sbin/lsof`
   3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/user/sbin/lsof`
-  4. `<your-user-name-here> ALL=(ALL) NOPASSWD:/sbin/shutdown`
+  4. `<username> ALL=(ALL) NOPASSWD:/sbin/shutdown`
   5. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/sbin/shutdown
-5. Create `emaillogindetails.txt` inside `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/assets/`.
-6. Add your gmail address to line 1 and gmail password to line 2 of `emaillogindetails.txt`. Make sure that insecure app access is also enabled for the gmail account.
-7. TBA
+5. Create `emaillogindetails.txt` inside the `assets` folder at `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/assets/`.
+6. Add your gmail address to line 1 and gmail password to line 2.
+7. By default your REST commands will be encrypted over HTTPS with a test certificate and private key that are readily available from this GitHub. This is fine for testing but when you decide to deploy you'll need to create your own private key / public key / certificate combination to keep all your transmissions totally secure.
+  1. Generate the private key: `openssl genrsa -out server.key 2048`
+  2. Generate the certificate and public key: `openssl req -new -x509 -sha256 -key server.key -out server.pem -days 3650`
+  3. Place both files in the 'assets' folder which will be at `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/assets/`
+8. TBA
 
 
 ##Linux Setup:
@@ -61,11 +73,14 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
   7. `export GOBIN=/home/seantcanavan/workspace/anon-eth-net/bin`
 4. Update your sudoers file with the following:
   1. `sudo visudo`
-  2. `<your-user-name-here> ALL=(ALL) NOPASSWD:/usr/bin/netstat`
+  2. `<username> ALL=(ALL) NOPASSWD:/usr/bin/netstat`
   3. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/usr/bin/netstat`
-5. Create `emaillogindetails.txt` inside `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/assets/`.
-6. Add your gmail address to line 1 and gmail password to line 2 of `emaillogindetails.txt`. Make sure that insecure app access is also enabled for the gmail account.
-7. TBA
+5. Create `emaillogindetails.txt` inside the `assets` folder at `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/assets/`.
+6. Add your gmail address to line 1 and gmail password to line 2.
+7. By default your REST commands will be encrypted over HTTPS with a test certificate and private key that are readily available from this GitHub. This is fine for testing but when you decide to deploy you'll need to create your own private key / public key / certificate combination to keep all your transmissions totally secure.
+  1. Ubuntu private key gen command here
+  2. Ubuntu certificate gen command here
+8. TBA
 
 ##Windows Setup:
 
@@ -73,13 +88,16 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 ####Required Packages:
 1. Git: https://github.com/git-for-windows/git/releases/download/v2.10.2.windows.1/Git-2.10.2-64-bit.exe
 2. Golang: https://storage.googleapis.com/golang/go1.7.3.windows-amd64.msi
-3. TBA - probably glide for better package management
+3. TBA - probably glide for better package management. is glide even on windows?
 
 ####Required Setup:
 1. Use `git clone` to download the repository.
 2. Configure your local system to make sure that the Go installation path is on the system path.
 3. Setup GOBIN and GOPATH system variables for your windows users. Point to the root of the anon-eth-net clone directory. For GOBIN use the same value as GOPATH but add \bin to the end. GOPATH should be something like `C:\users\<username>\clone_root_dir\anon-eth-net`.
-4. Create `emaillogindetails.txt` inside `<clone_root_dir>\anon-eth-net\src\github.com\seantcanavan\assets\`.
-5. Add your gmail address to line 1 and gmail password to line 2 of `emaillogindetails.txt`. Make sure that insecure app access is also enabled for the gmail account.
-6. TBA
-7. TBA
+4. I don't think Windows requires elevated permissions to execute the shutdown command natively from the shell as long as the executing user is an Administrator. Fingers crossed.
+5. Create `emaillogindetails.txt` inside the `assets` folder at `<clone_root_dir>\anon-eth-net\src\github.com\seantcanavan\assets\`.
+6. Add your gmail address to line 1 and gmail password to line 2.
+7. By default your REST commands will be encrypted over HTTPS with a test certificate and private key that are readily available from this GitHub. This is fine for testing but when you decide to deploy you'll need to create your own private key / public key / certificate combination to keep all your transmissions totally secure.
+  1. Windows private key gen command here
+  2. Windows certificate gen command here
+8. TBA

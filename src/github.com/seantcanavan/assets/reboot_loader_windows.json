@@ -1,0 +1,4 @@
+{
+        "Reboot Windows Machine": "shutdown /r /f /t 0"
+}
+
