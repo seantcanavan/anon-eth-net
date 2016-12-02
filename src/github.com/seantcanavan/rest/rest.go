@@ -36,6 +36,8 @@ const RECIPIENT_GMAIL = "emailaddress"
 // The key to the query parameter for the file type to execute for execute handler
 const FILE_TYPE = "filetype"
 
+const ASSET_NAME = "assetname"
+
 // The subject of the email to send out after a successfuly REST port has been negotiated
 const REST_EMAIL_SUBJECT = "REST Service Successfully Started"
 
@@ -56,6 +58,9 @@ const CONFIG_REST_PATH = "config"
 
 // The REST path name which calls the check in handler
 const CHECKIN_REST_PATH = "checkin"
+
+// The REST path name which calls the asset handler
+const ASSET_REST_PATH ="asset"
 
 const REST_LOADER_SUBJECT = "Rest Execute Handler Results"
 
@@ -87,18 +92,18 @@ func NewRestHandler() (*RestHandler, error) {
 	rh.Endpoints[LOG_REST_PATH] = buildGorillaPath(LOG_REST_PATH, TIMESTAMP, RECIPIENT_GMAIL)
 	rh.Endpoints[REBOOT_REST_PATH] = buildGorillaPath(REBOOT_REST_PATH, TIMESTAMP, REBOOT_DELAY)
 	rh.Endpoints[UPDATE_REST_PATH] = buildGorillaPath(UPDATE_REST_PATH, TIMESTAMP)
-	rh.Endpoints[CONFIG_REST_PATH] = buildGorillaPath(CONFIG_REST_PATH, TIMESTAMP)
 	rh.Endpoints[CHECKIN_REST_PATH] = buildGorillaPath(CHECKIN_REST_PATH, TIMESTAMP, RECIPIENT_GMAIL)
 	rh.Endpoints[EXECUTE_REST_PATH] = buildGorillaPath(EXECUTE_REST_PATH, TIMESTAMP, FILE_TYPE)
+	rh.Endpoints[ASSET_REST_PATH] = buildGorillaPath(ASSET_REST_PATH, TIMESTAMP, ASSET_NAME)
 
 	rh.lgr = lgr
 	rh.rtr = mux.NewRouter()
 	rh.rtr.HandleFunc(rh.Endpoints[LOG_REST_PATH], rh.logHandler)
 	rh.rtr.HandleFunc(rh.Endpoints[REBOOT_REST_PATH], rh.rebootHandler)
 	rh.rtr.HandleFunc(rh.Endpoints[UPDATE_REST_PATH], rh.updateHandler)
-	rh.rtr.HandleFunc(rh.Endpoints[CONFIG_REST_PATH], rh.configHandler)
 	rh.rtr.HandleFunc(rh.Endpoints[CHECKIN_REST_PATH], rh.checkinHandler)
 	rh.rtr.HandleFunc(rh.Endpoints[EXECUTE_REST_PATH], rh.executeHandler)
+	rh.rtr.HandleFunc(rh.Endpoints[ASSET_REST_PATH], rh.assetHandler)
 
 	rh.startupRestServer()
 	return &rh, nil
@@ -487,17 +492,20 @@ func (rh *RestHandler) updateHandler(writer http.ResponseWriter, request *http.R
 	return
 }
 
-// configHandler will handle receiving and verifying config commands via REST.
-// Config commands will allow the remote user to set or get the local config
-// file that anon-eth-net uses when started up.
-func (rh *RestHandler) configHandler(writer http.ResponseWriter, request *http.Request) {
+// assetHandler will allow the user to perform basic CRUD operations on files
+// within the "assets" folder. The best usage of this endpoint would be to
+// update the config file with new data. If the file sent over is config.json
+// and the operation is an update or create then the config instance will be
+// reinitialized with the new data.
+func (rh *RestHandler) assetHandler(writer http.ResponseWriter, request *http.Request) {
 
 	var err error
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
+	targetFileName := queryParams[ASSET_NAME]
 
-	rh.lgr.LogMessage("configHandler - remoteTimestamp: %v", remoteTimestamp)
-	defer rh.lgr.LogMessage("configHandler finished\n")
+	rh.lgr.LogMessage("assetHandler - remoteTimestamp: %v targetFileName: %v", remoteTimestamp, targetFileName)
+	defer rh.lgr.LogMessage("assetHandler finished\n")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
 	if err != nil {
@@ -505,12 +513,24 @@ func (rh *RestHandler) configHandler(writer http.ResponseWriter, request *http.R
 		return
 	}
 
+	err = rh.verifyQueryParams(targetFileName)
+	if err != nil {
+		rh.writeResponseAndLog(err.Error(), http.StatusBadRequest, writer, request)
+		return
+	}
+
 	switch request.Method {
 	case "GET":
-		rh.lgr.LogMessage("received remote request for the current config. returning via REST")
+		rh.lgr.LogMessage("received remote request to retrieve file: %v", targetFileName)
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	case "POST":
-		rh.lgr.LogMessage("received remote request to save a new config. downloading via REST")
+		rh.lgr.LogMessage("received remote request to create new file: %v", targetFileName)
+		rh.writeResponseAndLog("", http.StatusOK, writer, request)
+	case "PUT":
+		rh.lgr.LogMessage("received remote request to create a new or modify an existing file: %v", targetFileName)
+		rh.writeResponseAndLog("", http.StatusOK, writer, request)
+	case "DELETE":
+		rh.lgr.LogMessage("received remote request to delete file: %v", targetFileName)
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	default:
 		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)

@@ -249,17 +249,17 @@ func TestUpdateHandlerPass(t *testing.T) {
 	}
 }
 
-func TestConfigHandlerPass(t *testing.T) {
-	path = buildRestPath(protocol, host, port, CONFIG_REST_PATH, nowString)
+func TestAssetHandlerPass(t *testing.T) {
+	path = buildRestPath(protocol, host, port, ASSET_REST_PATH, nowString, "config.json")
 
-	fmt.Println(fmt.Sprintf("TestConfigHandlerPass: client.Get -> %v", path))
+	fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Get -> %v", path))
 
 	response, err := client.Get(path)
 	if err != nil {
 		t.Error(err)
 	}
 
-	fmt.Println(fmt.Sprintf("TestConfigHandlerPass: client.Post -> %v", path))
+	fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Post -> %v", path))
 
 	response, err = client.Post(path, "text/plain", bytes.NewBuffer([]byte("welcome to my house")))
 	if err != nil {
@@ -270,14 +270,35 @@ func TestConfigHandlerPass(t *testing.T) {
 		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
 	}
 
-	fmt.Println(fmt.Sprintf("TestConfigHandlerPass: client.Do -> %v", path))
+	fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Do(PUT) -> %v", path))
 
-	response, err = client.Head(path)
+	putRequest, putErr := http.NewRequest("PUT", path, bytes.NewBuffer([]byte("welcome to my house")))
+	if putErr != nil {
+		t.Error(putErr)
+	}
+
+	response, err = client.Do(putRequest)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if response.StatusCode != http.StatusMethodNotAllowed {
-		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusMethodNotAllowed, response.StatusCode))
+	if response.StatusCode != http.StatusOK {
+		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
+	}
+
+	fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Do(DELETE) -> %v", path))
+
+	deleteRequest, deleteErr := http.NewRequest("DELETE", path, bytes.NewBuffer([]byte("welcome to my house")))
+	if deleteErr != nil {
+		t.Error(deleteErr)
+	}
+
+	response, err = client.Do(deleteRequest)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
 	}
 }
