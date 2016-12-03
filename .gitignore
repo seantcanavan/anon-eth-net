@@ -27,6 +27,10 @@ _testmain.go
 
 #compiled binaries
 /bin/
+/src/github.com/seantcanavan/vendor/
 
 #ignore password files
 src/github.com/seantcanavan/assets/emaillogindetails.txt
+
+#ignore glide files
+src/github.com/seantcanavan/glide.lock

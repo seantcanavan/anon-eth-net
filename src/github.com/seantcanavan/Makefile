@@ -15,12 +15,16 @@ clean:
 	find . -name "*.rep" -type f -delete
 	find . -name "*.tar" -type f -delete
 
+deps:
+	glide install
+
 format:
 	for p in $(PACKAGES); do \
 		gofmt -w ../../$$p; \
 	done
 
 install:
+	glide install
 	for p in $(PACKAGES); do \
 		go install ../../$$p; \
 	done

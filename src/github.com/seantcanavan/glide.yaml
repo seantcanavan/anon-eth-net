@@ -1,0 +1,8 @@
+package: github.com/seantcanavan
+import:
+- package: github.com/facebookgo/freeport
+- package: github.com/gorilla/mux
+  version: v1.1
+- package: github.com/jordan-wright/email
+  version: v2.2
+- package: github.com/nu7hatch/gouuid
