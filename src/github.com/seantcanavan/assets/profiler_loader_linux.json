@@ -8,7 +8,7 @@
     "Distro Version": "cat /etc/os-release",
     "Routing Table": "netstat -r",
     "Network Interfaces": "netstat -i",
-    "Occupied Ports": "sudo netstat -ntlp | grep LISTEN",
+    "Occupied Ports": "sudo netstat -ntlp",
     "Network Usage Stats": "netstat -s",
     "Active Connections": "netstat -va"
 }

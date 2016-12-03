@@ -1,6 +1,6 @@
 ## Anonymous Ethereum Network (anon-eth-net)
 
-Totally anonymous botnet client with an emphasis on individual zombie control, resiliency of the host machine, and ease of remote code execution. Zombies mine ethereum in their free time for fun and check in at pre-specified intervals to report on their CPU, memory, disk, and network utilization. Can be combined with go-dos-yourself to enable remote network performance testing, fuzzing, spoofing, and attacking. Use responsibly.
+Totally anonymous botnet client with an emphasis on individual zombie control, resiliency of the host machine, and ease of remote code execution. Zombies mine ethereum in their free time for fun and check in at pre-specified intervals to report on their CPU, memory, disk, and network utilization. Can be combined with [go-dos-yourself](https://github.com/seantcanavan/go-dos-yourself) to enable remote network performance testing, fuzzing, spoofing, and attacking. Use responsibly.
 
 ###Currently supported platforms:
 - macOS El Capitan 10.11.6
@@ -42,9 +42,9 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 04. Update your sudoers file with the following:
   01. `sudo visudo`
   02. `<username> ALL=(ALL) NOPASSWD:/usr/sbin/lsof`
-  03. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/user/sbin/lsof`
+  03. Mine looks like: `seantcanavan ALL=(ALL) NOPASSWD:/user/sbin/lsof`
   04. `<username> ALL=(ALL) NOPASSWD:/sbin/shutdown`
-  05. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/sbin/shutdown
+  05. Mine looks like: `seantcanavan ALL=(ALL) NOPASSWD:/sbin/shutdown`
 05. Create `emaillogindetails.txt` inside the `assets` folder at `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/assets/`.
 06. Add your gmail address to line 1 and gmail password to line 2.
 07. By default your REST commands will be encrypted over HTTPS with a test certificate and private key that are readily available from this GitHub. This is fine for testing but when you decide to deploy you'll need to create your own private key / public key / certificate combination to keep all your transmissions totally secure.
@@ -79,8 +79,8 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
   07. `export GOBIN=/home/seantcanavan/workspace/anon-eth-net/bin`
 04. Update your sudoers file with the following:
   01. `sudo visudo`
-  02. `<username> ALL=(ALL) NOPASSWD:/usr/bin/netstat`
-  03. `Mine looks like: seantcanavan ALL=(ALL) NOPASSWD:/usr/bin/netstat`
+  02. `<username> ALL=(ALL) NOPASSWD:/bin/netstat`
+  03. Mine looks like: `seantcanavan ALL=(ALL) NOPASSWD:/bin/netstat`
 05. Create `emaillogindetails.txt` inside the `assets` folder at `<clone_root_dir>/anon-eth-net/src/github.com/seantcanavan/assets/`.
 06. Add your gmail address to line 1 and gmail password to line 2.
 07. By default your REST commands will be encrypted over HTTPS with a test certificate and private key that are readily available from this GitHub. This is fine for testing but when you decide to deploy you'll need to create your own private key / public key / certificate combination to keep all your transmissions totally secure.

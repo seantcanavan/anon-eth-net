@@ -60,7 +60,7 @@ const CONFIG_REST_PATH = "config"
 const CHECKIN_REST_PATH = "checkin"
 
 // The REST path name which calls the asset handler
-const ASSET_REST_PATH ="asset"
+const ASSET_REST_PATH = "asset"
 
 const REST_LOADER_SUBJECT = "Rest Execute Handler Results"
 

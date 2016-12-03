@@ -9,6 +9,8 @@ import (
 	"github.com/seantcanavan/utils"
 )
 
+var udr *Updater
+
 func TestMain(m *testing.M) {
 	assetPath, assetErr := utils.AssetPath("config.json")
 	if assetErr != nil {
@@ -24,42 +26,26 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
+	updater, udrError := NewUpdater()
+	if udrError != nil {
+		fmt.Println(udrError)
+		return
+	}
+
+	udr = updater
+
+	// clear our the buffered log before exiting
+	defer udr.lgr.Flush()
+
 	os.Exit(m.Run())
 }
 
 func TestVersionCompare(t *testing.T) {
-	udr, udrError := NewUpdater()
 
-	if udrError != nil {
-		t.Error(udrError)
+	update, updateErr := udr.UpdateNecessary()
+	if updateErr != nil {
+		t.Error(updateErr)
 	}
 
-	localAsset, assetErr := utils.AssetPath(config.Cfg.LocalVersionURI)
-	if assetErr != nil {
-		t.Error(assetErr)
-	}
-
-	localVersion, localError := udr.localVersion(localAsset)
-	remoteVersion, remoteError := udr.remoteVersion(config.Cfg.RemoteVersionURI)
-
-	if localError != nil {
-		t.Error(localError)
-	} else if remoteError != nil {
-		t.Error(remoteError)
-	}
-
-	fmt.Println(fmt.Sprintf("localVersion: %v", localVersion))
-	fmt.Println(fmt.Sprintf("remoteVersion: %v", remoteVersion))
-
-	if localVersion > remoteVersion {
-		fmt.Println("Your version is higher than the remote. Push your changes!")
-	}
-
-	if localVersion == remoteVersion {
-		fmt.Println("Your version equals the remote version. Do some work!")
-	}
-
-	if localVersion < remoteVersion {
-		fmt.Println("Your version is lower than the remote. Pull the latest code and build it!")
-	}
+	fmt.Println(fmt.Sprintf("update necessary: %v", update))
 }
