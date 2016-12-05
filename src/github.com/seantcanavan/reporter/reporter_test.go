@@ -1,29 +1,19 @@
 package reporter
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/utils"
 )
 
 func TestMain(m *testing.M) {
 
-	flag.Parse()
-
-	assetPath, assetErr := utils.AssetPath("config.json")
-	if assetErr != nil {
-		fmt.Println(assetErr)
-		return
-	}
-
-	err := config.FromFile(assetPath)
-	if err != nil {
-		fmt.Println(err)
+	configErr := config.FromFile()
+	if configErr != nil {
+		fmt.Println(configErr)
 		return
 	}
 

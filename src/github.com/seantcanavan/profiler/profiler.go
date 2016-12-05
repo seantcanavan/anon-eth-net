@@ -14,11 +14,13 @@ import (
 	"github.com/seantcanavan/utils"
 )
 
-const END_COMMAND_DIVIDER = "------------------------------------------------------------"
-const SEPARATING_SEQUENCE = "\n\n"
-const PROFILE_FILE_EXTENSION = ".rep"
+// the text to print after we finish executing a command so successive commands have some kind of visual break
+const END_COMMAND_DIVIDER = "------------------------------------------------------------\n\n"
+// prof is short for profile and is the file extension we use after generating full system profiles
+const PROFILE_FILE_EXTENSION = ".prof"
+// the subject of the email that we use when sending out the profile
 const PROFILE_EMAIL_SUBJECT = "System Profile"
-const SYS_PROFILE_FILE_NAME = "profile_file"
+// the base name of the archive file that we save all our individual reports into
 const SYS_PROFILE_ARCHIVE_NAME = "profile_archive"
 
 // ProfileAsArchive will generate an individual file for each
@@ -148,6 +150,5 @@ func execCommand(header string, command string, args ...string) []byte {
 	}
 
 	cmdBuffer.WriteString(END_COMMAND_DIVIDER)
-	cmdBuffer.WriteString(SEPARATING_SEQUENCE)
 	return cmdBuffer.Bytes()
 }

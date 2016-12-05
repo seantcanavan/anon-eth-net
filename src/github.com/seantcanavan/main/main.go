@@ -5,13 +5,11 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/nu7hatch/gouuid"
 	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/loader"
 	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/network"
 	"github.com/seantcanavan/updater"
-	"github.com/seantcanavan/utils"
 )
 
 // Logger for the main package and any errors it encounters while executing
@@ -38,15 +36,9 @@ func main() {
 
 	// load the main config file from JSON which we'll use throughout execution.
 	// we're exiting under an error condition since it's so early in execution.
-	assetPath, assetErr := utils.AssetPath("config.json")
-	if assetErr != nil {
-		fmt.Println(fmt.Sprintf("Could not successfully locate the config asset: %v. Make sure its path is ./assets/config.json.", assetPath))
-		os.Exit(1)
-	}
-
-	configErr := config.FromFile(assetPath)
+	configErr := config.FromFile()
 	if configErr != nil {
-		fmt.Println(fmt.Sprintf("Could not successfully load config from: %v. Make sure the JSON is well formed and the values are correct for each variable. Revert to the standard config on github if this problem persists.", assetPath))
+		fmt.Println(fmt.Sprintf("Could not successfully load config. Received error %v. Make sure the JSON is well formed and the values are correct for each variable. Revert to the standard config on github if this problem persists.", configErr))
 		os.Exit(1)
 	}
 
@@ -102,7 +94,7 @@ func main() {
 	net = mainNetwork
 
 	// if this is our first time ever starting up - run the initial config
-	if config.Cfg.InitialStartup {
+	if config.Cfg.InitialStartup == "yes" {
 		err := initialStartup()
 		if err != nil {
 			lgr.LogMessage(err.Error())
@@ -110,7 +102,7 @@ func main() {
 	}
 
 	// if this is our first time starting up after an update - run the update config
-	if config.Cfg.FirstRunAfterUpdate {
+	if config.Cfg.FirstRunAfterUpdate == "yes" {
 		err := firstRunAfterUpdate()
 		if err != nil {
 			lgr.LogMessage(err.Error())
@@ -150,32 +142,19 @@ func main() {
 		net.Run()
 	}()
 
-	lgr.Flush()
+	lgr.LogMessage("Backing up the latest config changes before exiting")
+	config.ToFile()
 }
 
 // initialStartup will be executed only when this program is running for the
 // first time on a new host.
 func initialStartup() error {
-	uuid, err := uuid.NewV4()
-	if err != nil {
-		return err
-	}
-
-	// update the UUID if it doesn't exist
-	config.Cfg.DeviceId = uuid.String()
-
-	// we're finishing the first run!
-	config.Cfg.InitialStartup = false
-
 	// more stuff later!
 
-	// push the UUID back to the file for next time
-	assetPath, assetErr := utils.AssetPath("config.json")
-	if assetErr != nil {
-		return assetErr
-	}
+	// we're finishing the first run!
+	config.Cfg.InitialStartup = "no"
 
-	return config.ToFile(assetPath)
+	return config.ToFile()
 }
 
 // firstRunAfterUpdate will be executed only when this program is running for
@@ -183,10 +162,10 @@ func initialStartup() error {
 // opportunity to do some post-update cleanup to make sure everything is in
 // working order.
 func firstRunAfterUpdate() error {
-	config.Cfg.FirstRunAfterUpdate = false
-	assetPath, assetErr := utils.AssetPath("config.json")
-	if assetErr != nil {
-		return assetErr
-	}
-	return config.ToFile(assetPath)
+	// more stuff later!
+
+	//we're finishing the run after an update
+	config.Cfg.FirstRunAfterUpdate = "no"
+
+	return config.ToFile()
 }

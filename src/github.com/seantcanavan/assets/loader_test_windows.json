@@ -1,5 +1,5 @@
 {
-	"windows dir example": "cmd /C dir",
-	"windows cd example": "cmd /C cd ..",
-	"windows pwd example": "cmd /C pwd"
+	"loader_test_windows_01": "cmd /C dir",
+	"loader_test_windows_02": "cmd /C cd ..",
+	"loader_test_windows_03": "cmd /C pwd"
 }

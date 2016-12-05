@@ -1,5 +1,5 @@
 {
-	"loader example 01": "ls -la",
-	"loader example 02": "ls",
-	"loader example 03": "pwd"
+	"loader_test_darwin_01": "ls -la",
+	"loader_test_darwin_02": "ls",
+	"loader_test_darwin_03": "pwd"
 }

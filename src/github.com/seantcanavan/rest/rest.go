@@ -23,45 +23,33 @@ import (
 // The acceptable amount of time between the incoming timestamp and the local timestamp in seconds
 // Microsoft recommends a maximum of 5 minutes: https://technet.microsoft.com/en-us/library/jj852172(v=ws.11).aspx
 const TIMESTAMP_DELTA_SECONDS = 300
-
 // The key to the query parameter for the incoming timestamp value
 const TIMESTAMP = "timestamp"
-
 // The key to the query parameter for the reboot delay value
 const REBOOT_DELAY = "delay"
-
 // The key to the query parameter for the remote log email address recipient value
 const RECIPIENT_GMAIL = "emailaddress"
-
 // The key to the query parameter for the file type to execute for execute handler
 const FILE_TYPE = "filetype"
-
+// The key to the query parameter for the asset file name to perform CRUD operations on over REST
 const ASSET_NAME = "assetname"
-
 // The subject of the email to send out after a successfuly REST port has been negotiated
 const REST_EMAIL_SUBJECT = "REST Service Successfully Started"
-
 // The REST path name which calls the execute handler
 const EXECUTE_REST_PATH = "execute"
-
 // The REST path name which calls the reboot handler
 const REBOOT_REST_PATH = "reboot"
-
 // The REST path name which calls the log handler
 const LOG_REST_PATH = "logs"
-
 // The REST path name which calls the update handler
 const UPDATE_REST_PATH = "update"
-
 // The REST path name which calls the config handler
 const CONFIG_REST_PATH = "config"
-
 // The REST path name which calls the check in handler
 const CHECKIN_REST_PATH = "checkin"
-
 // The REST path name which calls the asset handler
 const ASSET_REST_PATH = "asset"
-
+// The subject of the email to send out when the REST package is finished executing remote code via the loader package
 const REST_LOADER_SUBJECT = "Rest Execute Handler Results"
 
 // RestHandler contains all the functionality to interact with this remote

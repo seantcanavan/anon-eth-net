@@ -1,14 +1,10 @@
 {
-  "CheckInGmailCredentialsFile" : "emaillogindetails.txt",
+  "CheckInGmailAddress" : "yourgmailhere@gmail.com",
+  "CheckInGmailPassword" : "yourgmailpasswordhere",
   "CheckInFrequencySeconds" : 3600,
-  "UpdateFrequencySeconds" : 3600,
-  "RemoteUpdateURI" : "https://github.com/seantcanavan/anon-eth-net.git",
-  "RemoteVersionURI" : "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/assets/version.no",
   "NetQueryFrequencySeconds" : 3600,
-  "LocalVersionURI" : "version.no",
-  "LogVolatility" : 3,
-  "DeviceName" : "LG Smart Fridge",
-  "DeviceId" : "519a2a15-afad-4c1a-94a3-71660c83504b",
-  "InitialStartup" : false,
-  "FirstRunAfterUpdate" : false
+  "LogVolatility": 3,
+
+  "DeviceName" : "My Little Raspberry Pi",
+  "DeviceId" : "aa3b2cd6-7a95-4b2a-af33-7eb953d730a9"
 }

@@ -1,6 +1,17 @@
 ## Anonymous Ethereum Network (anon-eth-net)
 
-Totally anonymous botnet client with an emphasis on individual zombie control, resiliency of the host machine, and ease of remote code execution. Zombies mine ethereum in their free time for fun and check in at pre-specified intervals to report on their CPU, memory, disk, and network utilization. Can be combined with [go-dos-yourself](https://github.com/seantcanavan/go-dos-yourself) to enable remote network performance testing, fuzzing, spoofing, and attacking. Use responsibly.
+Totally anonymous botnet client with an emphasis on individual zombie control, resiliency of the host machine, and ease of remote code execution. Zombies mine ethereum in their free time for fun and check in at pre-specified intervals to report on their CPU, memory, disk, and network utilization.
+
+Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yourself) to enable remote network performance testing, fuzzing, spoofing, and attacking. Use responsibly.
+
+Feature List:
+01. Automatic logging of all processes that are executed. Log files are automatically pruned to conserve disk space after a configurable amount of time.
+02. Easily configurable via one simple JSON file. Up and running after setting only 5 easy variables
+03. Arbitrary process loader can run processes synchronously or asynchronously. Output is automatically captured and logged to disk. Command output can also be emailed after execution finishes.
+04. Built in network manager can monitor the internet connectivity of all clients at a regular interval and automatically reboot the machine as necessary in order to restore a broken link state.
+05. Built in system profiler monitors all key aspects of the client machine such as disk space, CPU and memory performance, open ports, network interfaces, kernel version, etc... Reports are automatically generated at set intervals and emailed directly to the user.
+06. Extremely robust and secure HTTPS REST interface. Code can be directly passed to the client in binary, command line script, or python format and directly executed. Logs are generated and sent back directly to the user after execution finishes. Configuration files can also be updated, logs can be collected / purged, and the machine can be rebooted all on command.
+07. Work in progress - a robust self-updating system which ensures that anon-eth-net is always running the most up-to-date version.
 
 ###Currently supported platforms:
 - macOS El Capitan 10.11.6

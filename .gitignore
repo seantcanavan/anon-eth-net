@@ -30,7 +30,7 @@ _testmain.go
 /src/github.com/seantcanavan/vendor/
 
 #ignore password files
-src/github.com/seantcanavan/assets/emaillogindetails.txt
+src/github.com/seantcanavan/assets/emaillogin.txt
 
 #ignore glide files
 src/github.com/seantcanavan/glide.lock

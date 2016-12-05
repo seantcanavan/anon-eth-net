@@ -29,15 +29,9 @@ var restHandler *RestHandler
 
 func TestMain(m *testing.M) {
 
-	configPath, configPathErr := utils.AssetPath("config.json")
-	if configPathErr != nil {
-		fmt.Println(configPathErr)
-		return
-	}
-
-	cfgErr := config.FromFile(configPath)
-	if cfgErr != nil {
-		fmt.Println(cfgErr)
+	configErr := config.FromFile()
+	if configErr != nil {
+		fmt.Println(configErr)
 		return
 	}
 
@@ -78,7 +72,6 @@ func TestMain(m *testing.M) {
 	client = &http.Client{Transport: transport}
 
 	result := m.Run()
-	restHandler.lgr.Flush()
 	os.Exit(result)
 }
 

@@ -132,12 +132,10 @@ func (l *Loader) StartAsynchronous() []LoaderProcess {
 			}
 			currentProcess.Lgr.LogMessage("LoaderProcess: %+v", currentProcess)
 			currentProcess.Lgr.LogMessage("Command output:\n%v", string(output))
-			currentProcess.Lgr.Flush()
 			lgr.LogMessage("Removing '%v' process from the Asynchronous WaitGroup. Execution took: %v", currentProcess.Name, currentProcess.Duration)
 		}(&l.Processes[index]) // passing the current process using index
 	}
 	waitGroup.Wait()
-	lgr.Flush()
 	return l.Processes
 }
 
@@ -160,8 +158,6 @@ func (l *Loader) StartSynchronous() []LoaderProcess {
 		}
 		currentProcess.Lgr.LogMessage("LoaderProcess: %+v", currentProcess)
 		currentProcess.Lgr.LogMessage("Command output:\n%v", string(output))
-		currentProcess.Lgr.Flush()
 	}
-	lgr.Flush()
 	return l.Processes
 }

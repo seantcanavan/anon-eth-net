@@ -9,12 +9,9 @@ import (
 
 	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/logger"
-	"github.com/seantcanavan/utils"
 )
 
 type Updater struct {
-	localVersionURI  string
-	remoteVersionURI string
 	lgr              *logger.Logger
 }
 
@@ -24,15 +21,7 @@ func NewUpdater() (*Updater, error) {
 		return nil, loggerError
 	}
 
-	localVersionPath, pathErr := utils.AssetPath(config.Cfg.LocalVersionURI)
-	if pathErr != nil {
-		return nil, pathErr
-	}
-
-	udr := &Updater{lgr: localLogger,
-		localVersionURI:  localVersionPath,
-		remoteVersionURI: config.Cfg.RemoteVersionURI}
-
+	udr := &Updater{lgr: localLogger}
 	return udr, nil
 }
 
@@ -45,12 +34,10 @@ func (udr *Updater) Run() error {
 	udr.lgr.LogMessage("waiting for updates. sleeping %v seconds", config.Cfg.CheckInFrequencySeconds)
 	time.Sleep(config.Cfg.CheckInFrequencySeconds * time.Second)
 
-	local, localError := udr.localVersion()
+	local := config.Cfg.LocalVersion
 	remote, remoteError := udr.remoteVersion()
 
-	if localError != nil {
-		return localError
-	} else if remoteError != nil {
+	if remoteError != nil {
 		return remoteError
 	}
 
@@ -65,10 +52,7 @@ func (udr *Updater) Run() error {
 
 func (udr *Updater) UpdateNecessary() (bool, error) {
 
-	localVersion, localErr := udr.localVersion()
-	if localErr != nil {
-		return false, localErr
-	}
+	localVersion := config.Cfg.LocalVersion
 
 	remoteVersion, remoteErr := udr.remoteVersion()
 	if remoteErr != nil {
@@ -91,28 +75,6 @@ func (udr *Updater) UpdateNecessary() (bool, error) {
 
 }
 
-// getCurrentVersion will grab the version of this program from the local given
-// file path where the version number should reside as a whole integer number.
-// The default project structure is to have this file be named 'version.no' and
-// be placed within the main package.
-func (udr *Updater) localVersion() (uint64, error) {
-
-	bytes, err := ioutil.ReadFile(udr.localVersionURI)
-	if err != nil {
-		return 0, err
-	}
-
-	s := string(bytes)
-	s = strings.Trim(s, "\n")
-	localVersion, castError := strconv.ParseUint(s, 10, 64)
-	if castError != nil {
-		return 0, castError
-	}
-
-	udr.lgr.LogMessage("Successfully retrieved local version: %v", localVersion)
-	return localVersion, nil
-}
-
 // getRemoteVersion will grab the version of this program from the remote given
 // file path where the version number should reside as a whole integer number.
 // The default project structure is to have this file be named 'version.no' and
@@ -120,7 +82,7 @@ func (udr *Updater) localVersion() (uint64, error) {
 func (udr *Updater) remoteVersion() (uint64, error) {
 
 	var s string // hold the value from the http GET
-	resp, getError := http.Get(udr.remoteVersionURI)
+	resp, getError := http.Get(config.Cfg.RemoteVersionURI)
 	if getError != nil {
 		return 0, getError
 	}

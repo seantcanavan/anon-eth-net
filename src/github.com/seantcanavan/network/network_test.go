@@ -6,22 +6,15 @@ import (
 	"testing"
 
 	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/utils"
 )
 
 var netw *Network
 
 func TestMain(m *testing.M) {
 
-	configPath, configPathErr := utils.AssetPath("config.json")
-	if configPathErr != nil {
-		fmt.Println(configPathErr)
-		return
-	}
-
-	cfgErr := config.FromFile(configPath)
-	if cfgErr != nil {
-		fmt.Println(cfgErr)
+	configErr := config.FromFile()
+	if configErr != nil {
+		fmt.Println(configErr)
 		return
 	}
 
@@ -34,7 +27,6 @@ func TestMain(m *testing.M) {
 	netw = network
 
 	result := m.Run()
-	netw.lgr.Flush()
 	os.Exit(result)
 }
 

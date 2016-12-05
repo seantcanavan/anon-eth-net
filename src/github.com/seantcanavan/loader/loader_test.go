@@ -1,23 +1,26 @@
 package loader
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/utils"
 )
 
+func TestMain(m *testing.M) {
+
+	configErr := config.FromFile()
+	if configErr != nil {
+		fmt.Println(fmt.Sprintf("could not initialize config: %v", configErr))
+	}
+
+	result := m.Run()
+	os.Exit(result)
+}
+
 func TestProcessMap(t *testing.T) {
-
-	assetPath, assetErr := utils.AssetPath("config.json")
-	if assetErr != nil {
-		t.Error(assetErr)
-	}
-
-	cfgErr := config.FromFile(assetPath)
-	if cfgErr != nil {
-		t.Error(cfgErr)
-	}
 
 	loaderAssetPath, assetErr := utils.SysAssetPath("loader_test.json")
 	if assetErr != nil {
