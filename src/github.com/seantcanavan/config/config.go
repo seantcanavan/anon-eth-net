@@ -17,6 +17,7 @@ type Config struct {
 	UpdateFrequencySeconds      int           `json:"UpdateFrequencySeconds"`      // (R) The frequency with which this program will attempt to update itself. In seconds.
 	RemoteUpdateURI             string        `json:"RemoteUpdateURI"`             // (R) The remote location where new source code can be obtained from for this program.
 	RemoteVersionURI            string        `json:"RemoteVersionURI"`            // (R) The remote URI where the latest version number of this program can be obtained from.
+	NetQueryFrequencySeconds    time.Duration `json:"NetQueryFrequencySeconds"`    // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
 	LocalVersionURI             string        `json:"LocalVersionURI"`             // (N/A) The local URI where the current running version of this program can be obtained from.
 	LocalVersion                uint64        `json:"LocalVersion"`                // (N/A) The local version of this program that is currently running.
 	LogVolatility               int           `json:"LogVolatility"`               // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
@@ -37,6 +38,7 @@ func ConfigJSONParametersExplained() string {
 	UpdateFrequencySeconds      int           json:"UpdateFrequencySeconds"      // (R) The frequency with which this program will attempt to update itself. In seconds.
 	RemoteUpdateURI             string        json:"RemoteUpdateURI"             // (R) The remote location where new source code can be obtained from for this program.
 	RemoteVersionURI            string        json:"RemoteVersionURI"            // (R) The remote URI where the latest version number of this program can be obtained from.
+	NetQueryFrequencySeconds    time.Duration json:"NetQueryFrequencySeconds"    // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
 	LocalVersionURI             string        json:"LocalVersionURI"             // (N/A) The local URI where the current running version of this program can be obtained from.
 	LocalVersion                uint64        json:"LocalVersion"                // (N/A) The local version of this program that is currently running.
 	LogVolatility               int           json:"LogVolatility"               // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.

@@ -27,7 +27,9 @@ func TestMain(m *testing.M) {
 		return
 	}
 
-	os.Exit(m.Run())
+	result := m.Run()
+	// flush logs
+	os.Exit(result)
 }
 
 func TestSimpleEmail(t *testing.T) {

@@ -44,6 +44,10 @@ func TestConfigFromFilePass(t *testing.T) {
 		t.Errorf("Cfg.RemoteVersionURI did not unmarshal correctly: %v", Cfg.RemoteVersionURI)
 	}
 
+	if Cfg.NetQueryFrequencySeconds != 3600 {
+		t.Errorf("Cfg.NetQueryFrequencySeconds did not unmarshal correctly: %v", Cfg.NetQueryFrequencySeconds)
+	}
+
 	if Cfg.LocalVersionURI != "version.no" {
 		t.Errorf("Cfg.LocalVersionURI did not unmarshal correctly: %v", Cfg.LocalVersionURI)
 	}

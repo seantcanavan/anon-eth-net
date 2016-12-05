@@ -34,10 +34,9 @@ func TestMain(m *testing.M) {
 
 	udr = updater
 
-	// clear our the buffered log before exiting
-	defer udr.lgr.Flush()
-
-	os.Exit(m.Run())
+	result := m.Run()
+	udr.lgr.Flush()
+	os.Exit(result)
 }
 
 func TestVersionCompare(t *testing.T) {

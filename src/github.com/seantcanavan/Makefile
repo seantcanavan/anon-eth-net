@@ -24,7 +24,6 @@ format:
 	done
 
 install:
-	glide install
 	for p in $(PACKAGES); do \
 		go install ../../$$p; \
 	done

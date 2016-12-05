@@ -1,10 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(m.Run())
+
+	result := m.Run()
+	// flush logs
+	os.Exit(result)
 }

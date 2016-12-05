@@ -216,7 +216,6 @@ func (rh *RestHandler) writeResponseAndLog(errorMessage string, httpStatusCode i
 	statusBuffer.WriteString(fmt.Sprintf("%+v", &request))
 	rh.lgr.LogMessage(errorMessage)
 	rh.lgr.LogMessage(statusBuffer.String())
-	rh.lgr.Flush()
 }
 
 // checkinHandler will handle receiving and verifying check-in commands via REST.

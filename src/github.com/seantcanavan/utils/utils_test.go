@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+func TestMain(m *testing.M) {
+
+	result := m.Run()
+	// flush logs
+	os.Exit(result)
+}
+
 func TestGetAssetPathPass(t *testing.T) {
 	relativePath, pathErr := AssetPath("config.json")
 	if pathErr != nil {

@@ -1,13 +1,14 @@
 {
-  "CheckInGmailCredentialsFile": "emaillogindetails.txt",
-  "CheckInFrequencySeconds": 3600,
-  "UpdateFrequencySeconds": 3600,
-  "RemoteUpdateURI": "https://github.com/seantcanavan/anon-eth-net.git",
-  "RemoteVersionURI": "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/assets/version.no",
-  "LocalVersionURI": "version.no",
-  "LogVolatility": 3,
-  "DeviceName": "LG Smart Fridge",
-  "DeviceId": "519a2a15-afad-4c1a-94a3-71660c83504b",
-  "InitialStartup": false,
-  "FirstRunAfterUpdate": false
+  "CheckInGmailCredentialsFile" : "emaillogindetails.txt",
+  "CheckInFrequencySeconds" : 3600,
+  "UpdateFrequencySeconds" : 3600,
+  "RemoteUpdateURI" : "https://github.com/seantcanavan/anon-eth-net.git",
+  "RemoteVersionURI" : "https://raw.githubusercontent.com/seantcanavan/anon-eth-net/master/src/github.com/seantcanavan/assets/version.no",
+  "NetQueryFrequencySeconds" : 3600,
+  "LocalVersionURI" : "version.no",
+  "LogVolatility" : 3,
+  "DeviceName" : "LG Smart Fridge",
+  "DeviceId" : "519a2a15-afad-4c1a-94a3-71660c83504b",
+  "InitialStartup" : false,
+  "FirstRunAfterUpdate" : false
 }

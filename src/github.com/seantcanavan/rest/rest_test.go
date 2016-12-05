@@ -25,6 +25,7 @@ var port string
 var publicKey string
 var transport *http.Transport
 var client *http.Client
+var restHandler *RestHandler
 
 func TestMain(m *testing.M) {
 
@@ -55,11 +56,13 @@ func TestMain(m *testing.M) {
 	now = time.Now().Unix()
 	nowString = strconv.FormatInt(now, 10)
 
-	restHandler, restErr := NewRestHandler()
+	newHandler, restErr := NewRestHandler()
 	if restErr != nil {
 		fmt.Println(restErr)
 		return
 	}
+
+	restHandler = newHandler
 
 	port = restHandler.Port
 	protocol = "https"
@@ -74,7 +77,9 @@ func TestMain(m *testing.M) {
 	transport = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: rootAuthorities}}
 	client = &http.Client{Transport: transport}
 
-	os.Exit(m.Run())
+	result := m.Run()
+	restHandler.lgr.Flush()
+	os.Exit(result)
 }
 
 func TestCheckinHandlerPass(t *testing.T) {
