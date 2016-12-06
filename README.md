@@ -4,7 +4,7 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 
 Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yourself) to enable remote network performance testing, fuzzing, spoofing, and attacking. Use responsibly.
 
-Feature List:
+###Feature List:
 01. Automatic logging of all processes that are executed. Log files are automatically pruned to conserve disk space after a configurable amount of time.
 02. Easily configurable via one simple JSON file. Up and running after setting only 5 easy variables
 03. Arbitrary process loader can run processes synchronously or asynchronously. Output is automatically captured and logged to disk. Command output can also be emailed after execution finishes.
