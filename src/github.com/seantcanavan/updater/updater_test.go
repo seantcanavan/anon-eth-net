@@ -6,23 +6,16 @@ import (
 	"testing"
 
 	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/utils"
 )
 
 var udr *Updater
 
 func TestMain(m *testing.M) {
-	assetPath, assetErr := utils.AssetPath("config.json")
-	if assetErr != nil {
-		fmt.Println(assetErr)
-		return
-	}
 
-	cfgError := config.FromFile(assetPath)
+	configErr := config.FromFile()
 
-	if cfgError != nil {
-		fmt.Println("test init failure")
-		fmt.Println(cfgError)
+	if configErr != nil {
+		fmt.Println(configErr)
 		os.Exit(1)
 	}
 

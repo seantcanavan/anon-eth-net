@@ -94,7 +94,7 @@ func FromFile() error {
 	}
 
 	// check if a manual email login file was provided to secretly override the defaults
-	emailAssetPath, emailAssetErr := utils.AssetPath("emaillogin.txt")
+	emailAssetPath, emailAssetErr := utils.AssetPath("emaillogin.conf")
 	if emailAssetErr == nil {
 		fileLines, readErr := utils.ReadLines(emailAssetPath)
 		if readErr != nil {

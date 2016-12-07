@@ -11,7 +11,7 @@ func TestLogger(t *testing.T) {
 
 	logBaseName := "logger_package"
 
-	logNameAsset, assetErr := utils.AssetPath("logger_test_sample.txt")
+	logNameAsset, assetErr := utils.AssetPath("logger_test.sample")
 	if assetErr != nil {
 		t.Error(assetErr)
 	}

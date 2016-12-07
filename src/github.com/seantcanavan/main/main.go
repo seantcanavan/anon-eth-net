@@ -6,11 +6,13 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/loader"
 	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/network"
+	"github.com/seantcanavan/profiler"
 	"github.com/seantcanavan/updater"
 	"github.com/seantcanavan/utils"
 )
@@ -153,9 +155,15 @@ func main() {
 		net.Run()
 	}()
 
+	// kick off the system profiler loop to send out system profiles at the specified interval
+	go func() {
+		lgr.LogMessage("Sleeping for %d seconds before sending a system profile", config.Cfg.CheckInFrequencySeconds)
+		time.Sleep(time.Duration(config.Cfg.CheckInFrequencySeconds))
+		lgr.LogMessage("Sending archive to provided email after sleeping %d seconds", config.Cfg.CheckInFrequencySeconds)
+		profiler.SendArchiveProfileAsAttachment()
+	}()
 
 	// wait for SIGINT before exiting
-
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
 
