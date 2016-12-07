@@ -3,13 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 
 	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/loader"
 	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/network"
 	"github.com/seantcanavan/updater"
+	"github.com/seantcanavan/utils"
 )
 
 // Logger for the main package and any errors it encounters while executing
@@ -28,10 +31,12 @@ func main() {
 
 	// check if the user is confused at first and is so, print the config.json
 	// with code documentation included. and and then exit.
-	if os.Args[1] == "h" || os.Args[1] == "help" || os.Args[1] == "?" {
-		fmt.Println("Does not require any command line arguments. Refer to the default assets/config.json file for all the parameters required for AEN to execute successfully.")
-		fmt.Println(config.ConfigJSONParametersExplained())
-		os.Exit(1)
+	if len(os.Args) > 1 {
+		if os.Args[1] == "h" || os.Args[1] == "help" || os.Args[1] == "?" {
+			fmt.Println("Does not require any command line arguments. Refer to the default ./assets/config.json file for all the parameters required for anon-eth-net to execute successfully.")
+			fmt.Println(config.ConfigJSONParametersExplained())
+			os.Exit(1)
+		}
 	}
 
 	// load the main config file from JSON which we'll use throughout execution.
@@ -45,41 +50,47 @@ func main() {
 	// generate a loader instance with the appropriate JSON file based on the
 	// system architecture
 	var mainLoader *loader.Loader
-	var loaderError error
+	var loaderErr error
 
 	switch runtime.GOOS {
-	case "windows":
-		mainLoader, loaderError = loader.NewLoader("main_loader_windows.json")
-	case "darwin":
-		mainLoader, loaderError = loader.NewLoader("main_loader_darwin.json")
-	case "linux":
-		mainLoader, loaderError = loader.NewLoader("main_loader_linux.json")
+	case "windows", "darwin", "linux":
+		loaderAssetPath, assetErr := utils.SysAssetPath("main_loader.json")
+		if assetErr != nil {
+			fmt.Println(assetErr)
+			fmt.Println("Could not successfully load main_loader.json... Exiting...")
+			os.Exit(1)
+		}
+		mainLoader, loaderErr = loader.NewLoader(loaderAssetPath)
 	default:
 		fmt.Println(fmt.Sprintf("Could not create loader for unsupported operating system: %v. Please choose from one of the selected supported operating systems to continue. Refer to the README.md for the list.", runtime.GOOS))
 		os.Exit(1)
 	}
 
-	if loaderError != nil {
+	if loaderErr != nil {
+		fmt.Println(loaderErr)
 		fmt.Println("Couldn't create the loader for executing external processes... Exiting...")
 		os.Exit(1)
 	}
 
 	// generate a Logger instance with the predefined volatility value and
 	// name it after the main_package to differentiate it from other packages
-	mainLogger, loggerError := logger.FromVolatilityValue("main_package")
-	if loggerError != nil {
+	mainLogger, loggerErr := logger.FromVolatilityValue("main_package")
+	if loggerErr != nil {
+		fmt.Println(loggerErr)
 		fmt.Println("Couldn't create the logger for logging local activity to disk... Exiting...")
 		os.Exit(1)
 	}
 
-	mainUpdater, updaterError := updater.NewUpdater()
-	if updaterError != nil {
+	mainUpdater, updaterErr := updater.NewUpdater()
+	if updaterErr != nil {
+		fmt.Println(updaterErr)
 		fmt.Println("Couldn't create the automatic updater for AEN... Exiting...")
 		os.Exit(1)
 	}
 
 	mainNetwork, networkErr := network.NewNetwork()
 	if networkErr != nil {
+		fmt.Println(updaterErr)
 		fmt.Println("Couldn't create the network monitor... Exiting...")
 		os.Exit(1)
 	}
@@ -142,8 +153,26 @@ func main() {
 		net.Run()
 	}()
 
+
+	// wait for SIGINT before exiting
+
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		signal := <-sigs
+		lgr.LogMessage("Received interrupting signal: %v", signal)
+		done <- true
+	}()
+
+	lgr.LogMessage("Executing... Press CTRL+C to exit. Browse local log files to keep an eye on each individual component.")
+	<-done
+	lgr.LogMessage("Clean exit after a CTRL+C interrupt.")
 	lgr.LogMessage("Backing up the latest config changes before exiting")
 	config.ToFile()
+	lgr.LogMessage("Fin")
 }
 
 // initialStartup will be executed only when this program is running for the

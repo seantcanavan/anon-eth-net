@@ -43,7 +43,6 @@ type Config struct {
 	RemoteUpdateURI             string        `json:"RemoteUpdateURI"`             // (D) The remote location where new source code can be obtained from for this program.
 	RemoteVersionURI            string        `json:"RemoteVersionURI"`            // (D) The remote URI where the latest version number of this program can be obtained from.
 	LocalVersion                uint64        `json:"LocalVersion"`                // (D) The local version of this program that is currently running.
-
 }
 
 // COnfigJSONParametersExplained() returns a nicely formatted string which
@@ -192,7 +191,7 @@ func ToFile() error {
 		return assetErr
 	}
 
-	bytes, marshalError := json.Marshal(Cfg)
+	bytes, marshalError := json.MarshalIndent(Cfg, "", "\t")
 	if marshalError != nil {
 		return marshalError
 	}

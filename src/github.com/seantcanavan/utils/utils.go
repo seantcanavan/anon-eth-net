@@ -85,7 +85,7 @@ func UnixDateString() string {
 // off of the current system time.
 func FullDateStringSafe() string {
 	t := time.Now()
-	return fmt.Sprintf("%v-%02d-%02d %02d_%02d_%02d.%02d",
+	return fmt.Sprintf("[%v-%02d-%02d][%02d_%02d_%02d.%02d]",
 		t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond())
 }
 

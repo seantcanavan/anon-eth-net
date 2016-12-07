@@ -28,6 +28,7 @@ _testmain.go
 #compiled binaries
 /bin/
 /src/github.com/seantcanavan/vendor/
+src/github.com/seantcanavan/bin/
 
 #ignore password files
 src/github.com/seantcanavan/assets/emaillogin.txt

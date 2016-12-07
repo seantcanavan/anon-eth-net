@@ -35,7 +35,6 @@ func TestMain(m *testing.M) {
 	udr = updater
 
 	result := m.Run()
-	udr.lgr.Flush()
 	os.Exit(result)
 }
 

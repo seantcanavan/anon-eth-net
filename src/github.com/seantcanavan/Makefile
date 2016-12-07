@@ -14,6 +14,7 @@ clean:
 	find . -name "*.log" -type f -delete
 	find . -name "*.rep" -type f -delete
 	find . -name "*.tar" -type f -delete
+	find . -name "*.txt" -type f -delete
 
 deps:
 	glide install
@@ -27,6 +28,12 @@ install:
 	for p in $(PACKAGES); do \
 		go install ../../$$p; \
 	done
+
+release:
+	for p in $(PACKAGES); do \
+		go install ../../$$p; \
+	done
+	cp ../../../bin/main ./bin/anon-eth-net
 
 test:
 	for p in $(PACKAGES); do \

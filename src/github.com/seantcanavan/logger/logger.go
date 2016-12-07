@@ -210,6 +210,8 @@ func (sl *Logger) LogMessage(formatString string, values ...interface{}) {
 	fmt.Fprintln(sl.writer, fmt.Sprintf(formatString, values...))
 	// write the logging message to std.out for local watchers
 	fmt.Println(fmt.Sprintf(formatString, values...))
+	// manually flush for now... it ain't pretty but it works
+	sl.writer.Flush()
 
 	sl.writer.Flush()
 
