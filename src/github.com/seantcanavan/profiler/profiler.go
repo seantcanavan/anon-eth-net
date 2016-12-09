@@ -16,10 +16,13 @@ import (
 
 // the text to print after we finish executing a command so successive commands have some kind of visual break
 const END_COMMAND_DIVIDER = "------------------------------------------------------------\n\n"
+
 // prof is short for profile and is the file extension we use after generating full system profiles
 const PROFILE_FILE_EXTENSION = ".prof"
+
 // the subject of the email that we use when sending out the profile
 const PROFILE_EMAIL_SUBJECT = "System Profile"
+
 // the base name of the archive file that we save all our individual reports into
 const SYS_PROFILE_ARCHIVE_NAME = "profile_archive"
 

@@ -41,7 +41,6 @@ func TestConfigFromFilePass(t *testing.T) {
 		t.Errorf("Cfg.LogVolatility did not unmarshal correctly: %v", Cfg.LogVolatility)
 	}
 
-
 	// ---------- verify optional values unmarshalled correctly ----------
 	if Cfg.DeviceName != "My Little Raspberry Pi" {
 		t.Errorf("Cfg.DeviceName did not unmarshal correctly: %v", Cfg.DeviceName)

@@ -77,7 +77,7 @@ func TestMain(m *testing.M) {
 
 func TestCheckinHandlerPass(t *testing.T) {
 
-	path = buildRestPath(protocol, host, port, CHECKIN_REST_PATH, nowString, "samplegmail")
+	path = buildRestPath(protocol, host, port, CHECKIN_REST_PATH, nowString)
 
 	fmt.Println(fmt.Sprintf("TestCheckinHandlerPass: client.Get -> : %v", path))
 
@@ -127,18 +127,28 @@ func TestExecuteHandlerPass(t *testing.T) {
 		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
 	}
 
-	// path = buildRestPath(protocol, host, port, EXECUTE_REST_PATH, nowString, "binary")
+	path = buildRestPath(protocol, host, port, EXECUTE_REST_PATH, nowString, "binary")
 
-	// fmt.Println(fmt.Sprintf("TestExecuteHandlerPass: client.Post -> %v", path))
+	fmt.Println(fmt.Sprintf("TestExecuteHandlerPass: client.Post -> %v", path))
 
-	// response, err = client.Post(path, "application/octet-stream", bytes.NewBuffer([]byte("this will surely fail")))
-	// if err != nil {
-	// 	t.Error(err)
-	// }
+	assetPath, assetErr := utils.SysAssetPath("rest_test_loader_binary")
+	if assetErr != nil {
+		t.Error(assetErr)
+	}
 
-	// if response.StatusCode != http.StatusOK {
-	// 	t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
-	// }
+	binaryBytes, readErr := ioutil.ReadFile(assetPath)
+	if readErr != nil {
+		t.Error(readErr)
+	}
+
+	response, err = client.Post(path, "application/octet-stream", bytes.NewBuffer(binaryBytes))
+	if err != nil {
+		t.Error(err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
+	}
 
 	path = buildRestPath(protocol, host, port, EXECUTE_REST_PATH, nowString, "script")
 
@@ -185,8 +195,9 @@ func TestExecuteHandlerPass(t *testing.T) {
 // }
 
 func TestLogHandlerPass(t *testing.T) {
-	path = buildRestPath(protocol, host, port, LOG_REST_PATH, nowString, "samplegmail")
+	path = buildRestPath(protocol, host, port, LOG_REST_PATH, nowString)
 
+	// TEST GET
 	fmt.Println(fmt.Sprintf("TestLogHandlerPass: client.Get -> %v", path))
 
 	response, err := client.Get(path)
@@ -198,6 +209,24 @@ func TestLogHandlerPass(t *testing.T) {
 		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
 	}
 
+	// TEST DELETE
+	fmt.Println(fmt.Sprintf("TestLogHandlerPass: client.Do(DELETE) -> %v", path))
+
+	deleteRequest, deleteErr := http.NewRequest("DELETE", path, bytes.NewBuffer([]byte("welcome to my house")))
+	if deleteErr != nil {
+		t.Error(deleteErr)
+	}
+
+	response, err = client.Do(deleteRequest)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
+	}
+
+	// TEST UNSUPPORTED METHOD
 	fmt.Println(fmt.Sprintf("TestLoginHandlerPass: client.Post -> %v", path))
 
 	response, err = client.Post(path, "text/plain", bytes.NewBuffer([]byte("welcome to my house")))
@@ -280,23 +309,23 @@ func TestAssetHandlerPass(t *testing.T) {
 		t.Error(err)
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusMethodNotAllowed {
 		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
 	}
 
-	fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Do(DELETE) -> %v", path))
+	// fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Do(DELETE) -> %v", path))
 
-	deleteRequest, deleteErr := http.NewRequest("DELETE", path, bytes.NewBuffer([]byte("welcome to my house")))
-	if deleteErr != nil {
-		t.Error(deleteErr)
-	}
+	// deleteRequest, deleteErr := http.NewRequest("DELETE", path, bytes.NewBuffer([]byte("welcome to my house")))
+	// if deleteErr != nil {
+	// 	t.Error(deleteErr)
+	// }
 
-	response, err = client.Do(deleteRequest)
-	if err != nil {
-		t.Error(err)
-	}
+	// response, err = client.Do(deleteRequest)
+	// if err != nil {
+	// 	t.Error(err)
+	// }
 
-	if response.StatusCode != http.StatusOK {
-		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
-	}
+	// if response.StatusCode != http.StatusOK {
+	// 	t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
+	// }
 }

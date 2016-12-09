@@ -12,7 +12,7 @@ import (
 )
 
 type Updater struct {
-	lgr              *logger.Logger
+	lgr *logger.Logger
 }
 
 func NewUpdater() (*Updater, error) {

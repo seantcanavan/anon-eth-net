@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/smtp"
 	"os"
+	"time"
 
 	"github.com/jordan-wright/email"
 	"github.com/seantcanavan/config"
@@ -11,6 +12,7 @@ import (
 
 const EMAIL_SERVER = "smtp.gmail.com"
 const EMAIL_PORT = "587"
+const MAX_EMAIL_TIMEOUT_ATTEMPTS = 5
 
 // SendPlainEmail will send the content of the byte array as the body of an
 // email along with the provided subject. The default sender and receiver are
@@ -38,7 +40,19 @@ func SendAttachment(subject string, contents []byte, attachmentPtr *os.File) err
 	}
 
 	emailAuth := smtp.PlainAuth("", config.Cfg.CheckInGmailAddress, config.Cfg.CheckInGmailPassword, EMAIL_SERVER)
-	return jwEmail.Send(EMAIL_SERVER+":"+EMAIL_PORT, emailAuth)
+	count := 0
+	var emailErr error
+
+	for count < MAX_EMAIL_TIMEOUT_ATTEMPTS {
+		emailErr = jwEmail.Send(EMAIL_SERVER+":"+EMAIL_PORT, emailAuth)
+		if emailErr == nil {
+			break
+		}
+		count++
+		time.Sleep(time.Second * 5)
+	}
+
+	return emailErr
 }
 
 // generateSubject will append the device ID to the beginning of the email

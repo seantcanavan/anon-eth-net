@@ -126,7 +126,8 @@ func (l *Loader) StartAsynchronous() []LoaderProcess {
 			currentProcess.End = time.Now().Unix()
 			currentProcess.Duration = currentProcess.End - currentProcess.Start
 			if err != nil {
-				lgr.LogMessage("LoaderProcess exited with error status: %+v\n %v", localProcess, err.Error())
+				lgr.LogMessage("LoaderProcess exited with error status: %+v", localProcess)
+				lgr.LogMessage("LoaderProcess for: %v error was: %v", localProcess.Name, err.Error())
 			} else {
 				lgr.LogMessage("LoaderProcess exited successfully: %+v", localProcess)
 			}
@@ -153,6 +154,7 @@ func (l *Loader) StartSynchronous() []LoaderProcess {
 		currentProcess.Duration = currentProcess.End - currentProcess.Start
 		if err != nil {
 			lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
+			lgr.LogMessage("LoaderProcess for: %v error was: %v", currentProcess.Name, err.Error())
 		} else {
 			lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
 		}

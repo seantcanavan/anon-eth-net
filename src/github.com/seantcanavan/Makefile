@@ -15,6 +15,7 @@ clean:
 	find . -name "*.rep" -type f -delete
 	find . -name "*.tar" -type f -delete
 	find . -name "*.txt" -type f -delete
+	find . -name "*.run" -type f -delete
 
 deps:
 	glide install
