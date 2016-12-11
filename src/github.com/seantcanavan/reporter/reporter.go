@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/smtp"
 	"os"
+	"time"
 
 	"github.com/jordan-wright/email"
 	"github.com/seantcanavan/config"
@@ -12,6 +13,8 @@ import (
 
 const EMAIL_SERVER = "smtp.gmail.com"
 const EMAIL_PORT = "587"
+const MAX_EMAIL_TIMEOUT_ATTEMPTS = 5
+const SUCCESSIVE_EMAIL_ATTEMPTS_DELAY = 5
 
 // SendPlainEmail will send the content of the byte array as the body of an
 // email along with the provided subject. The default sender and receiver are
@@ -45,13 +48,21 @@ func SendAttachment(subject string, contents []byte, attachmentPtr *os.File) err
 
 	logger.Lgr.LogMessage("Successfully generated SMTP email auth: %+v", emailAuth)
 
-	sendErr := jwEmail.Send(EMAIL_SERVER+":"+EMAIL_PORT, emailAuth)
+	count := 0
+	var emailErr error
 
-	if sendErr == nil {
-		logger.Lgr.LogMessage("Successfully sent email")
+	for count < MAX_EMAIL_TIMEOUT_ATTEMPTS {
+		emailErr = jwEmail.Send(EMAIL_SERVER+":"+EMAIL_PORT, emailAuth)
+		if emailErr == nil {
+			logger.Lgr.LogMessage("Successfully sent out email to: %v", config.Cfg.CheckInGmailAddress)
+			break
+		}
+		count++
+		logger.Lgr.LogMessage("Unsuccessfully sent out email to: %v. Sleeping for %d", config.Cfg.CheckInGmailAddress, SUCCESSIVE_EMAIL_ATTEMPTS_DELAY)
+		time.Sleep(time.Second * SUCCESSIVE_EMAIL_ATTEMPTS_DELAY)
 	}
 
-	return sendErr
+	return emailErr
 }
 
 // generateSubject will append the device ID to the beginning of the email

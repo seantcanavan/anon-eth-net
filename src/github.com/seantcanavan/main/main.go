@@ -6,22 +6,14 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
-	"time"
 
 	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/loader"
 	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/network"
-	"github.com/seantcanavan/profiler"
 	"github.com/seantcanavan/updater"
 	"github.com/seantcanavan/utils"
 )
-
-// Logger for the main package and any errors it encounters while executing
-var lgr *logger.Logger
-
-// Updater for the main package which will track local and remote versions of the code
-var udr *updater.Updater
 
 // Loader for the main package which will execute all of the third party processes
 var ldr *loader.Loader
@@ -76,31 +68,20 @@ func main() {
 
 	// generate a Logger instance with the predefined volatility value and
 	// name it after the main_package to differentiate it from other packages
-	mainLogger, loggerErr := logger.StandardLogger("main_package")
+	loggerErr := logger.StandardLogger("main_package")
 	if loggerErr != nil {
 		fmt.Println(loggerErr)
 		fmt.Println("Couldn't create the logger for logging local activity to disk... Exiting...")
 		os.Exit(1)
 	}
 
-	mainUpdater, updaterErr := updater.NewUpdater()
-	if updaterErr != nil {
-		fmt.Println(updaterErr)
-		fmt.Println("Couldn't create the automatic updater for AEN... Exiting...")
-		os.Exit(1)
-	}
-
 	mainNetwork, networkErr := network.NewNetwork()
 	if networkErr != nil {
-		fmt.Println(updaterErr)
+		fmt.Println(networkErr)
 		fmt.Println("Couldn't create the network monitor... Exiting...")
 		os.Exit(1)
 	}
 
-	// maintain a local logging reference for anything kicked off by the main package
-	lgr = mainLogger
-	// maintain a local loader reference for executing processes
-	udr = mainUpdater
 	// maintain a local updater reference for updating the main program
 	ldr = mainLoader
 	// maintain a local network reference for checking internet connection
@@ -110,7 +91,7 @@ func main() {
 	if config.Cfg.InitialStartup == "yes" {
 		err := initialStartup()
 		if err != nil {
-			lgr.LogMessage(err.Error())
+			logger.Lgr.LogMessage(err.Error())
 		}
 	}
 
@@ -118,20 +99,20 @@ func main() {
 	if config.Cfg.FirstRunAfterUpdate == "yes" {
 		err := firstRunAfterUpdate()
 		if err != nil {
-			lgr.LogMessage(err.Error())
+			logger.Lgr.LogMessage(err.Error())
 		}
 	}
 
 	// kick off the updater loop
-	lgr.LogMessage("Initializing the updater")
-	udr.Run()
+	logger.Lgr.LogMessage("Initializing the updater")
+	updater.Run()
 
 	// kick off the process loader loop that will execute things like miners
-	lgr.LogMessage("Initializing the loader")
+	logger.Lgr.LogMessage("Initializing the loader")
 	ldr.Run()
 
 	// kick off the network monitor loop to monitor internet connectivity
-	lgr.LogMessage("Initializing the network monitor")
+	logger.Lgr.LogMessage("Initializing the network monitor")
 	net.Run()
 
 	// create a channel to listen to type os.Signal on with depth = 1
@@ -146,18 +127,18 @@ func main() {
 	go func() {
 		// when the OS sends SIGINT or SIGTERM to us, save the signal to value to 'signal'
 		signal := <-sigs
-		lgr.LogMessage("Received interrupting signal: %v", signal)
+		logger.Lgr.LogMessage("Received interrupting signal: %v", signal)
 		// push 'true' to the 'done' channel when we've successfully received SIGINT or SIGTERM
 		done <- true
 	}()
 
-	lgr.LogMessage("Executing... Press CTRL+C to exit. Browse local log files to keep an eye on each individual component.")
+	logger.Lgr.LogMessage("Executing... Press CTRL+C to exit. Browse local log files to keep an eye on each individual component.")
 	// block until we receive SIGINT or SIGTERM and 'true' is pushed down the 'done' pipe
 	<-done
-	lgr.LogMessage("Clean exit after a CTRL+C interrupt.")
-	lgr.LogMessage("Backing up the latest config changes before exiting")
+	logger.Lgr.LogMessage("Clean exit after a CTRL+C interrupt.")
+	logger.Lgr.LogMessage("Backing up the latest config changes before exiting")
 	config.ToFile()
-	lgr.LogMessage("Fin")
+	logger.Lgr.LogMessage("Fin")
 }
 
 // initialStartup will be executed only when this program is running for the

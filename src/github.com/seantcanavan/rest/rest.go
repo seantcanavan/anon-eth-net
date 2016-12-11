@@ -8,11 +8,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/facebookgo/freeport"
 	"github.com/gorilla/mux"
+	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/loader"
 	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/profiler"
@@ -29,9 +31,6 @@ const TIMESTAMP = "timestamp"
 
 // The key to the query parameter for the reboot delay value
 const REBOOT_DELAY = "delay"
-
-// The key to the query parameter for the remote log email address recipient value
-const RECIPIENT_GMAIL = "emailaddress"
 
 // The key to the query parameter for the file type to execute for execute handler
 const FILE_TYPE = "filetype"
@@ -85,10 +84,10 @@ func NewRestHandler() (*RestHandler, error) {
 	rh := RestHandler{}
 
 	rh.Endpoints = make(map[string]string)
-	rh.Endpoints[LOG_REST_PATH] = buildGorillaPath(LOG_REST_PATH, TIMESTAMP, RECIPIENT_GMAIL)
+	rh.Endpoints[LOG_REST_PATH] = buildGorillaPath(LOG_REST_PATH, TIMESTAMP)
 	rh.Endpoints[REBOOT_REST_PATH] = buildGorillaPath(REBOOT_REST_PATH, TIMESTAMP, REBOOT_DELAY)
 	rh.Endpoints[UPDATE_REST_PATH] = buildGorillaPath(UPDATE_REST_PATH, TIMESTAMP)
-	rh.Endpoints[CHECKIN_REST_PATH] = buildGorillaPath(CHECKIN_REST_PATH, TIMESTAMP, RECIPIENT_GMAIL)
+	rh.Endpoints[CHECKIN_REST_PATH] = buildGorillaPath(CHECKIN_REST_PATH, TIMESTAMP)
 	rh.Endpoints[EXECUTE_REST_PATH] = buildGorillaPath(EXECUTE_REST_PATH, TIMESTAMP, FILE_TYPE)
 	rh.Endpoints[ASSET_REST_PATH] = buildGorillaPath(ASSET_REST_PATH, TIMESTAMP, ASSET_NAME)
 
@@ -242,9 +241,8 @@ func (rh *RestHandler) checkinHandler(writer http.ResponseWriter, request *http.
 	var err error
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
-	recipientEmail := queryParams[RECIPIENT_GMAIL]
 
-	logger.Lgr.LogMessage("checkinHandler - remoteTimestamp: %v recipientEmail: %v", remoteTimestamp, recipientEmail)
+	logger.Lgr.LogMessage("checkinHandler - remoteTimestamp: %v recipientEmail: %v", remoteTimestamp, config.Cfg.CheckInGmailAddress)
 	defer logger.Lgr.LogMessage("checkinHandler finished\n")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
@@ -254,14 +252,6 @@ func (rh *RestHandler) checkinHandler(writer http.ResponseWriter, request *http.
 	}
 
 	logger.Lgr.LogMessage("Successfully validated incoming timestamp")
-
-	err = rh.verifyQueryParams(recipientEmail)
-	if err != nil {
-		rh.writeResponseAndLog(err.Error(), http.StatusBadRequest, writer, request)
-		return
-	}
-
-	logger.Lgr.LogMessage("Successfully verified query parameters")
 
 	switch request.Method {
 
@@ -328,7 +318,7 @@ func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.
 		case "python", "binary", "script":
 			logger.Lgr.LogMessage("executeHandler is executing remote %v file", fileType)
 			// save the bytes to a local file and execute the file in the appropriate manner
-			loaderError := rh.executeLoader(fileType, string(bodyContents))
+			loaderError := rh.executeLoader(fileType, bodyContents)
 			if loaderError != nil {
 				logger.Lgr.LogMessage("error executing remote code: %v", loaderError.Error())
 				rh.writeResponseAndLog(loaderError.Error(), http.StatusBadRequest, writer, request)
@@ -347,36 +337,41 @@ func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.
 	return
 }
 
-func (rh *RestHandler) executeLoader(fileType string, fileContents string) error {
+func (rh *RestHandler) executeLoader(fileType string, fileContents []byte) error {
+
 	processMap := make(map[string]string)
-	tmpFile, tmpErr := ioutil.TempFile("", "executeHandler")
-	if tmpErr != nil {
-		return tmpErr
-	}
+	fileName := utils.FullDateStringSafe() + ".run"
 
-	logger.Lgr.LogMessage("Successfully created temp file for rest execute loader: %v", tmpFile.Name())
+	logger.Lgr.LogMessage("Successfully created temp file for rest execute loader: %v", fileName)
 
-	defer os.Remove(tmpFile.Name())
-
-	bufferFileContents := bytes.NewBufferString(fileContents)
-
-	_, copiedErr := io.Copy(tmpFile, bufferFileContents)
-	if copiedErr != nil {
-		return copiedErr
+	writeErr := ioutil.WriteFile(fileName, fileContents, 0777)
+	if writeErr != nil {
+		return writeErr
 	}
 
 	logger.Lgr.LogMessage("Successfully copied bytes from REST body to tmpfile")
 
+	defer os.Remove(fileName)
+
+	absPath, pathErr := filepath.Abs(fileName)
+	if pathErr != nil {
+		return pathErr
+	}
+
 	switch fileType {
+
 	case "python":
-		processMap["rest_loader_python"] = "python " + tmpFile.Name()
+		processMap["rest_loader_python"] = "python " + absPath
 		logger.Lgr.LogMessage("Generated REST loader python execute command")
+
 	case "binary":
-		processMap["rest_loader_binary"] = tmpFile.Name()
+		processMap["rest_loader_binary"] = absPath
 		logger.Lgr.LogMessage("Generated REST loader binary execute command")
+
 	case "script":
-		processMap["rest_loader_script"] = "/bin/sh " + tmpFile.Name()
+		processMap["rest_loader_script"] = "/bin/sh " + absPath
 		logger.Lgr.LogMessage("Generated REST loader script execute command")
+
 	}
 
 	jsonString, jsonErr := json.Marshal(processMap)
@@ -397,7 +392,7 @@ func (rh *RestHandler) executeLoader(fileType string, fileContents string) error
 
 	bufferJsonContents := bytes.NewBufferString(string(jsonString))
 
-	_, copiedErr = io.Copy(tmpLoaderFile, bufferJsonContents)
+	_, copiedErr := io.Copy(tmpLoaderFile, bufferJsonContents)
 	if copiedErr != nil {
 		return copiedErr
 	}
@@ -502,9 +497,8 @@ func (rh *RestHandler) logHandler(writer http.ResponseWriter, request *http.Requ
 	var err error
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
-	recipientEmail := queryParams[RECIPIENT_GMAIL]
 
-	logger.Lgr.LogMessage("logHandler - remoteTimestamp: %v recipientEmail: %v", remoteTimestamp, recipientEmail)
+	logger.Lgr.LogMessage("logHandler - remoteTimestamp: %v recipientEmail: %v", remoteTimestamp, config.Cfg.CheckInGmailAddress)
 	defer logger.Lgr.LogMessage("logHandler finished\n")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
@@ -515,19 +509,15 @@ func (rh *RestHandler) logHandler(writer http.ResponseWriter, request *http.Requ
 
 	logger.Lgr.LogMessage("Successfully validated incoming timestamp")
 
-	err = rh.verifyQueryParams(recipientEmail)
-	if err != nil {
-		rh.writeResponseAndLog(err.Error(), http.StatusBadRequest, writer, request)
-		return
-	}
-
-	logger.Lgr.LogMessage("Successfully verified query parameters")
-
 	switch request.Method {
 	case "GET":
-		logger.Lgr.LogMessage("collating logs and sending to gmail address: %v", recipientEmail)
+		logger.Lgr.LogMessage("collating logs and sending to gmail address: %v", config.Cfg.CheckInGmailAddress)
+		rh.writeResponseAndLog("", http.StatusOK, writer, request)
+	case "DELETE":
+		logger.Lgr.LogMessage("deleting all temp files from the local working directory to free up disk space")
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	default:
+		logger.Lgr.LogMessage("Received unsupported REST method %v for logHandler", request.Method)
 		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
 	}
 
@@ -600,24 +590,80 @@ func (rh *RestHandler) assetHandler(writer http.ResponseWriter, request *http.Re
 
 	logger.Lgr.LogMessage("Successfully verified query parameters")
 
+	assetPath, assetErr := utils.AssetPath(targetFileName)
+	if assetErr != nil {
+		rh.writeResponseAndLog(err.Error(), http.StatusBadRequest, writer, request)
+		return
+	}
+
+	logger.Lgr.LogMessage("Successfully located asset: %v", assetPath)
+
 	switch request.Method {
 	case "GET":
 		logger.Lgr.LogMessage("received remote request to retrieve file: %v", targetFileName)
-		rh.writeResponseAndLog("", http.StatusOK, writer, request)
+		rh.actionAssetAndReturn("GET", assetPath, writer, request)
 	case "POST":
 		logger.Lgr.LogMessage("received remote request to create new file: %v", targetFileName)
-		rh.writeResponseAndLog("", http.StatusOK, writer, request)
-	case "PUT":
-		logger.Lgr.LogMessage("received remote request to create a new or modify an existing file: %v", targetFileName)
-		rh.writeResponseAndLog("", http.StatusOK, writer, request)
+		rh.actionAssetAndReturn("POST", assetPath, writer, request)
 	case "DELETE":
 		logger.Lgr.LogMessage("received remote request to delete file: %v", targetFileName)
-		rh.writeResponseAndLog("", http.StatusOK, writer, request)
+		rh.actionAssetAndReturn("DELETE", assetPath, writer, request)
 	default:
 		logger.Lgr.LogMessage("Received unsupported REST method %v for assetHandler", request.Method)
 		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
 	}
 
+	return
+}
+
+func (rh *RestHandler) actionAssetAndReturn(action string, assetPath string, writer http.ResponseWriter, request *http.Request) {
+
+	switch action {
+
+	case "GET":
+
+		fileBytes, readErr := ioutil.ReadFile(assetPath)
+		if readErr != nil {
+			rh.writeResponseAndLog(fmt.Sprintf("Read error: %v from asset: %v", readErr.Error(), assetPath), http.StatusInternalServerError, writer, request)
+			return
+		}
+
+		_, writeErr := writer.Write(fileBytes)
+		if writeErr != nil {
+			rh.writeResponseAndLog(fmt.Sprintf("Write error: %v for asset: %v", writeErr.Error(), assetPath), http.StatusInternalServerError, writer, request)
+		} else {
+			rh.writeResponseAndLog("", http.StatusOK, writer, request)
+		}
+
+	case "POST":
+
+		writeBytes, readErr := ioutil.ReadAll(request.Body)
+		if readErr != nil {
+			rh.writeResponseAndLog(fmt.Sprintf("Read error: %v for asset: %v", readErr.Error(), assetPath), http.StatusInternalServerError, writer, request)
+			return
+		}
+
+		defer request.Body.Close()
+
+		writeErr := ioutil.WriteFile(assetPath, writeBytes, 0644)
+		if writeErr != nil {
+			rh.writeResponseAndLog(fmt.Sprintf("Write error: %v for asset: %v", writeErr.Error(), assetPath), http.StatusInternalServerError, writer, request)
+		} else {
+			rh.writeResponseAndLog("", http.StatusOK, writer, request)
+		}
+
+	case "DELETE":
+
+		deleteErr := os.Remove(assetPath)
+		if deleteErr != nil {
+			rh.writeResponseAndLog(fmt.Sprintf("Delete error: %v for asset: %v", deleteErr.Error(), assetPath), http.StatusInternalServerError, writer, request)
+		} else {
+			rh.writeResponseAndLog("", http.StatusOK, writer, request)
+		}
+
+	default:
+		rh.writeResponseAndLog(fmt.Sprintf("Unsupported asset action: %v", action), http.StatusBadRequest, writer, request)
+	}
 	return
 }
 
