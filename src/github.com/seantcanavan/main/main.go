@@ -76,7 +76,7 @@ func main() {
 
 	// generate a Logger instance with the predefined volatility value and
 	// name it after the main_package to differentiate it from other packages
-	mainLogger, loggerErr := logger.FromVolatilityValue("main_package")
+	mainLogger, loggerErr := logger.StandardLogger("main_package")
 	if loggerErr != nil {
 		fmt.Println(loggerErr)
 		fmt.Println("Couldn't create the logger for logging local activity to disk... Exiting...")
@@ -123,59 +123,36 @@ func main() {
 	}
 
 	// kick off the updater loop
-	go func() {
-		lgr.LogMessage("Initializing the updater")
-		for 1 == 1 {
-			if err := udr.Run(); err != nil {
-				lgr.LogMessage("Error occurred in the Updater module: %v", err.Error())
-			} else {
-				lgr.LogMessage("Updater has exited gracefully. Well played.")
-			}
-		}
-	}()
+	lgr.LogMessage("Initializing the updater")
+	udr.Run()
 
 	// kick off the process loader loop that will execute things like miners
-	go func() {
-		lgr.LogMessage("Initializing the loader")
-		for 1 == 1 {
-			processes := ldr.StartAsynchronous()
-			for _, resultProcess := range processes {
-				//process results here
-				logContents, logError := resultProcess.Lgr.CurrentLogContents()
-				if logError == nil {
-					lgr.LogMessage(string(logContents))
-				}
-			}
-		}
-	}()
+	lgr.LogMessage("Initializing the loader")
+	ldr.Run()
 
 	// kick off the network monitor loop to monitor internet connectivity
-	go func() {
-		lgr.LogMessage("Initializing the network monitor")
-		net.Run()
-	}()
+	lgr.LogMessage("Initializing the network monitor")
+	net.Run()
 
-	// kick off the system profiler loop to send out system profiles at the specified interval
-	go func() {
-		lgr.LogMessage("Sleeping for %d seconds before sending a system profile", config.Cfg.CheckInFrequencySeconds)
-		time.Sleep(time.Duration(config.Cfg.CheckInFrequencySeconds))
-		lgr.LogMessage("Sending archive to provided email after sleeping %d seconds", config.Cfg.CheckInFrequencySeconds)
-		profiler.SendArchiveProfileAsAttachment()
-	}()
-
-	// wait for SIGINT before exiting
+	// create a channel to listen to type os.Signal on with depth = 1
 	sigs := make(chan os.Signal, 1)
+	// create a channel to listen to type bool on with depth = 1
 	done := make(chan bool, 1)
 
+	// redirect the signals SIGINT and SIGTERM to the channel 'sigs'
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
+	// wait in a separate go routine for the SIGINT and SIGTERM signals
 	go func() {
+		// when the OS sends SIGINT or SIGTERM to us, save the signal to value to 'signal'
 		signal := <-sigs
 		lgr.LogMessage("Received interrupting signal: %v", signal)
+		// push 'true' to the 'done' channel when we've successfully received SIGINT or SIGTERM
 		done <- true
 	}()
 
 	lgr.LogMessage("Executing... Press CTRL+C to exit. Browse local log files to keep an eye on each individual component.")
+	// block until we receive SIGINT or SIGTERM and 'true' is pushed down the 'done' pipe
 	<-done
 	lgr.LogMessage("Clean exit after a CTRL+C interrupt.")
 	lgr.LogMessage("Backing up the latest config changes before exiting")

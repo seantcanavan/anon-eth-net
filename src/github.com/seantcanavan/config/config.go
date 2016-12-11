@@ -5,15 +5,15 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/seantcanavan/utils"
 	"github.com/nu7hatch/gouuid"
+	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/utils"
 )
 
 var Cfg *Config
@@ -28,42 +28,38 @@ var Cfg *Config
 // (D) means the value is default value already set and should only be
 // changed after careful consideration.
 type Config struct {
-	CheckInGmailAddress  		string 		  `json:"CheckInGmailAddress"`	       // (R) the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
-	CheckInGmailPassword 		string 		  `json:"CheckInGmailPassword"`	       // (R) the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
-	CheckInFrequencySeconds     time.Duration `json:"CheckInFrequencySeconds"`     // (R) The frequency with which this program will send status updates. In seconds.
-	NetQueryFrequencySeconds    time.Duration `json:"NetQueryFrequencySeconds"`    // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
-	LogVolatility               int           `json:"LogVolatility"`               // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
-
-	DeviceName                  string        `json:"DeviceName"`                  // (O) The canonical DeviceName for the machine currently executing this program.
-	DeviceId                    string        `json:"DeviceId"`                    // (O) The unique ID for the machine currently executing this program.
-
-	InitialStartup              string        `json:"InitialStartup"`              // (D) Whether or not this is the first time that the program is starting.
-	FirstRunAfterUpdate         string        `json:"FirstRunAfterUpdate"`         // (D) Whether or not this is the first time that the program is running after an update has been executed.
-	UpdateFrequencySeconds      int           `json:"UpdateFrequencySeconds"`      // (D) The frequency with which this program will attempt to update itself. In seconds.
-	RemoteUpdateURI             string        `json:"RemoteUpdateURI"`             // (D) The remote location where new source code can be obtained from for this program.
-	RemoteVersionURI            string        `json:"RemoteVersionURI"`            // (D) The remote URI where the latest version number of this program can be obtained from.
-	LocalVersion                uint64        `json:"LocalVersion"`                // (D) The local version of this program that is currently running.
+	CheckInGmailAddress      string        `json:"CheckInGmailAddress"`      // (R) the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
+	CheckInGmailPassword     string        `json:"CheckInGmailPassword"`     // (R) the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
+	CheckInFrequencySeconds  time.Duration `json:"CheckInFrequencySeconds"`  // (R) The frequency with which this program will send status updates. In seconds.
+	NetQueryFrequencySeconds time.Duration `json:"NetQueryFrequencySeconds"` // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
+	LogVolatility            int           `json:"LogVolatility"`            // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
+	DeviceName               string        `json:"DeviceName"`               // (O) The canonical DeviceName for the machine currently executing this program.
+	DeviceId                 string        `json:"DeviceId"`                 // (O) The unique ID for the machine currently executing this program.
+	InitialStartup           string        `json:"InitialStartup"`           // (D) Whether or not this is the first time that the program is starting.
+	FirstRunAfterUpdate      string        `json:"FirstRunAfterUpdate"`      // (D) Whether or not this is the first time that the program is running after an update has been executed.
+	UpdateFrequencySeconds   int           `json:"UpdateFrequencySeconds"`   // (D) The frequency with which this program will attempt to update itself. In seconds.
+	RemoteUpdateURI          string        `json:"RemoteUpdateURI"`          // (D) The remote location where new source code can be obtained from for this program.
+	RemoteVersionURI         string        `json:"RemoteVersionURI"`         // (D) The remote URI where the latest version number of this program can be obtained from.
+	LocalVersion             uint64        `json:"LocalVersion"`             // (D) The local version of this program that is currently running.
 }
 
 // COnfigJSONParametersExplained() returns a nicely formatted string which
 // describes all the public variables available to the user for configuration.
 func ConfigJSONParametersExplained() string {
 	return `
-	CheckInGmailAddress  		string 		  json:"CheckInGmailAddress"	     // (R) the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
-	CheckInGmailPassword 		string 		  json:"CheckInGmailPassword"	     // (R) the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
-	CheckInFrequencySeconds     time.Duration json:"CheckInFrequencySeconds"     // (R) The frequency with which this program will send status updates. In seconds.
-	NetQueryFrequencySeconds    time.Duration json:"NetQueryFrequencySeconds"    // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
-	LogVolatility               int           json:"LogVolatility"               // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
-
-	DeviceName                  string        json:"DeviceName"                  // (O) The canonical DeviceName for the machine currently executing this program.
-	DeviceId                    string        json:"DeviceId"                    // (O) The unique ID for the machine currently executing this program.
-
-	InitialStartup              string        json:"InitialStartup"              // (D) Whether or not this is the first time that the program is starting.
-	FirstRunAfterUpdate         string        json:"FirstRunAfterUpdate"         // (D) Whether or not this is the first time that the program is running after an update has been executed.
-	UpdateFrequencySeconds      int           json:"UpdateFrequencySeconds"      // (D) The frequency with which this program will attempt to update itself. In seconds.
-	RemoteUpdateURI             string        json:"RemoteUpdateURI"             // (D) The remote location where new source code can be obtained from for this program.
-	RemoteVersionURI            string        json:"RemoteVersionURI"            // (D) The remote URI where the latest version number of this program can be obtained from.
-	LocalVersion                uint64        json:"LocalVersion"                // (D) The local version of this program that is currently running.
+	CheckInGmailAddress      string        json:"CheckInGmailAddress"      // (R) the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
+	CheckInGmailPassword     string        json:"CheckInGmailPassword"     // (R) the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
+	CheckInFrequencySeconds  time.Duration json:"CheckInFrequencySeconds"  // (R) The frequency with which this program will send status updates. In seconds.
+	NetQueryFrequencySeconds time.Duration json:"NetQueryFrequencySeconds" // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
+	LogVolatility            int           json:"LogVolatility"            // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
+	DeviceName               string        json:"DeviceName"               // (O) The canonical DeviceName for the machine currently executing this program.
+	DeviceId                 string        json:"DeviceId"                 // (O) The unique ID for the machine currently executing this program.
+	InitialStartup           string        json:"InitialStartup"           // (D) Whether or not this is the first time that the program is starting.
+	FirstRunAfterUpdate      string        json:"FirstRunAfterUpdate"      // (D) Whether or not this is the first time that the program is running after an update has been executed.
+	UpdateFrequencySeconds   int           json:"UpdateFrequencySeconds"   // (D) The frequency with which this program will attempt to update itself. In seconds.
+	RemoteUpdateURI          string        json:"RemoteUpdateURI"          // (D) The remote location where new source code can be obtained from for this program.
+	RemoteVersionURI         string        json:"RemoteVersionURI"         // (D) The remote URI where the latest version number of this program can be obtained from.
+	LocalVersion             uint64        json:"LocalVersion"             // (D) The local version of this program that is currently running.
 `
 }
 
@@ -77,21 +73,25 @@ func FromFile() error {
 		return assetErr
 	}
 
+	logger.Lgr.LogMessage("Successfully located config asset: %v", configAssetPath)
+
 	// read in the pre-existing config file
 	bytes, loadErr := ioutil.ReadFile(configAssetPath)
 	if loadErr != nil {
-		fmt.Println(fmt.Sprintf("Error reading in provided config file from path: %v", configAssetPath))
 		return loadErr
 	}
+
+	logger.Lgr.LogMessage("Successfully read in config asset: %v", configAssetPath)
 
 	newConfig := &Config{}
 
 	// unmarshal the JSON directly into a config struct instance
 	jsonErr := json.Unmarshal(bytes, &newConfig)
 	if jsonErr != nil {
-		fmt.Println(fmt.Sprintf("Error unmarshalling the config file into a struct: %v", jsonErr))
 		return jsonErr
 	}
+
+	logger.Lgr.LogMessage("Successfully unmarshalled config object: %+v", newConfig)
 
 	// check if a manual email login file was provided to secretly override the defaults
 	emailAssetPath, emailAssetErr := utils.AssetPath("emaillogin.conf")
@@ -103,6 +103,8 @@ func FromFile() error {
 		newConfig.CheckInGmailAddress = fileLines[0]
 		newConfig.CheckInGmailPassword = fileLines[1]
 	}
+
+	logger.Lgr.LogMessage("Successfully loaded overriding gmail credentials: %v, %v", newConfig.CheckInGmailAddress, newConfig.CheckInGmailPassword)
 
 	// verify all the required values are correctly setup by the user
 	if newConfig.CheckInGmailAddress == "" {
@@ -125,6 +127,7 @@ func FromFile() error {
 	if newConfig.DeviceName == "" {
 		randInt := rand.Int()
 		newConfig.DeviceName = "device_" + strconv.Itoa(randInt)
+		logger.Lgr.LogMessage("Successfully generated new device name: %v", newConfig.DeviceName)
 	}
 
 	if newConfig.DeviceId == "" {
@@ -135,6 +138,7 @@ func FromFile() error {
 		}
 		// update the UUID if it doesn't exist
 		newConfig.DeviceId = uuid.String()
+		logger.Lgr.LogMessage("Successfully generated new device GUID: %v", newConfig.DeviceId)
 	}
 
 	if newConfig.InitialStartup == "" {
@@ -159,11 +163,18 @@ func FromFile() error {
 
 	// load the local version number from the local asset
 	localVersionAsset, assetErr := utils.AssetPath("version.no")
+	if assetErr != nil {
+		return assetErr
+	}
+
+	logger.Lgr.LogMessage("Successfully located local version asset: %v", localVersionAsset)
 
 	bytes, err := ioutil.ReadFile(localVersionAsset)
 	if err != nil {
 		return err
 	}
+
+	logger.Lgr.LogMessage("Successfully read from local version asset: %v", localVersionAsset)
 
 	s := string(bytes)
 	s = strings.Trim(s, "\n")
@@ -173,11 +184,12 @@ func FromFile() error {
 	}
 
 	newConfig.LocalVersion = localVersion
-
-	fmt.Println("Loaded config from file:")
-	fmt.Println(fmt.Sprintf("%+v\n", newConfig))
-
 	Cfg = newConfig
+
+	logger.Lgr.LogMessage("Successfully set local version to: %v", newConfig.LocalVersion)
+	logger.Lgr.LogMessage("Config file was successfully loaded from file in its entirety and default values were set")
+	logger.Lgr.LogMessage("Config:\n%+v", Cfg)
+
 	return nil
 }
 
@@ -191,14 +203,20 @@ func ToFile() error {
 		return assetErr
 	}
 
+	logger.Lgr.LogMessage("Successfully located config asset for writing: %v", configAssetPath)
+
 	bytes, marshalError := json.MarshalIndent(Cfg, "", "\t")
 	if marshalError != nil {
 		return marshalError
 	}
 
+	logger.Lgr.LogMessage("Successfully marshaled the config to json")
+
 	writeError := ioutil.WriteFile(configAssetPath, bytes, 0644)
 	if writeError != nil {
 		return writeError
 	}
+
+	logger.Lgr.LogMessage("Successfully wrote the JSON bytes to the file: %v", configAssetPath)
 	return nil
 }

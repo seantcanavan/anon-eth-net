@@ -7,25 +7,21 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"sync"
 	"time"
 
-	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/utils"
 )
 
+// The file extension to use for all new log files that are created
 const LOG_EXTENSION = ".log"
+
+var Lgr *Logger
+var lock sync.Mutex
 
 // Logger allows for aggressive log management in scenarios where disk space
 // might be limited. You can limit based on log message count or duration and
-// also prune log files when too many are saved on disk. I don't like the
-// current implementation - it makes too many assumptions about how many
-// simultaneous loggers are running and never checks available disk space.
-// I need to consider keeping a list of all loggers currently executing and
-// keep the option to manually prune and report logs as disk space runs low.
-// This could be managed via a watchdog go routine. Ideas here:
-// https://stackoverflow.com/questions/20108520/get-amount-of-free-disk-space-using-go
-// This would essentially be the nail in the coffin for windows builds if
-// implemented. RIP Bill Gates.
+// also prune log files when too many are saved on disk.
 type Logger struct {
 	MaxLogFileCount    uint64        // The maximum number of log files saved to disk before pruning occurs
 	MaxLogMessageCount uint64        // The maximum number of bytes a log file can take up before it's cut off and a new one is created
@@ -40,143 +36,93 @@ type Logger struct {
 	writer             *bufio.Writer // our writer we use to log to the current log file
 }
 
-func FromVolatilityValue(logBaseName string) (*Logger, error) {
-	volatility := config.Cfg.LogVolatility
-	switch volatility {
-	case 0:
-		return HoardingLogger(logBaseName)
-	case 1:
-		return AnticonservativeLogger(logBaseName)
-	case 2:
-		return ConservativeLogger(logBaseName)
-	case 3:
-		return MinimalLogger(logBaseName)
-	default:
-		return nil, fmt.Errorf("The value you gave: %d does not have a logging map available for it. Please check logger/logger.go for valid logging mapping values", volatility)
-	}
-}
-
+// CustomLogger returns a logger with the given variables customized to your
+// liking. Smaller values are better for devices with less free space and vice
+// versa for devices with more free space.
 func CustomLogger(logBaseName string, maxFileCount uint64, maxMessageCount uint64, maxDuration uint64) (*Logger, error) {
 
-	sl := Logger{}
-	// public variables
-	sl.MaxLogFileCount = maxFileCount
-	sl.MaxLogMessageCount = maxMessageCount
-	sl.MaxLogDuration = maxDuration
+	lgr := &Logger{
+		MaxLogFileCount:    maxFileCount,
+		MaxLogMessageCount: maxMessageCount,
+		MaxLogDuration:     maxDuration,
+	}
 
-	err := sl.initLogger(logBaseName)
+	err := lgr.initLogger(logBaseName)
 	if err != nil {
 		return nil, err
 	}
 
-	return &sl, nil
+	fmt.Println(fmt.Sprintf("Successfully initialized custom logger: %+v", lgr))
+
+	return lgr, nil
 }
 
-// MinimalLogger will return a Logger struct which will make sure to be as
-// minimal as possible and only hold on to the most recent of log files for a
-// short period of time. Recommended for systems with 100GB or less of overall
-// storage. If the logs are not checked or reported via email daily it's
-// possible that data could be missed.
-func MinimalLogger(logBaseName string) (*Logger, error) {
+// StandardLogger will return a Logger struct which will hoard a massive
+// amount of logs and messages. Recommended for systems with a healthy amount of
+// free disk space. Logs can be left unchecked for up to 7 days before they're
+// pruned. If you don't want to check them and you don't want to lose them then
+// make sure you download them via REST otherwise you'll miss log data.
+func StandardLogger(logBaseName string) error {
 
-	sl := Logger{}
-	// public variables
-	sl.MaxLogFileCount = 10
-	sl.MaxLogMessageCount = 1000
-	sl.MaxLogDuration = 86400 // one day in seconds
-
-	err := sl.initLogger(logBaseName)
-	if err != nil {
-		return nil, err
+	lgr := &Logger{
+		MaxLogFileCount:    1000,   // up to 1000 max log files simultaneously stored on disk
+		MaxLogMessageCount: 10000,  // a new log file every 10,000 messages
+		MaxLogDuration:     604800, // a new log file every 7 days
 	}
 
-	return &sl, nil
-}
-
-// ConservativeLogger will return a Logger struct which will hold on to a
-// respectful number of log files and messages. Recommended for systems with
-// at least 250GB of overall storage. If the logs are not checked or reported
-// via email at least every three days it's possible that data could be missed.
-func ConservativeLogger(logBaseName string) (*Logger, error) {
-
-	sl := Logger{}
-	// public variables
-	sl.MaxLogFileCount = 100
-	sl.MaxLogMessageCount = 5000
-	sl.MaxLogDuration = 259200 // three days in seconds
-
-	err := sl.initLogger(logBaseName)
+	err := lgr.initLogger(logBaseName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &sl, nil
+	fmt.Println(fmt.Sprintf("Successfully initialized standard logger: %+v", lgr))
+
+	Lgr = lgr
+	return nil
 }
 
-// AnticonservativeLogger is not a political message. It will return a
-// Logger struct which will hold a large number of log files and messages.
-// Recommended for systems with at least 500GB of overall storage. If the logs
-// are not checked or reported via email at least every five days it's possible
-// that data could be missed.
-func AnticonservativeLogger(logBaseName string) (*Logger, error) {
+// CurrentLogContents returns the contents of the current log file that's being
+// managed by the logger instance. The current log should be active thus
+// multiple calls to CurrentLogContents() should give different results.
+func (lgr *Logger) CurrentLogContents() ([]byte, error) {
 
-	sl := Logger{}
-	// public variables
-	sl.MaxLogFileCount = 1000
-	sl.MaxLogMessageCount = 10000
-	sl.MaxLogDuration = 432000 // five days in seconds
+	lgr.writer.Flush()
 
-	err := sl.initLogger(logBaseName)
-	if err != nil {
-		return nil, err
-	}
-
-	return &sl, nil
-}
-
-// HoardingLogger will return a Logger struct which will hoard a massive
-// amount of logs and messages. Recommended for systems with at least 1TB of
-// overall storage. If the logs are not checked or reported via email at least
-// every week it's possible that data could be missed.
-func HoardingLogger(logBaseName string) (*Logger, error) {
-
-	sl := Logger{}
-	// public variables
-	sl.MaxLogFileCount = 5000
-	sl.MaxLogMessageCount = 10000
-	sl.MaxLogDuration = 604800
-
-	err := sl.initLogger(logBaseName)
-	if err != nil {
-		return nil, err
-	}
-
-	return &sl, nil
-}
-
-func (sl *Logger) CurrentLogContents() ([]byte, error) {
-	sl.writer.Flush()
-
-	fileBytes, readErr := ioutil.ReadFile(sl.log.Name())
+	fileBytes, readErr := ioutil.ReadFile(lgr.log.Name())
 	if readErr != nil {
 		return nil, readErr
 	}
+
+	fmt.Println(fmt.Sprintf("Successfully retrieved current log contents"))
+
 	return fileBytes, nil
 }
 
-func (sl *Logger) CurrentLogName() (string, error) {
-	fileInfo, statErr := sl.log.Stat()
+// CurrentLogName returns the name of the file which contains the most current
+// log output. This log will be active and likely changing frequently.
+func (lgr *Logger) CurrentLogName() (string, error) {
+
+	fileInfo, statErr := lgr.log.Stat()
 	if statErr != nil {
 		return "", statErr
 	}
+
+	fmt.Println(fmt.Sprintf("Successfully retrieved current log name: %v", fileInfo.Name()))
+
 	return fileInfo.Name(), nil
 }
 
-func (sl *Logger) CurrentLogFile() *os.File {
-	return sl.log
+// CurrentLogFile returns a pointer to the current os.File representation of
+// the current log file that is being written to. If this reference is held
+// log enough it can become invalid if the log file is pruned from the disk.
+func (lgr *Logger) CurrentLogFile() *os.File {
+	return lgr.log
 }
 
-func (sl *Logger) initLogger(logBaseName string) error {
+// initLogger will initialize all of the helper values required to maintain a
+// circular array of log files. When you reach the end of the circle the log
+// is 'pruned'.
+func (lgr *Logger) initLogger(logBaseName string) error {
 
 	logFileName := utils.TimeStampFileName(logBaseName, LOG_EXTENSION)
 
@@ -186,70 +132,73 @@ func (sl *Logger) initLogger(logBaseName string) error {
 	}
 
 	// private variables
-	sl.baseLogName = logBaseName
-	sl.logFileCount = 0
-	sl.logDuration = 0
-	sl.logStamp = uint64(time.Now().Unix())
-	sl.log = filePtr
-	sl.writer = bufio.NewWriter(sl.log)
-	sl.logFileNames.PushBack(logFileName)
+	lgr.baseLogName = logBaseName
+	lgr.logFileCount = 0
+	lgr.logDuration = 0
+	lgr.logStamp = uint64(time.Now().Unix())
+	lgr.log = filePtr
+	lgr.writer = bufio.NewWriter(lgr.log)
+	lgr.logFileNames.PushBack(logFileName)
 	return nil
 }
 
-// LogMessage will write the given string to the log file. It will then perform
-// all the necessary checks to make sure that the max number of messages, the
-// max duration of the log file, and the maximum number of overall log files
-// has not been reached. If any of the above parameters have been tripped,
-// log cleanup will occur.
-func (sl *Logger) LogMessage(formatString string, values ...interface{}) {
+// LogMessage will write the given string to the current active log file. It
+// will then perform all the necessary checks to make sure that the max number
+// of messages, the max duration of the log file, and the maximum number of
+// overall log files has not been reached. If any of the above parameters have
+// been tripped, action will be taken accordingly.
+func (lgr *Logger) LogMessage(formatString string, values ...interface{}) {
+
+	lock.Lock()
+	defer lock.Unlock()
 
 	// what time is it right now?
 	now := uint64(time.Now().Unix())
-
 	// write the logging message to the current log file
-	fmt.Fprintln(sl.writer, fmt.Sprintf(formatString, values...))
+	fmt.Fprintln(lgr.writer, fmt.Sprintf(formatString, values...))
 	// write the logging message to std.out for local watchers
 	fmt.Println(fmt.Sprintf(formatString, values...))
 	// manually flush for now... it ain't pretty but it works
-	sl.writer.Flush()
+	lgr.writer.Flush()
 
-	sl.writer.Flush()
+	lgr.logMessageCount++
+	lgr.logDuration += now - lgr.logStamp
+	lgr.logStamp = now
 
-	sl.logMessageCount++
-	sl.logDuration += now - sl.logStamp
-	sl.logStamp = now
-
-	if sl.logMessageCount >= sl.MaxLogMessageCount ||
-		sl.logDuration >= sl.MaxLogDuration {
-		sl.newFile()
+	if lgr.logMessageCount >= lgr.MaxLogMessageCount ||
+		lgr.logDuration >= lgr.MaxLogDuration {
+		lgr.newFile()
 	}
 }
 
 // newFile generates a new log file to store the log messages within. It
 // intelligently keeps track of the number of log files that have already been
 // created so that you don't overload your disk with logs and can 'prune' extra
-// logs as necessary.
-func (sl *Logger) newFile() error {
+// logs as they pass the threshold to keep around.
+func (lgr *Logger) newFile() error {
 
-	logFileName := utils.TimeStampFileName(sl.baseLogName, LOG_EXTENSION)
+	logFileName := utils.TimeStampFileName(lgr.baseLogName, LOG_EXTENSION)
 
 	filePtr, err := os.Create(logFileName)
 	if err != nil {
 		return err
 	}
 
-	sl.writer.Flush()
-	sl.log.Close()
+	fmt.Println(fmt.Sprintf("Created new log file: %v", filePtr.Name()))
 
-	sl.log = filePtr
-	sl.writer = bufio.NewWriter(sl.log)
+	lgr.log.Close()
 
-	sl.logMessageCount = 0
-	sl.logFileCount++
-	sl.logFileNames.PushBack(logFileName)
+	fmt.Println(fmt.Sprintf("Successfully flushed and closed the old log file: %v", lgr.CurrentLogFile().Name()))
 
-	if sl.logFileCount >= sl.MaxLogFileCount {
-		if err := sl.pruneFile(); err != nil {
+	lgr.log = filePtr
+	lgr.writer = bufio.NewWriter(lgr.log)
+
+	lgr.logMessageCount = 0
+	lgr.logFileCount++
+	lgr.logFileNames.PushBack(logFileName)
+
+	if lgr.logFileCount >= lgr.MaxLogFileCount {
+		if err := lgr.pruneFile(); err != nil {
 			return err
 		}
 	}
@@ -259,12 +208,11 @@ func (sl *Logger) newFile() error {
 
 // pruneFile will remove the oldest file handle from the queue and delete the
 // file from the local file system.
-func (sl *Logger) pruneFile() error {
+func (lgr *Logger) pruneFile() error {
 
-	oldestLog := sl.logFileNames.Remove(sl.logFileNames.Front())
+	oldestLog := lgr.logFileNames.Remove(lgr.logFileNames.Front())
 	logFileName := reflect.ValueOf(oldestLog).String()
 
 	fmt.Println(fmt.Sprintf("Deleting oldest log file: %v", logFileName))
-
 	return os.Remove(logFileName)
 }

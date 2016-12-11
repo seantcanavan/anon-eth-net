@@ -7,6 +7,7 @@ import (
 
 	"github.com/jordan-wright/email"
 	"github.com/seantcanavan/config"
+	"github.com/seantcanavan/logger"
 )
 
 const EMAIL_SERVER = "smtp.gmail.com"
@@ -33,12 +34,24 @@ func SendAttachment(subject string, contents []byte, attachmentPtr *os.File) err
 		Text:    contents,
 	}
 
+	logger.Lgr.LogMessage("Successfully created new jwemail instance: %+v", jwEmail)
+
 	if attachmentPtr != nil {
 		jwEmail.AttachFile(attachmentPtr.Name())
+		logger.Lgr.LogMessage("Successfully attached file: %v", attachmentPtr.Name())
 	}
 
 	emailAuth := smtp.PlainAuth("", config.Cfg.CheckInGmailAddress, config.Cfg.CheckInGmailPassword, EMAIL_SERVER)
-	return jwEmail.Send(EMAIL_SERVER+":"+EMAIL_PORT, emailAuth)
+
+	logger.Lgr.LogMessage("Successfully generated SMTP email auth: %+v", emailAuth)
+
+	sendErr := jwEmail.Send(EMAIL_SERVER+":"+EMAIL_PORT, emailAuth)
+
+	if sendErr == nil {
+		logger.Lgr.LogMessage("Successfully sent email")
+	}
+
+	return sendErr
 }
 
 // generateSubject will append the device ID to the beginning of the email

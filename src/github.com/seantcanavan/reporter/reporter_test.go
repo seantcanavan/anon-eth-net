@@ -7,9 +7,16 @@ import (
 	"testing"
 
 	"github.com/seantcanavan/config"
+	"github.com/seantcanavan/logger"
 )
 
 func TestMain(m *testing.M) {
+
+	logErr := logger.StandardLogger("reporter_test")
+	if logErr != nil {
+		fmt.Println(fmt.Sprintf("Could not initialize logger: %v", logErr))
+		return
+	}
 
 	configErr := config.FromFile()
 	if configErr != nil {

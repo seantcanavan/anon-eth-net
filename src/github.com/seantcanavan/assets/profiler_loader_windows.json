@@ -1,14 +1,14 @@
 {
-    "CPU and Disk Utilization": "pwd",
-    "Memory Utilization": "pwd",
-    "Disk Free Space": "cd ..",
-    "Process List": "cd ..",
-    "Uptime": "dir",
-    "Kernel Version": "dir",
-    "Distro Version": "pwd",
-    "Routing Table": "pwd",
-    "Network Interfaces": "cd ..",
-    "Occupied Ports": "cd ..",
-    "Network Usage Stats": "dir",
-    "Active Connections": "dir"
+    "cpu_and_disk_util": "pwd",
+    "mem_util": "pwd",
+    "disk_free_space": "cd ..",
+    "running_processes": "cd ..",
+    "uptime": "dir",
+    "kernel_version": "dir",
+    "distro_version": "pwd",
+    "routing_table": "pwd",
+    "network_interfaces": "cd ..",
+    "occupied_ports": "cd ..",
+    "ntwork_usage_stats": "dir",
+    "active_connections": "dir"
 }

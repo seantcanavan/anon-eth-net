@@ -4,28 +4,25 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/seantcanavan/config"
+	"github.com/seantcanavan/logger"
 )
-
-var udr *Updater
 
 func TestMain(m *testing.M) {
 
-	configErr := config.FromFile()
+	logErr := logger.StandardLogger("updater_test")
+	if logErr != nil {
+		fmt.Println(fmt.Sprintf("Could not initialize logger: %v", logErr))
+		return
+	}
 
+	configErr := config.FromFile()
 	if configErr != nil {
 		fmt.Println(configErr)
 		os.Exit(1)
 	}
-
-	updater, udrError := NewUpdater()
-	if udrError != nil {
-		fmt.Println(udrError)
-		return
-	}
-
-	udr = updater
 
 	result := m.Run()
 	os.Exit(result)
@@ -33,10 +30,18 @@ func TestMain(m *testing.M) {
 
 func TestVersionCompare(t *testing.T) {
 
-	update, updateErr := udr.UpdateNecessary()
+	update, updateErr := UpdateNecessary()
 	if updateErr != nil {
 		t.Error(updateErr)
 	}
 
 	fmt.Println(fmt.Sprintf("update necessary: %v", update))
+}
+
+func TestRun(t *testing.T) {
+
+	config.Cfg.CheckInFrequencySeconds = 2
+	Run()
+	time.Sleep(time.Second * 6)
+
 }

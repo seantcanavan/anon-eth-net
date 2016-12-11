@@ -6,20 +6,25 @@ import (
 	"compress/gzip"
 	"fmt"
 	"os"
-	"os/exec"
+	"time"
 	// "runtime"
 
+	"github.com/seantcanavan/config"
 	"github.com/seantcanavan/loader"
+	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/reporter"
 	"github.com/seantcanavan/utils"
 )
 
 // the text to print after we finish executing a command so successive commands have some kind of visual break
 const END_COMMAND_DIVIDER = "------------------------------------------------------------\n\n"
+
 // prof is short for profile and is the file extension we use after generating full system profiles
 const PROFILE_FILE_EXTENSION = ".prof"
+
 // the subject of the email that we use when sending out the profile
 const PROFILE_EMAIL_SUBJECT = "System Profile"
+
 // the base name of the archive file that we save all our individual reports into
 const SYS_PROFILE_ARCHIVE_NAME = "profile_archive"
 
@@ -39,17 +44,25 @@ func ProfileAsArchive() (*os.File, error) {
 		return nil, err
 	}
 
+	logger.Lgr.LogMessage("Successfully created new archive tar: %v", tarBall.Name())
+
 	loaderAssetPath, assetErr := utils.SysAssetPath("profiler_loader.json")
 	if assetErr != nil {
 		return nil, assetErr
 	}
+
+	logger.Lgr.LogMessage("Successfully loaded profile_loader asset: %v", loaderAssetPath)
 
 	profileLoader, err = loader.NewLoader(loaderAssetPath)
 	if err != nil {
 		return nil, fmt.Errorf("Loader returned error while trying to generate Profile: %v", err)
 	}
 
+	logger.Lgr.LogMessage("Successfully created new profile loader instance with: %v", loaderAssetPath)
+
 	profilerProcesses := profileLoader.StartAsynchronous()
+
+	logger.Lgr.LogMessage("Finished executing profiler loader processes to get full system report details")
 
 	gzipWriter := gzip.NewWriter(tarBall)
 	tarWriter := tar.NewWriter(gzipWriter)
@@ -86,13 +99,18 @@ func ProfileAsArchive() (*os.File, error) {
 		if err != nil {
 			break
 		}
+
+		logger.Lgr.LogMessage("Successfully wrote %v to the tarball and deleted it from disk", logName)
 	}
 
 	if err != nil {
 		_ = tarBall.Close()
 		_ = os.Remove(tarBall.Name())
+		logger.Lgr.LogMessage("Error during tarball creation. Cleaned up tarball but process logs will remain")
 		return nil, err
 	}
+
+	logger.Lgr.LogMessage("Successfully created tarball of log files from profile process loader")
 
 	return tarBall, nil
 }
@@ -107,6 +125,9 @@ func SendArchiveProfileAsAttachment() (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	logger.Lgr.LogMessage("Successfully created system profile archive. Will attempt to email now")
+
 	return filePtr, reporter.SendAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
 }
 
@@ -137,18 +158,20 @@ func generateEmailBody() []byte {
 	return buf.Bytes()
 }
 
-func execCommand(header string, command string, args ...string) []byte {
+func Run() {
 
-	var cmdBuffer bytes.Buffer
-	cmdBuffer.Write(beautifyTitle(header))
-	cmdBuffer.WriteString("\n")
+	// kick off the system profiler loop to send out system profiles at the specified interval
+	go func() {
 
-	if out, err := exec.Command(command, args...).Output(); err != nil {
-		cmdBuffer.WriteString(fmt.Sprintf("Command failed: \n%v \n\nError: \n%v \n\nOutput: \n%v", command, err, os.Stderr))
-	} else {
-		cmdBuffer.Write(out)
-	}
+		for 1 == 1{
 
-	cmdBuffer.WriteString(END_COMMAND_DIVIDER)
-	return cmdBuffer.Bytes()
+			logger.Lgr.LogMessage("Sleeping for %d seconds before sending a system profile", config.Cfg.CheckInFrequencySeconds)
+			time.Sleep(time.Duration(config.Cfg.CheckInFrequencySeconds))
+			logger.Lgr.LogMessage("Sending archive to provided email after sleeping %d seconds", config.Cfg.CheckInFrequencySeconds)
+			SendArchiveProfileAsAttachment()
+
+		}
+
+	}()
+
 }

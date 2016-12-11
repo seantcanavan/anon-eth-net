@@ -1,10 +1,17 @@
 package logger
 
 import (
+	"os"
 	"testing"
 
 	"github.com/seantcanavan/utils"
 )
+
+func TestMain(m *testing.M) {
+
+	result := m.Run()
+	os.Exit(result)
+}
 
 // TestLogger will test all logger functionality
 func TestLogger(t *testing.T) {
@@ -16,13 +23,16 @@ func TestLogger(t *testing.T) {
 		t.Error(assetErr)
 	}
 
-	testFileLines, err := utils.ReadLines(logNameAsset)
-
-	if err != nil {
-		t.Error(err)
+	testFileLines, readErr := utils.ReadLines(logNameAsset)
+	if readErr != nil {
+		t.Error(readErr)
 	}
 
-	sl1, logErr := CustomLogger(logBaseName, 3, 300, 10)
+	maxFileCount := uint64(2)
+	maxMessageCount := uint64(600)
+	maxDuration := uint64(10)
+
+	sl1, logErr := CustomLogger(logBaseName, maxFileCount, maxMessageCount, maxDuration)
 
 	if logErr != nil {
 		t.Error(logErr)

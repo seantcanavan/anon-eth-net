@@ -23,32 +23,46 @@ import (
 // The acceptable amount of time between the incoming timestamp and the local timestamp in seconds
 // Microsoft recommends a maximum of 5 minutes: https://technet.microsoft.com/en-us/library/jj852172(v=ws.11).aspx
 const TIMESTAMP_DELTA_SECONDS = 300
+
 // The key to the query parameter for the incoming timestamp value
 const TIMESTAMP = "timestamp"
+
 // The key to the query parameter for the reboot delay value
 const REBOOT_DELAY = "delay"
+
 // The key to the query parameter for the remote log email address recipient value
 const RECIPIENT_GMAIL = "emailaddress"
+
 // The key to the query parameter for the file type to execute for execute handler
 const FILE_TYPE = "filetype"
+
 // The key to the query parameter for the asset file name to perform CRUD operations on over REST
 const ASSET_NAME = "assetname"
-// The subject of the email to send out after a successfuly REST port has been negotiated
+
+// The subject of the email to send out after a successfully REST port has been negotiated
 const REST_EMAIL_SUBJECT = "REST Service Successfully Started"
+
 // The REST path name which calls the execute handler
 const EXECUTE_REST_PATH = "execute"
+
 // The REST path name which calls the reboot handler
 const REBOOT_REST_PATH = "reboot"
+
 // The REST path name which calls the log handler
 const LOG_REST_PATH = "logs"
+
 // The REST path name which calls the update handler
 const UPDATE_REST_PATH = "update"
+
 // The REST path name which calls the config handler
 const CONFIG_REST_PATH = "config"
+
 // The REST path name which calls the check in handler
 const CHECKIN_REST_PATH = "checkin"
+
 // The REST path name which calls the asset handler
 const ASSET_REST_PATH = "asset"
+
 // The subject of the email to send out when the REST package is finished executing remote code via the loader package
 const REST_LOADER_SUBJECT = "Rest Execute Handler Results"
 
@@ -60,7 +74,6 @@ const REST_LOADER_SUBJECT = "Rest Execute Handler Results"
 // prevent remote code execution.
 type RestHandler struct {
 	rtr       *mux.Router
-	lgr       *logger.Logger
 	Port      string
 	Endpoints map[string]string
 }
@@ -71,11 +84,6 @@ func NewRestHandler() (*RestHandler, error) {
 
 	rh := RestHandler{}
 
-	lgr, lgrErr := logger.FromVolatilityValue("rest_package")
-	if lgrErr != nil {
-		return nil, lgrErr
-	}
-
 	rh.Endpoints = make(map[string]string)
 	rh.Endpoints[LOG_REST_PATH] = buildGorillaPath(LOG_REST_PATH, TIMESTAMP, RECIPIENT_GMAIL)
 	rh.Endpoints[REBOOT_REST_PATH] = buildGorillaPath(REBOOT_REST_PATH, TIMESTAMP, REBOOT_DELAY)
@@ -84,7 +92,8 @@ func NewRestHandler() (*RestHandler, error) {
 	rh.Endpoints[EXECUTE_REST_PATH] = buildGorillaPath(EXECUTE_REST_PATH, TIMESTAMP, FILE_TYPE)
 	rh.Endpoints[ASSET_REST_PATH] = buildGorillaPath(ASSET_REST_PATH, TIMESTAMP, ASSET_NAME)
 
-	rh.lgr = lgr
+	logger.Lgr.LogMessage("Successfully generated REST endpoint map: %+v", rh.Endpoints)
+
 	rh.rtr = mux.NewRouter()
 	rh.rtr.HandleFunc(rh.Endpoints[LOG_REST_PATH], rh.logHandler)
 	rh.rtr.HandleFunc(rh.Endpoints[REBOOT_REST_PATH], rh.rebootHandler)
@@ -93,7 +102,11 @@ func NewRestHandler() (*RestHandler, error) {
 	rh.rtr.HandleFunc(rh.Endpoints[EXECUTE_REST_PATH], rh.executeHandler)
 	rh.rtr.HandleFunc(rh.Endpoints[ASSET_REST_PATH], rh.assetHandler)
 
+	logger.Lgr.LogMessage("Successfully generated REST gorilla mux router: %+v", rh.rtr)
+
 	rh.startupRestServer()
+
+	logger.Lgr.LogMessage("Started up TLS REST server")
 	return &rh, nil
 }
 
@@ -146,19 +159,26 @@ func (rh *RestHandler) startupRestServer() error {
 		return pKeyPathErr
 	}
 
+	logger.Lgr.LogMessage("Successfully located private key asset: %v", pKeyPath)
+
 	certPath, certPathErr := utils.AssetPath("server.cert")
 	if certPathErr != nil {
 		return certPathErr
 	}
 
+	logger.Lgr.LogMessage("Successfully located server cert asset: %v", certPath)
+
 	go http.ListenAndServeTLS(":"+rh.Port, certPath, pKeyPath, rh.rtr)
-	rh.lgr.LogMessage("REST server successfully started up on port %v", port)
+
+	logger.Lgr.LogMessage("REST server successfully started up on port %v", port)
 
 	externalIp, extIpErr := utils.ExternalIPAddress()
 	if extIpErr != nil {
-		rh.lgr.LogMessage("Failed to retrieve external IP address: %v", extIpErr)
+		logger.Lgr.LogMessage("Failed to retrieve external IP address: %v", extIpErr)
 		return reporter.SendPlainEmail(REST_EMAIL_SUBJECT, []byte(strconv.Itoa(port)))
 	}
+
+	logger.Lgr.LogMessage("Successfully retrieved external IP: %v", externalIp)
 
 	var baseRestPath bytes.Buffer
 	baseRestPath.WriteString("https://")
@@ -173,6 +193,8 @@ func (rh *RestHandler) startupRestServer() error {
 		emailBody.WriteString(value)
 		emailBody.WriteString("\n")
 	}
+
+	logger.Lgr.LogMessage("Sending out full REST path specs via email")
 
 	return reporter.SendPlainEmail(REST_EMAIL_SUBJECT, emailBody.Bytes())
 }
@@ -202,8 +224,13 @@ func (rh *RestHandler) writeResponseAndLog(errorMessage string, httpStatusCode i
 	statusBuffer.WriteString(fmt.Sprintf("%+v", writer))
 	statusBuffer.WriteString("and request:")
 	statusBuffer.WriteString(fmt.Sprintf("%+v", &request))
-	rh.lgr.LogMessage(errorMessage)
-	rh.lgr.LogMessage(statusBuffer.String())
+
+	if errorMessage != "" {
+		logger.Lgr.LogMessage(errorMessage)
+
+	}
+
+	logger.Lgr.LogMessage(statusBuffer.String())
 }
 
 // checkinHandler will handle receiving and verifying check-in commands via REST.
@@ -217,8 +244,8 @@ func (rh *RestHandler) checkinHandler(writer http.ResponseWriter, request *http.
 	remoteTimestamp := queryParams[TIMESTAMP]
 	recipientEmail := queryParams[RECIPIENT_GMAIL]
 
-	rh.lgr.LogMessage("checkinHandler - remoteTimestamp: %v recipientEmail: %v", remoteTimestamp, recipientEmail)
-	defer rh.lgr.LogMessage("checkinHandler finished\n")
+	logger.Lgr.LogMessage("checkinHandler - remoteTimestamp: %v recipientEmail: %v", remoteTimestamp, recipientEmail)
+	defer logger.Lgr.LogMessage("checkinHandler finished\n")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
 	if err != nil {
@@ -226,23 +253,31 @@ func (rh *RestHandler) checkinHandler(writer http.ResponseWriter, request *http.
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully validated incoming timestamp")
+
 	err = rh.verifyQueryParams(recipientEmail)
 	if err != nil {
 		rh.writeResponseAndLog(err.Error(), http.StatusBadRequest, writer, request)
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully verified query parameters")
+
 	switch request.Method {
+
 	case "GET":
+		logger.Lgr.LogMessage("Received http.GET request - sending profile out via email")
 		archive, err := profiler.SendArchiveProfileAsAttachment()
 		if err != nil {
-			rh.lgr.LogMessage("checkinHandler failed to email system profile: %v", err.Error())
+			logger.Lgr.LogMessage("checkinHandler failed to email system profile: %v", err.Error())
 			rh.writeResponseAndLog(err.Error(), http.StatusInternalServerError, writer, request)
 		} else {
 			defer os.Remove(archive.Name())
+			logger.Lgr.LogMessage("Successfully emailed out system profile via email")
 			rh.writeResponseAndLog("", http.StatusOK, writer, request)
 		}
 	default:
+		logger.Lgr.LogMessage("Received unsupported REST method %v for checkinHandler", request.Method)
 		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
 	}
 	return
@@ -260,8 +295,8 @@ func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.
 	remoteTimestamp := queryParams[TIMESTAMP]
 	fileType := queryParams[FILE_TYPE]
 
-	rh.lgr.LogMessage("remoteTimestamp: %v fileType: %v", remoteTimestamp, fileType)
-	defer rh.lgr.LogMessage("executeHandler finished\n")
+	logger.Lgr.LogMessage("remoteTimestamp: %v fileType: %v", remoteTimestamp, fileType)
+	defer logger.Lgr.LogMessage("executeHandler finished\n")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
 	if err != nil {
@@ -269,11 +304,15 @@ func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully validated incoming timestamp")
+
 	err = rh.verifyQueryParams(fileType)
 	if err != nil {
 		rh.writeResponseAndLog(err.Error(), http.StatusBadRequest, writer, request)
 		return
 	}
+
+	logger.Lgr.LogMessage("Successfully verified query parameters")
 
 	bodyContents, bodyErr := ioutil.ReadAll(request.Body)
 	if bodyErr != nil {
@@ -281,22 +320,28 @@ func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully read in request.Body")
+
 	switch request.Method {
 	case "POST":
 		switch fileType {
 		case "python", "binary", "script":
-			rh.lgr.LogMessage("executeHandler is executing remote %v file", fileType)
+			logger.Lgr.LogMessage("executeHandler is executing remote %v file", fileType)
 			// save the bytes to a local file and execute the file in the appropriate manner
 			loaderError := rh.executeLoader(fileType, string(bodyContents))
 			if loaderError != nil {
+				logger.Lgr.LogMessage("error executing remote code: %v", loaderError.Error())
 				rh.writeResponseAndLog(loaderError.Error(), http.StatusBadRequest, writer, request)
 				return
 			}
+			logger.Lgr.LogMessage("Successfully executed remote code")
 			rh.writeResponseAndLog("", http.StatusOK, writer, request)
 		default:
+			logger.Lgr.LogMessage("Received unsupported code type: %v", fileType)
 			rh.writeResponseAndLog("", http.StatusBadRequest, writer, request)
 		}
 	default:
+		logger.Lgr.LogMessage("Received unsupported REST method %v for executeHandler", request.Method)
 		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
 	}
 	return
@@ -309,6 +354,8 @@ func (rh *RestHandler) executeLoader(fileType string, fileContents string) error
 		return tmpErr
 	}
 
+	logger.Lgr.LogMessage("Successfully created temp file for rest execute loader: %v", tmpFile.Name())
+
 	defer os.Remove(tmpFile.Name())
 
 	bufferFileContents := bytes.NewBufferString(fileContents)
@@ -318,13 +365,18 @@ func (rh *RestHandler) executeLoader(fileType string, fileContents string) error
 		return copiedErr
 	}
 
+	logger.Lgr.LogMessage("Successfully copied bytes from REST body to tmpfile")
+
 	switch fileType {
 	case "python":
 		processMap["rest_loader_python"] = "python " + tmpFile.Name()
+		logger.Lgr.LogMessage("Generated REST loader python execute command")
 	case "binary":
 		processMap["rest_loader_binary"] = tmpFile.Name()
+		logger.Lgr.LogMessage("Generated REST loader binary execute command")
 	case "script":
 		processMap["rest_loader_script"] = "/bin/sh " + tmpFile.Name()
+		logger.Lgr.LogMessage("Generated REST loader script execute command")
 	}
 
 	jsonString, jsonErr := json.Marshal(processMap)
@@ -332,10 +384,14 @@ func (rh *RestHandler) executeLoader(fileType string, fileContents string) error
 		return jsonErr
 	}
 
+	logger.Lgr.LogMessage("Successfully marshaled REST process JSON into a map")
+
 	tmpLoaderFile, tmpLoaderErr := ioutil.TempFile("", "restLoader.json")
 	if tmpLoaderErr != nil {
 		return tmpLoaderErr
 	}
+
+	logger.Lgr.LogMessage("Successfully created tmp rest loader file: %v", tmpLoaderFile.Name())
 
 	defer os.Remove(tmpLoaderFile.Name())
 
@@ -346,18 +402,27 @@ func (rh *RestHandler) executeLoader(fileType string, fileContents string) error
 		return copiedErr
 	}
 
+	logger.Lgr.LogMessage("Successfully copied JSON REST loader bytes into new loader process file")
+
 	restLoader, loaderErr := loader.NewLoader(tmpLoaderFile.Name())
 	if loaderErr != nil {
 		return loaderErr
 	}
 
+	logger.Lgr.LogMessage("Successfully instantiated a new Loader instance: %+v", restLoader)
+
 	finishedProcesses := restLoader.StartSynchronous()
+	logger.Lgr.LogMessage("Successfully ran code over REST synchronously")
+
 	for _, process := range finishedProcesses {
 		reprErr := reporter.SendAttachment(REST_LOADER_SUBJECT, jsonString, process.Lgr.CurrentLogFile())
 		if reprErr != nil {
 			return reprErr
 		}
 	}
+
+	logger.Lgr.LogMessage("Successfully sent REST loader results via email")
+
 	return nil
 }
 
@@ -369,8 +434,8 @@ func (rh *RestHandler) rebootHandler(writer http.ResponseWriter, request *http.R
 	remoteTimestamp := queryParams[TIMESTAMP]
 	rebootDelay := queryParams[REBOOT_DELAY]
 
-	rh.lgr.LogMessage("rebootHandler - remoteTimestamp: %v rebootDelay: %v", remoteTimestamp, rebootDelay)
-	defer rh.lgr.LogMessage("rebootHandler finished\n")
+	logger.Lgr.LogMessage("rebootHandler - remoteTimestamp: %v rebootDelay: %v", remoteTimestamp, rebootDelay)
+	defer logger.Lgr.LogMessage("rebootHandler finished\n")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
 	if err != nil {
@@ -378,40 +443,55 @@ func (rh *RestHandler) rebootHandler(writer http.ResponseWriter, request *http.R
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully validated incoming timestamp")
+
 	err = rh.verifyQueryParams(rebootDelay)
 	if err != nil {
 		rh.writeResponseAndLog(err.Error(), http.StatusBadRequest, writer, request)
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully verified query parameters")
+
 	switch request.Method {
+
 	case "GET":
 		intDelay, intErr := strconv.Atoi(rebootDelay)
 		if intErr != nil {
-			rh.lgr.LogMessage("could not convert reboot parameter to an int: %v", intErr.Error())
+			logger.Lgr.LogMessage("could not convert reboot parameter to an int: %v", intErr.Error())
 			rh.writeResponseAndLog(intErr.Error(), http.StatusInternalServerError, writer, request)
-		} else {
-			rh.lgr.LogMessage("sleeping for %d seconds before rebooting", intDelay)
-			time.Sleep(time.Duration(intDelay) * time.Second)
-			assetPath, assetErr := utils.SysAssetPath("reboot_loader.json")
-			if assetErr != nil {
-				rh.lgr.LogMessage("could not successfully locate reboot loader JSON file: %v", assetErr.Error())
-				rh.writeResponseAndLog(assetErr.Error(), http.StatusInternalServerError, writer, request)
-			} else {
-				rebootLoader, loaderError := loader.NewLoader(assetPath)
-				if loaderError != nil {
-					rh.lgr.LogMessage("could not initialize new reboot loader: %v", loaderError.Error())
-					rh.writeResponseAndLog(loaderError.Error(), http.StatusInternalServerError, writer, request)
-				} else {
-					rh.writeResponseAndLog("", http.StatusOK, writer, request)
-					defer rebootLoader.StartSynchronous()
-				}
-			}
-
+			return
 		}
+
+		logger.Lgr.LogMessage("sleeping for %d seconds before rebooting", intDelay)
+
+		time.Sleep(time.Duration(intDelay) * time.Second)
+		assetPath, assetErr := utils.SysAssetPath("reboot_loader.json")
+		if assetErr != nil {
+			logger.Lgr.LogMessage("could not successfully locate reboot loader JSON file: %v", assetErr.Error())
+			rh.writeResponseAndLog(assetErr.Error(), http.StatusInternalServerError, writer, request)
+			return
+		}
+
+		logger.Lgr.LogMessage("Successfully loaded reboot_loader asset: %v", assetPath)
+
+		rebootLoader, loaderError := loader.NewLoader(assetPath)
+		if loaderError != nil {
+			logger.Lgr.LogMessage("could not initialize new reboot loader: %v", loaderError.Error())
+			rh.writeResponseAndLog(loaderError.Error(), http.StatusInternalServerError, writer, request)
+			return
+		}
+
+		logger.Lgr.LogMessage("Successfully instantiated new reboot loader: %+v", rebootLoader)
+
+		rh.writeResponseAndLog("", http.StatusOK, writer, request)
+		defer rebootLoader.StartSynchronous()
+
 	default:
+		logger.Lgr.LogMessage("Received unsupported REST method %v for rebootHandler", request.Method)
 		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
 	}
+
 	return
 }
 
@@ -424,8 +504,8 @@ func (rh *RestHandler) logHandler(writer http.ResponseWriter, request *http.Requ
 	remoteTimestamp := queryParams[TIMESTAMP]
 	recipientEmail := queryParams[RECIPIENT_GMAIL]
 
-	rh.lgr.LogMessage("logHandler - remoteTimestamp: %v recipientEmail: %v", remoteTimestamp, recipientEmail)
-	defer rh.lgr.LogMessage("logHandler finished\n")
+	logger.Lgr.LogMessage("logHandler - remoteTimestamp: %v recipientEmail: %v", remoteTimestamp, recipientEmail)
+	defer logger.Lgr.LogMessage("logHandler finished\n")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
 	if err != nil {
@@ -433,19 +513,25 @@ func (rh *RestHandler) logHandler(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully validated incoming timestamp")
+
 	err = rh.verifyQueryParams(recipientEmail)
 	if err != nil {
 		rh.writeResponseAndLog(err.Error(), http.StatusBadRequest, writer, request)
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully verified query parameters")
+
 	switch request.Method {
 	case "GET":
-		rh.lgr.LogMessage("collating logs and sending to gmail address: %v", recipientEmail)
+		logger.Lgr.LogMessage("collating logs and sending to gmail address: %v", recipientEmail)
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	default:
 		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
 	}
+
+	return
 }
 
 // updateHandler will handle receiving and verifying update commands via REST.
@@ -457,8 +543,8 @@ func (rh *RestHandler) updateHandler(writer http.ResponseWriter, request *http.R
 	queryParams := mux.Vars(request)
 	remoteTimestamp := queryParams[TIMESTAMP]
 
-	rh.lgr.LogMessage("updateHandler - remoteTimestamp: %v", remoteTimestamp)
-	defer rh.lgr.LogMessage("updateHandler finished\n")
+	logger.Lgr.LogMessage("updateHandler - remoteTimestamp: %v", remoteTimestamp)
+	defer logger.Lgr.LogMessage("updateHandler finished\n")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
 	if err != nil {
@@ -466,16 +552,20 @@ func (rh *RestHandler) updateHandler(writer http.ResponseWriter, request *http.R
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully validated incoming timestamp")
+
 	switch request.Method {
 	case "GET":
-		rh.lgr.LogMessage("need to return the current update URL")
+		logger.Lgr.LogMessage("need to return the current update URL")
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	case "POST":
-		rh.lgr.LogMessage("need to retrieve the URL that was posted and update config with it")
+		logger.Lgr.LogMessage("need to retrieve the URL that was posted and update config with it")
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	default:
+		logger.Lgr.LogMessage("Received unsupported REST method %v for updateHandler", request.Method)
 		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
 	}
+
 	return
 }
 
@@ -491,8 +581,8 @@ func (rh *RestHandler) assetHandler(writer http.ResponseWriter, request *http.Re
 	remoteTimestamp := queryParams[TIMESTAMP]
 	targetFileName := queryParams[ASSET_NAME]
 
-	rh.lgr.LogMessage("assetHandler - remoteTimestamp: %v targetFileName: %v", remoteTimestamp, targetFileName)
-	defer rh.lgr.LogMessage("assetHandler finished\n")
+	logger.Lgr.LogMessage("assetHandler - remoteTimestamp: %v targetFileName: %v", remoteTimestamp, targetFileName)
+	defer logger.Lgr.LogMessage("assetHandler finished\n")
 
 	err = rh.verifyTimeStamp(remoteTimestamp)
 	if err != nil {
@@ -500,28 +590,34 @@ func (rh *RestHandler) assetHandler(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully validated incoming timestamp")
+
 	err = rh.verifyQueryParams(targetFileName)
 	if err != nil {
 		rh.writeResponseAndLog(err.Error(), http.StatusBadRequest, writer, request)
 		return
 	}
 
+	logger.Lgr.LogMessage("Successfully verified query parameters")
+
 	switch request.Method {
 	case "GET":
-		rh.lgr.LogMessage("received remote request to retrieve file: %v", targetFileName)
+		logger.Lgr.LogMessage("received remote request to retrieve file: %v", targetFileName)
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	case "POST":
-		rh.lgr.LogMessage("received remote request to create new file: %v", targetFileName)
+		logger.Lgr.LogMessage("received remote request to create new file: %v", targetFileName)
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	case "PUT":
-		rh.lgr.LogMessage("received remote request to create a new or modify an existing file: %v", targetFileName)
+		logger.Lgr.LogMessage("received remote request to create a new or modify an existing file: %v", targetFileName)
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	case "DELETE":
-		rh.lgr.LogMessage("received remote request to delete file: %v", targetFileName)
+		logger.Lgr.LogMessage("received remote request to delete file: %v", targetFileName)
 		rh.writeResponseAndLog("", http.StatusOK, writer, request)
 	default:
+		logger.Lgr.LogMessage("Received unsupported REST method %v for assetHandler", request.Method)
 		rh.writeResponseAndLog("", http.StatusMethodNotAllowed, writer, request)
 	}
+
 	return
 }
 
@@ -529,6 +625,7 @@ func (rh *RestHandler) assetHandler(writer http.ResponseWriter, request *http.Re
 // time in seconds. Returns error if the input time stamp cannot be correctly
 // converted to a time instance.
 func (rh *RestHandler) TimeDiffSeconds(unixTimeStamp string) (*UnixTimeDiff, error) {
+
 	unixDiff := UnixTimeDiff{}
 	otherTime, err := strconv.ParseInt(unixTimeStamp, 10, 64)
 	if err != nil {
@@ -545,6 +642,8 @@ func (rh *RestHandler) TimeDiffSeconds(unixTimeStamp string) (*UnixTimeDiff, err
 		unixDiff.diff = unixDiff.diff * -1
 	}
 
+	logger.Lgr.LogMessage("Calculated diff: %+v", unixDiff)
+
 	return &unixDiff, nil
 }
 
@@ -553,7 +652,8 @@ func (rh *RestHandler) TimeDiffSeconds(unixTimeStamp string) (*UnixTimeDiff, err
 // synchronization of both the local time on the local box and the remote time
 // on the remote box.
 func (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
-	rh.lgr.LogMessage("verifyTimeStamp called with remoteTimeStamp: %v", remoteTimeStamp)
+
+	logger.Lgr.LogMessage("verifyTimeStamp called with remoteTimeStamp: %v", remoteTimeStamp)
 
 	// get the difference between then and now in seconds from unix time stamps
 	diff, diffErr := rh.TimeDiffSeconds(remoteTimeStamp)
@@ -561,7 +661,7 @@ func (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
 		return fmt.Errorf("verifyTimeStamp failed with diff: %v", diff.diff)
 	}
 
-	rh.lgr.LogMessage("verifyTimeStamp succeeded with diff: %v", diff.diff)
+	logger.Lgr.LogMessage("verifyTimeStamp succeeded with diff: %v", diff.diff)
 	return nil
 }
 
@@ -573,7 +673,7 @@ func (rh *RestHandler) verifyTimeStamp(remoteTimeStamp string) error {
 func (rh *RestHandler) verifyQueryParams(parameters ...string) error {
 	for _, value := range parameters {
 		if value == "" {
-			rh.lgr.LogMessage("verifyQueryParams failed with: %v", value)
+			logger.Lgr.LogMessage("verifyQueryParams failed with: %v", value)
 			return fmt.Errorf("verifyQueryParams failed with: %v", value)
 		}
 	}
@@ -592,10 +692,10 @@ func (utd UnixTimeDiff) pprint() string {
 	var prettyBuf bytes.Buffer
 
 	prettyBuf.WriteString("UnixTimeDiff:\n")
-	prettyBuf.WriteString(fmt.Sprintf("now: %d\t", utd.now))
-	prettyBuf.WriteString(fmt.Sprintf("then: %d\t", utd.then))
-	prettyBuf.WriteString(fmt.Sprintf("diff: %d\t", utd.diff))
+	prettyBuf.WriteString(fmt.Sprintf("now    : %d\t", utd.now))
+	prettyBuf.WriteString(fmt.Sprintf("then   : %d\t", utd.then))
+	prettyBuf.WriteString(fmt.Sprintf("diff   : %d\t", utd.diff))
 	prettyBuf.WriteString(fmt.Sprintf("rawdiff: %d\t", utd.rawdiff))
-	prettyBuf.WriteString(fmt.Sprintf("future: %t\n", utd.future))
+	prettyBuf.WriteString(fmt.Sprintf("future : %t\n", utd.future))
 	return prettyBuf.String()
 }

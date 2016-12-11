@@ -11,8 +11,6 @@ import (
 	"github.com/seantcanavan/logger"
 )
 
-var lgr *logger.Logger
-
 const TIME_BETWEEN_SUCCESSIVE_ITERATIONS = 60
 
 // Loader represents a struct that will load a set of processes and watch over
@@ -39,24 +37,17 @@ type LoaderProcess struct {
 // Each individual process will have its own logs.
 func NewLoader(processesPath string) (*Loader, error) {
 
-	if lgr == nil {
-		newLogger, logError := logger.FromVolatilityValue("loader_package")
-		if logError != nil {
-			return nil, logError
-		}
-		lgr = newLogger
-	}
-
-	l := Loader{}
-	var loadedProcesses []LoaderProcess
 	loadedProcesses, loadErr := processesFromJSONFile(processesPath)
-
 	if loadErr != nil {
 		return nil, loadErr
 	}
 
-	l.Processes = loadedProcesses
-	return &l, nil
+	logger.Lgr.LogMessage("Successfully loaded processes from file: %v", processesPath)
+	logger.Lgr.LogMessage("Successfully instantiated loader from JSON:\n%+v", loadedProcesses)
+
+	loader := &Loader{Processes: loadedProcesses}
+
+	return loader, nil
 }
 
 // getProcessesFromJSONFile will read in a set of JSON values which define both
@@ -75,10 +66,14 @@ func processesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
 		return nil, readErr
 	}
 
+	logger.Lgr.LogMessage("Successfully loaded process map bytes from file: %v", processesPath)
+
 	mapErr1 := json.Unmarshal(fileBytes, &rawJSONMap)
 	if mapErr1 != nil {
 		return nil, mapErr1
 	}
+
+	logger.Lgr.LogMessage("Successfully unmarshalled JSON process file bytes into a map")
 
 	for key, value := range rawJSONMap {
 		var s string
@@ -87,77 +82,119 @@ func processesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
 			return nil, mapErr2
 		}
 
-		lp := LoaderProcess{}
-		lp.Name = key
 		commandParts := strings.Split(s, " ")
-		lp.Command = commandParts[0]
-		lp.Arguments = commandParts[1:]
+		lp := LoaderProcess{Name: key, Command: commandParts[0], Arguments: commandParts[1:]}
 
-		logInstance, logError := logger.FromVolatilityValue(lp.Name)
+		logger.Lgr.LogMessage("Successfully created LoaderProcess instance: %v", lp.Name)
+
+		logInstance, logError := logger.CustomLogger(lp.Name, 1, 9999999999, 9999999999)
 		if logError != nil {
-			lgr.LogMessage("LoaderProcess unsuccessfully initialized logger: %+v", lp)
 			return nil, logError
 		}
 
+		logger.Lgr.LogMessage("Successfully instantiated custom logger process for LoaderProcess: %v", lp.Name)
+
 		lp.Lgr = logInstance
-		lgr.LogMessage("Read process successfully from file: %+v", lp)
 		processList = append(processList, lp)
+
+		logger.Lgr.LogMessage("Successfully initialized one LoaderProcess instance: %+v", lp)
 	}
+
 	return processList, nil
 }
 
 // StartAsynchronous will execute all the processes that have been loaded into
-// this specific instance of Loader. It will execute them asynchronously and
-// eventually in the future it will hopefully figure out a meaningful way of
-// logging the output of each individual process...
-func (l *Loader) StartAsynchronous() []LoaderProcess {
-	var waitGroup sync.WaitGroup
-	lgr.LogMessage("Adding %d processes to the Asynchronous WaitGroup", len(l.Processes))
-	waitGroup.Add(len(l.Processes))
+// this specific instance of Loader asynchronously. It will capture their
+// individual log output and put each specific process output in its own log
+// file. It will also track how long each process runs for and return all this
+// information inside an array of LoaderProcess.
+func (ldr *Loader) StartAsynchronous() []LoaderProcess {
 
-	for index := range l.Processes {
+	var waitGroup sync.WaitGroup
+	numProcesses := len(ldr.Processes)
+	waitGroup.Add(numProcesses)
+
+	logger.Lgr.LogMessage("Adding %d processes to the Asynchronous WaitGroup", numProcesses)
+
+	for index := range ldr.Processes {
+
 		go func(currentProcess *LoaderProcess) {
+
 			defer waitGroup.Done()
+
 			cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
-			lgr.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
-			localProcess := currentProcess
+
+			logger.Lgr.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
+
 			currentProcess.Start = time.Now().Unix()
 			output, err := cmd.CombinedOutput()
 			currentProcess.End = time.Now().Unix()
 			currentProcess.Duration = currentProcess.End - currentProcess.Start
+
 			if err != nil {
-				lgr.LogMessage("LoaderProcess exited with error status: %+v\n %v", localProcess, err.Error())
+				logger.Lgr.LogMessage("LoaderProcess:\n%+v\nexited with error status: %v", currentProcess, err.Error())
+				currentProcess.Lgr.LogMessage("LoaderProcess:\n%+v\nexited with error status: %v", currentProcess, err.Error())
 			} else {
-				lgr.LogMessage("LoaderProcess exited successfully: %+v", localProcess)
+				logger.Lgr.LogMessage("LoaderProcess:\n%+v\nexited successfully", currentProcess)
+				currentProcess.Lgr.LogMessage("LoaderProcess:\n%+v\nexited successfully", currentProcess)
 			}
-			currentProcess.Lgr.LogMessage("LoaderProcess: %+v", currentProcess)
-			currentProcess.Lgr.LogMessage("Command output:\n%v", string(output))
-			lgr.LogMessage("Removing '%v' process from the Asynchronous WaitGroup. Execution took: %v", currentProcess.Name, currentProcess.Duration)
-		}(&l.Processes[index]) // passing the current process using index
+
+			currentProcess.Lgr.LogMessage("Command output:\n%v\n", string(output))
+			logger.Lgr.LogMessage("Command output:\n%v\n", string(output))
+			logger.Lgr.LogMessage("Removing '%v' process from the Asynchronous WaitGroup. Execution took: %v", currentProcess.Name, currentProcess.Duration)
+
+		}(&ldr.Processes[index]) // passing the current process using index
 	}
+
+	logger.Lgr.LogMessage("Waiting for %d processes to finish executing asynchronously", numProcesses)
 	waitGroup.Wait()
-	return l.Processes
+	logger.Lgr.LogMessage("%d processes finished executing asynchronously. returning.", numProcesses)
+	return ldr.Processes
 }
 
 // StartSynchronous will execute all the processes that have been loaded into
-// this specific instance of Loader. It will execute them synchronously and
-// return a slice of pointers to instances of os.File. Each instance of os.File
-// contains the log output from each command that was executed.
-func (l *Loader) StartSynchronous() []LoaderProcess {
-	for _, currentProcess := range l.Processes {
+// this specific instance of Loader in series. It will capture their
+// individual log output and put each specific process output in its own log
+// file. It will also track how long each process runs for and return all this
+// information inside an array of LoaderProcess.
+func (ldr *Loader) StartSynchronous() []LoaderProcess {
+
+	numProcesses := len(ldr.Processes)
+
+	logger.Lgr.LogMessage("Executing %d processes in series", numProcesses)
+
+	for _, currentProcess := range ldr.Processes {
+
 		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
-		lgr.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
+
+		logger.Lgr.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
+
 		currentProcess.Start = time.Now().Unix()
 		output, err := cmd.CombinedOutput()
 		currentProcess.End = time.Now().Unix()
 		currentProcess.Duration = currentProcess.End - currentProcess.Start
+
 		if err != nil {
-			lgr.LogMessage("LoaderProcess exited with error status: %+v", currentProcess)
+			logger.Lgr.LogMessage("LoaderProcess:\n%+v\nexited with error status: %v", currentProcess, err.Error())
+			currentProcess.Lgr.LogMessage("LoaderProcess:\n%+v\nexited with error status: %v", currentProcess, err.Error())
 		} else {
-			lgr.LogMessage("LoaderProcess exited successfully: %+v", currentProcess)
+			logger.Lgr.LogMessage("LoaderProcess:\n%+vexited successfully", currentProcess)
+			currentProcess.Lgr.LogMessage("LoaderProcess:\n%+vexited successfully", currentProcess)
 		}
-		currentProcess.Lgr.LogMessage("LoaderProcess: %+v", currentProcess)
-		currentProcess.Lgr.LogMessage("Command output:\n%v", string(output))
+
+		currentProcess.Lgr.LogMessage("Command output:\n%v\n", string(output))
+		logger.Lgr.LogMessage("Command output:\n%v\n", string(output))
+		logger.Lgr.LogMessage("Finished executing one process out of %d", numProcesses)
 	}
-	return l.Processes
+
+	logger.Lgr.LogMessage("%d processes finished executing synchronously. returning.", numProcesses)
+	return ldr.Processes
+}
+
+func (ldr *Loader) Run() {
+	go func() {
+		for 1 == 1 {
+			ldr.StartAsynchronous()
+		}
+	}()
 }

@@ -98,7 +98,7 @@ func TimeStampFileName(fileBaseName string, fileExtension string) string {
 
 	var nameBuffer bytes.Buffer
 	nameBuffer.WriteString(fileBaseName)
-	nameBuffer.WriteString("-")
+	nameBuffer.WriteString("_")
 	nameBuffer.WriteString(dts)
 	nameBuffer.WriteString(fileExtension)
 

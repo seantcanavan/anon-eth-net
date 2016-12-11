@@ -4,9 +4,17 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/seantcanavan/logger"
 )
 
 func TestMain(m *testing.M) {
+
+	logErr := logger.StandardLogger("config_test")
+	if logErr != nil {
+		fmt.Println(fmt.Sprintf("Could not initialize logger: %v", logErr))
+		return
+	}
 
 	configErr := FromFile()
 	if configErr != nil {
@@ -40,7 +48,6 @@ func TestConfigFromFilePass(t *testing.T) {
 	if Cfg.LogVolatility != 3 {
 		t.Errorf("Cfg.LogVolatility did not unmarshal correctly: %v", Cfg.LogVolatility)
 	}
-
 
 	// ---------- verify optional values unmarshalled correctly ----------
 	if Cfg.DeviceName != "My Little Raspberry Pi" {

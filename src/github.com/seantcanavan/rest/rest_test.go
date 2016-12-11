@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/seantcanavan/config"
+	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/utils"
 )
 
@@ -28,6 +29,12 @@ var client *http.Client
 var restHandler *RestHandler
 
 func TestMain(m *testing.M) {
+
+	logErr := logger.StandardLogger("rest_test")
+	if logErr != nil {
+		fmt.Println(fmt.Sprintf("Could not initialize logger: %v", logErr))
+		return
+	}
 
 	configErr := config.FromFile()
 	if configErr != nil {

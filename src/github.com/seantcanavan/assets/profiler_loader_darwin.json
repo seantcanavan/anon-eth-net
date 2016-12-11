@@ -1,14 +1,14 @@
 {
-    "CPU and Disk Utilization": "iostat 1 20",
-    "Memory Utilization": "top -l 1 -s 0",
-    "Disk Free Space": "df -h",
-    "Process List": "ps -Al",
-    "Uptime": "uptime",
-    "Kernel Version": "uname -r",
-    "Distro Version": "system_profiler SPSoftwareDataType",
-    "Routing Table": "netstat -nr",
-    "Network Interfaces": "netstat -i",
-    "Occupied Ports": "sudo lsof -i -n -P",
-    "Network Usage Stats": "netstat -s",
-    "Active Connections": "netstat -va"
+    "cpu_and_disk_util": "iostat 1 20",
+    "mem_util": "top -l 1 -s 0",
+    "disk_free_space": "df -h",
+    "running_processes": "ps -Al",
+    "uptime": "uptime",
+    "kernel_version": "uname -r",
+    "distro_version": "system_profiler SPSoftwareDataType",
+    "routing_table": "netstat -nr",
+    "network_interfaces": "netstat -i",
+    "occupied_ports": "sudo lsof -i -n -P",
+    "network_usage_stats": "netstat -s",
+    "active_connections": "netstat -va"
 }

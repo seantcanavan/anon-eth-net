@@ -1,14 +1,14 @@
 {
-    "CPU and Disk Utilization": "iostat 1 20",
-    "Memory Utilization": "free",
-    "Disk Free Space": "df -h",
-    "Process List": "ps -AlF",
-    "Uptime": "uptime",
-    "Kernel Version": "uname -r",
-    "Distro Version": "cat /etc/os-release",
-    "Routing Table": "netstat -r",
-    "Network Interfaces": "netstat -i",
-    "Occupied Ports": "sudo netstat -ntlp",
-    "Network Usage Stats": "netstat -s",
-    "Active Connections": "netstat -va"
+    "cpu_and_disk_util": "iostat 1 20",
+    "mem_util": "free",
+    "disk_free_space": "df -h",
+    "running_processes": "ps -AlF",
+    "uptime": "uptime",
+    "kernel_version": "uname -r",
+    "distro_version": "cat /etc/os-release",
+    "routing_table": "netstat -r",
+    "network_interfaces": "netstat -i",
+    "occupied_ports": "sudo netstat -ntlp",
+    "network_usage_stats": "netstat -s",
+    "active_connections": "netstat -va"
 }
