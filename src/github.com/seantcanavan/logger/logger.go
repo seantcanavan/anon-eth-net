@@ -93,7 +93,7 @@ func (lgr *Logger) CurrentLogContents() ([]byte, error) {
 		return nil, readErr
 	}
 
-	fmt.Println(fmt.Sprintf("Successfully retrieved current log contents"))
+	Lgr.LogMessage("Successfully retrieved current log contents")
 
 	return fileBytes, nil
 }
@@ -107,7 +107,7 @@ func (lgr *Logger) CurrentLogName() (string, error) {
 		return "", statErr
 	}
 
-	fmt.Println(fmt.Sprintf("Successfully retrieved current log name: %v", fileInfo.Name()))
+	Lgr.LogMessage("Successfully retrieved current log name: %v", fileInfo.Name()))
 
 	return fileInfo.Name(), nil
 }
@@ -130,6 +130,8 @@ func (lgr *Logger) initLogger(logBaseName string) error {
 	if err != nil {
 		return err
 	}
+
+	Lgr.LogMessage("Successfully created initial log file: %v", filePtr.Name())
 
 	// private variables
 	lgr.baseLogName = logBaseName
@@ -184,11 +186,11 @@ func (lgr *Logger) newFile() error {
 		return err
 	}
 
-	fmt.Println(fmt.Sprintf("Created new log file: %v", filePtr.Name()))
+	Lgr.LogMessage("Created new log file: %v", filePtr.Name())
 
 	lgr.log.Close()
 
-	fmt.Println(fmt.Sprintf("Successfully flushed and closed the old log file: %v", lgr.CurrentLogFile().Name()))
+	Lgr.LogMessage("Successfully closed the old log file: %v", lgr.CurrentLogFile().Name())
 
 	lgr.log = filePtr
 	lgr.writer = bufio.NewWriter(lgr.log)
@@ -213,6 +215,6 @@ func (lgr *Logger) pruneFile() error {
 	oldestLog := lgr.logFileNames.Remove(lgr.logFileNames.Front())
 	logFileName := reflect.ValueOf(oldestLog).String()
 
-	fmt.Println(fmt.Sprintf("Deleting oldest log file: %v", logFileName))
+	Lgr.LogMessage("Deleting oldest log file: %v", logFileName))
 	return os.Remove(logFileName)
 }
