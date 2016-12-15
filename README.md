@@ -5,13 +5,13 @@ Totally anonymous botnet client with an emphasis on individual zombie control, r
 Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yourself) to enable remote network performance testing, fuzzing, spoofing, and attacking. Use responsibly.
 
 ###Feature List:
-1. Automate the execution of remote processes via REST or JSON configuration
-2. Receive local processes' log output directly via email or query the server for recent logs via REST
-3. Automatically prune old logs when disk space gets low
-4. Built-in network manager reboots the machine when it's unable to reach the internet
-5. Receive automated 'checkups' from the remote machine via email which include reports about overall system health
-6. Remote machines can be fully passively and fully anonymously monitored via a steady stream of emailed logs or directly managed via REST
-7. REST supports HTTPS with TLS encryption and timestamping to prevent replay attacks and ensure anonymity
+1. Automate the execution of local processes remotely via REST or locally via JSON configuration.
+2. Automatically receive local processes' log output directly via email or query the server for recent logs via REST.
+3. Automatically prune old logs when disk space gets low.
+4. Built-in network manager regularly queries configurable internet endpoints at set intervals and reboots the machine when it's unable to reach the internet.
+5. Receive automated 'checkups' from the remote machine via email which include reports about overall system health.
+6. Remote machines can be fully passively and fully anonymously monitored via a steady stream of emailed logs or directly managed via REST.
+7. REST supports HTTPS with TLS encryption and timestamping to prevent replay attacks and ensure anonymity.
 
 ###Currently supported platforms:
 - macOS El Capitan 10.11.6
@@ -25,8 +25,8 @@ Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yo
 
 ##General Setup for all OS's:
 1. Update the required values in assets/config.json:
-  1. CheckInGmailAddress - set this to the gmail address you wish to receive system reports and process logs at
-  2. CheckInGmailPassword - set this to the password to the above gmail address
+  1. CheckInGmailAddress - set this to the gmail address you wish to receive system reports and process logs at.
+  2. CheckInGmailPassword - set this to the password to the above gmail address.
   3. CheckInFrequencySeconds - set this to the frequency at which you'd like to receive system reports at your specified emai laddress. value is in seconds.
   4. NetQueryFrequencySeconds - set this to the frequency at which you'd like anon-eth-net to check for internet connectivity.
 2. Optionally update the optional values in assets/config.json:
@@ -34,9 +34,12 @@ Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yo
   2. DeviceId - if you wish to use your own method of uniquely identifying your remote devices fill in that value here otherwise anon-eth-net will generate a GUID for you automatically.
 3. Set your give gmail adress to allow "insecure app access". The page to enable that is here: https://support.google.com/accounts/answer/6010255?hl=en
 4. Skip to the operating system of your choice and continue to setup process!
+5. Download your favorite ethereum miner from the internet and add its install location to your system PATH variable.
+6. Read the manual for the miner and configure it along with all the command-line parameters required for it to operate.
+7. Update assets/main_loader_<targetos>.json with the command to start up the miner. An example is already located in assets/main_loader_linux.json to copy from.
+8. You're done! Run the binary!
 
-
-##Mac Setup:
+##Mac Code Complitaion Setup:
 
 ####Required Packages:
 1. Git: `brew install git`
@@ -69,7 +72,7 @@ Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yo
 7. `make install`
 8. TBA
 
-##Linux Setup:
+##Linux Code Compliation Setup:
 
 ####Required Packages:
 1. Git: `sudo apt-get install git`
@@ -102,7 +105,7 @@ Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yo
 7. `make install`
 8. TBA
 
-##Windows Setup:
+##Windows Code Compliation Setup:
 
 
 ####Required Packages:
