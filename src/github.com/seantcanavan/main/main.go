@@ -11,6 +11,7 @@ import (
 	"github.com/seantcanavan/loader"
 	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/network"
+	"github.com/seantcanavan/profiler"
 	"github.com/seantcanavan/updater"
 	"github.com/seantcanavan/utils"
 )
@@ -31,6 +32,15 @@ func main() {
 			fmt.Println(config.ConfigJSONParametersExplained())
 			os.Exit(1)
 		}
+	}
+
+	// generate a Logger instance with the predefined volatility value and
+	// name it after the main_package to differentiate it from other packages
+	loggerErr := logger.StandardLogger("main_package")
+	if loggerErr != nil {
+		fmt.Println(loggerErr)
+		fmt.Println("Couldn't create the logger for logging local activity to disk... Exiting...")
+		os.Exit(1)
 	}
 
 	// load the main config file from JSON which we'll use throughout execution.
@@ -66,15 +76,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// generate a Logger instance with the predefined volatility value and
-	// name it after the main_package to differentiate it from other packages
-	loggerErr := logger.StandardLogger("main_package")
-	if loggerErr != nil {
-		fmt.Println(loggerErr)
-		fmt.Println("Couldn't create the logger for logging local activity to disk... Exiting...")
-		os.Exit(1)
-	}
-
 	mainNetwork, networkErr := network.NewNetwork()
 	if networkErr != nil {
 		fmt.Println(networkErr)
@@ -103,6 +104,10 @@ func main() {
 		}
 	}
 
+	// kick off the profiler loop
+	logger.Lgr.LogMessage("Initializing the profiler")
+	profiler.Run()
+
 	// kick off the updater loop
 	logger.Lgr.LogMessage("Initializing the updater")
 	updater.Run()
@@ -114,6 +119,7 @@ func main() {
 	// kick off the network monitor loop to monitor internet connectivity
 	logger.Lgr.LogMessage("Initializing the network monitor")
 	net.Run()
+
 
 	// create a channel to listen to type os.Signal on with depth = 1
 	sigs := make(chan os.Signal, 1)

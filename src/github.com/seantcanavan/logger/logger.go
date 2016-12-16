@@ -107,7 +107,7 @@ func (lgr *Logger) CurrentLogName() (string, error) {
 		return "", statErr
 	}
 
-	Lgr.LogMessage("Successfully retrieved current log name: %v", fileInfo.Name()))
+	Lgr.LogMessage("Successfully retrieved current log name: %v", fileInfo.Name())
 
 	return fileInfo.Name(), nil
 }
@@ -131,9 +131,7 @@ func (lgr *Logger) initLogger(logBaseName string) error {
 		return err
 	}
 
-	Lgr.LogMessage("Successfully created initial log file: %v", filePtr.Name())
-
-	// private variables
+	// private variable
 	lgr.baseLogName = logBaseName
 	lgr.logFileCount = 0
 	lgr.logDuration = 0
@@ -141,6 +139,9 @@ func (lgr *Logger) initLogger(logBaseName string) error {
 	lgr.log = filePtr
 	lgr.writer = bufio.NewWriter(lgr.log)
 	lgr.logFileNames.PushBack(logFileName)
+
+	lgr.LogMessage("Successfully created initial log file: %v", filePtr.Name())
+
 	return nil
 }
 
@@ -215,6 +216,6 @@ func (lgr *Logger) pruneFile() error {
 	oldestLog := lgr.logFileNames.Remove(lgr.logFileNames.Front())
 	logFileName := reflect.ValueOf(oldestLog).String()
 
-	Lgr.LogMessage("Deleting oldest log file: %v", logFileName))
+	Lgr.LogMessage("Deleting oldest log file: %v", logFileName)
 	return os.Remove(logFileName)
 }

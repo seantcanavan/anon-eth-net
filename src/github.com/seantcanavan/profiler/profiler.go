@@ -166,7 +166,7 @@ func Run() {
 		for 1 == 1{
 
 			logger.Lgr.LogMessage("Sleeping for %d seconds before sending a system profile", config.Cfg.CheckInFrequencySeconds)
-			time.Sleep(time.Duration(config.Cfg.CheckInFrequencySeconds))
+			time.Sleep(time.Duration(config.Cfg.CheckInFrequencySeconds) * time.Second)
 			logger.Lgr.LogMessage("Sending archive to provided email after sleeping %d seconds", config.Cfg.CheckInFrequencySeconds)
 			SendArchiveProfileAsAttachment()
 

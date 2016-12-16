@@ -32,7 +32,6 @@ type Config struct {
 	CheckInGmailPassword     string        `json:"CheckInGmailPassword"`     // (R) the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
 	CheckInFrequencySeconds  time.Duration `json:"CheckInFrequencySeconds"`  // (R) The frequency with which this program will send status updates. In seconds.
 	NetQueryFrequencySeconds time.Duration `json:"NetQueryFrequencySeconds"` // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
-	LogVolatility            int           `json:"LogVolatility"`            // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
 	DeviceName               string        `json:"DeviceName"`               // (O) The canonical DeviceName for the machine currently executing this program.
 	DeviceId                 string        `json:"DeviceId"`                 // (O) The unique ID for the machine currently executing this program.
 	InitialStartup           string        `json:"InitialStartup"`           // (D) Whether or not this is the first time that the program is starting.
@@ -51,7 +50,6 @@ func ConfigJSONParametersExplained() string {
 	CheckInGmailPassword     string        json:"CheckInGmailPassword"     // (R) the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
 	CheckInFrequencySeconds  time.Duration json:"CheckInFrequencySeconds"  // (R) The frequency with which this program will send status updates. In seconds.
 	NetQueryFrequencySeconds time.Duration json:"NetQueryFrequencySeconds" // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
-	LogVolatility            int           json:"LogVolatility"            // (R) How quickly or slowly logs are pruned from the local disk. More volatility means logs last less time. Use 0 for most conservative logging strategy, 3 for least conservative.
 	DeviceName               string        json:"DeviceName"               // (O) The canonical DeviceName for the machine currently executing this program.
 	DeviceId                 string        json:"DeviceId"                 // (O) The unique ID for the machine currently executing this program.
 	InitialStartup           string        json:"InitialStartup"           // (D) Whether or not this is the first time that the program is starting.
