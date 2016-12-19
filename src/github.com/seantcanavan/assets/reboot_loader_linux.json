@@ -1,5 +1,3 @@
-
 {
-        "Reboot Linux Machine": "sudo shutdown -r now"
+    "reboot_linux_machine": "sudo shutdown -r now"
 }
-

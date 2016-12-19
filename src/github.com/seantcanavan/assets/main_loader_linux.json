@@ -1,3 +1,3 @@
 {
-	"Claymore GPU Mine ethpool.org": "ethdcrminer64 -epool us1.ethpool.org:3333 -ewal 224b370f60db56c84b2f23bbf628ba8bfd037723.ms -esm 1 -mode 1 -allpools 1"
+	"linux_gpu_mine_claymore_ethpool": "ethdcrminer64 -epool us1.ethpool.org:3333 -ewal 224b370f60db56c84b2f23bbf628ba8bfd037723.ms -esm 1 -mode 1 -allpools 1"
 }

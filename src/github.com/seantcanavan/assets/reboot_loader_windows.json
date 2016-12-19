@@ -1,4 +1,3 @@
 {
-        "Reboot Windows Machine": "shutdown /r /f /t 0"
+    "reboot_windows_machine": "shutdown /r /f /t 0"
 }
-

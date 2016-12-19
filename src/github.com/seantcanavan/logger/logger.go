@@ -33,7 +33,7 @@ type Logger struct {
 	logStamp           uint64        // The time when this log was last written to in unix time
 	log                *os.File      // The file that we're logging to
 	writer             *bufio.Writer // our writer we use to log to the current log file
-	lock 			   sync.Mutex
+	lock               sync.Mutex
 }
 
 // CustomLogger returns a logger with the given variables customized to your

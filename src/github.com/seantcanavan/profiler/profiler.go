@@ -163,7 +163,7 @@ func Run() {
 	// kick off the system profiler loop to send out system profiles at the specified interval
 	go func() {
 
-		for 1 == 1{
+		for 1 == 1 {
 
 			logger.Lgr.LogMessage("Sleeping for %d seconds before sending a system profile", config.Cfg.CheckInFrequencySeconds)
 			time.Sleep(time.Duration(config.Cfg.CheckInFrequencySeconds) * time.Second)

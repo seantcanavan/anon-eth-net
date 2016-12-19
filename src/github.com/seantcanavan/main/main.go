@@ -120,7 +120,6 @@ func main() {
 	logger.Lgr.LogMessage("Initializing the network monitor")
 	net.Run()
 
-
 	// create a channel to listen to type os.Signal on with depth = 1
 	sigs := make(chan os.Signal, 1)
 	// create a channel to listen to type bool on with depth = 1

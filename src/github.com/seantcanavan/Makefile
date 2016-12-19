@@ -46,8 +46,11 @@ vet:
 		go vet ../../$$p; \
 	done
 
-ubuntu-zip:
+linux-zip:
 	zip -r "anon-eth-net-v0.1.0-ubuntu-x64.zip" assets/ bin/
+
+darwin-zip:
+	zip -r "anon-eth-net-v0.1.0-macos-x64.zip" assets/ bin/ -x ./assets/emaillogin.conf ./assets/loader_test*.json ./assets/logger_test.sample ./assets/rest_test_loader_binary_darwin ./assets/version.no
 
 version-update:
 	@echo "Current build number: $(BUILD_NUMBER)"

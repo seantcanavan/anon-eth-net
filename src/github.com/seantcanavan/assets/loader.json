@@ -1,5 +1,0 @@
-{
-	"loader example 01": "ls -la",
-	"loader example 02": "cd ..",
-	"loader example 03": "pwd"
-}
