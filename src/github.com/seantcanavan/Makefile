@@ -46,6 +46,9 @@ vet:
 		go vet ../../$$p; \
 	done
 
+ubuntu-zip:
+	zip -r "anon-eth-net-v0.1.0-ubuntu-x64.zip" assets/ bin/
+
 version-update:
 	@echo "Current build number: $(BUILD_NUMBER)"
 	@echo "New build number: $(NEW_BUILD_NUMBER)"
