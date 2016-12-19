@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -8,6 +9,12 @@ import (
 )
 
 func TestMain(m *testing.M) {
+
+	logErr := StandardLogger("logger_test")
+	if logErr != nil {
+		fmt.Println(fmt.Sprintf("Could not initialize logger: %v", logErr))
+		return
+	}
 
 	result := m.Run()
 	os.Exit(result)

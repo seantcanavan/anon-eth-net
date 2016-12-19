@@ -37,7 +37,7 @@ func SendAttachment(subject string, contents []byte, attachmentPtr *os.File) err
 		Text:    contents,
 	}
 
-	logger.Lgr.LogMessage("Successfully created new jwemail instance: %+v", jwEmail)
+	logger.Lgr.LogMessage("Successfully created new jwemail instance to: %v", config.Cfg.CheckInGmailAddress)
 
 	if attachmentPtr != nil {
 		jwEmail.AttachFile(attachmentPtr.Name())

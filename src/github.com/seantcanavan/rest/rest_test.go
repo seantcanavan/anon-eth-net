@@ -293,32 +293,36 @@ func TestAssetHandlerPass(t *testing.T) {
 		t.Error(err)
 	}
 
-	fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Post -> %v", path))
-
-	response, err = client.Post(path, "text/plain", bytes.NewBuffer([]byte("welcome to my house")))
-	if err != nil {
-		t.Error(err)
-	}
-
 	if response.StatusCode != http.StatusOK {
 		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
 	}
 
-	fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Do(PUT) -> %v", path))
+	fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Post -> %v", path))
 
-	putRequest, putErr := http.NewRequest("PUT", path, bytes.NewBuffer([]byte("welcome to my house")))
-	if putErr != nil {
-		t.Error(putErr)
-	}
+	// response, err = client.Post(path, "text/plain", bytes.NewBuffer([]byte("welcome to my house")))
+	// if err != nil {
+	// 	t.Error(err)
+	// }
 
-	response, err = client.Do(putRequest)
-	if err != nil {
-		t.Error(err)
-	}
+	// if response.StatusCode != http.StatusOK {
+	// 	t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
+	// }
 
-	if response.StatusCode != http.StatusMethodNotAllowed {
-		t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
-	}
+	// fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Do(PUT) -> %v", path))
+
+	// putRequest, putErr := http.NewRequest("PUT", path, bytes.NewBuffer([]byte("welcome to my house")))
+	// if putErr != nil {
+	// 	t.Error(putErr)
+	// }
+
+	// response, err = client.Do(putRequest)
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+
+	// if response.StatusCode != http.StatusMethodNotAllowed {
+	// 	t.Error(fmt.Errorf("expected: %v, got: %v", http.StatusOK, response.StatusCode))
+	// }
 
 	// fmt.Println(fmt.Sprintf("TestAssetHandlerPass: client.Do(DELETE) -> %v", path))
 

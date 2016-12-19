@@ -17,7 +17,6 @@ import (
 const LOG_EXTENSION = ".log"
 
 var Lgr *Logger
-var lock sync.Mutex
 
 // Logger allows for aggressive log management in scenarios where disk space
 // might be limited. You can limit based on log message count or duration and
@@ -34,6 +33,7 @@ type Logger struct {
 	logStamp           uint64        // The time when this log was last written to in unix time
 	log                *os.File      // The file that we're logging to
 	writer             *bufio.Writer // our writer we use to log to the current log file
+	lock 			   sync.Mutex
 }
 
 // CustomLogger returns a logger with the given variables customized to your
@@ -152,8 +152,8 @@ func (lgr *Logger) initLogger(logBaseName string) error {
 // been tripped, action will be taken accordingly.
 func (lgr *Logger) LogMessage(formatString string, values ...interface{}) {
 
-	lock.Lock()
-	defer lock.Unlock()
+	lgr.lock.Lock()
+	defer lgr.lock.Unlock()
 
 	// what time is it right now?
 	now := uint64(time.Now().Unix())

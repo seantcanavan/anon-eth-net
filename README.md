@@ -52,7 +52,7 @@ Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yo
 2. Go is already automatically configured on your local macOS path if installed via the brew package manager.
 3. Setup GOBIN and GOPATH system variables for your macOS user. Point to the root of the anon-eth-net clone directory. For GOBIN use the same value as GOPATH but add /bin to the end. GOPATH should be something like `/Users/<username>/clone_root_dir/anon-eth-net`. You can automatically set the GOPATH variable in your .bash_profile file on each terminal load / system startup:
   1. `nano ~/.bash_profile`
-  2. Scroll to the bottom and paste the following WITHOUT quotes. You may wrap the folder argument after the equal sign in quotes if you have spaces in your folder names (shame on you).
+  2. Scroll to the bottom and paste the following. You may wrap the folder argument after the equal sign in quotes if you have spaces in your folder names (shame on you).
   3. `export GOPATH=/Users/<username>/<clone_root_dir>/anon-eth-net`
   4. `export GOBIN=/Users/<username>/<clone_root_dir>/anon-eth-net/bin`
   5. I use a folder called 'workspace' as a former Eclipse user so my paths looks like this:
@@ -88,7 +88,7 @@ Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yo
 2. Go is already automatically configured in your local Ubuntu path if installed via the synaptic package manager.
 3. Setup GOBIN and GOPATH system variables for your Ubuntu user. Point to the root of the anon-eth-net clone directory. For GOBIN use the same value as GOPATH but add /bin to the end. GOPATH should be something like `/home/<username>/clone_root_dir/anon-eth-net`. You can automatically set the GOPATH variable in your .bashrc file on each terminal load / system startup:
   1. `nano ~/.bashrc`
-  2. Scroll to the bottom and paste the following WITHOUT quotes. You may wrap the folder argument after the equal sign in quotes if you have spaces in your folder names (shame on you).
+  2. Scroll to the bottom and paste the following. You may wrap the folder argument after the equal sign in quotes if you have spaces in your folder names (shame on you).
   3. `export GOPATH=/home/<username>/<clone_root_dir>/anon-eth-net`
   4. `export GOBIN=/home/<username>/<clone_root_dir>/anon-eth-net/bin`
   5. I use a folder called 'workspace' as a former Eclipse user so my paths looks like this:

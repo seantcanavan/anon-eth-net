@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -15,13 +16,13 @@ import (
 )
 
 // the root asset directory where all the external files used are stored
-const ASSET_ROOT_DIR = "../assets/"
+const ASSET_ROOT_DIR = "assets"
 
 // GetAssetPath will return the relative path to the file represented by
 // assetName otherwise it will return an error if the file doesn't exist.
 func AssetPath(assetName string) (string, error) {
 
-	relativePath := ASSET_ROOT_DIR + assetName
+	relativePath := path.Join("..", ASSET_ROOT_DIR, assetName)
 
 	if _, err := os.Stat(relativePath); os.IsNotExist(err) {
 		return "", err
@@ -49,8 +50,7 @@ func SysAssetPath(assetName string) (string, error) {
 		extIndex = len(assetName)
 	}
 
-	relativeName.WriteString(ASSET_ROOT_DIR)
-	relativeName.WriteString(assetName[0:extIndex])
+	relativeName.WriteString(path.Join("..", ASSET_ROOT_DIR, assetName[0:extIndex]))
 
 	switch runtime.GOOS {
 	case "windows", "darwin", "linux":
