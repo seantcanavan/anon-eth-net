@@ -122,9 +122,9 @@ func (ldr *Loader) StartAsynchronous() []LoaderProcess {
 
 			defer waitGroup.Done()
 
-			cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
-
 			logger.Lgr.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
+
+			cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
 
 			currentProcess.Start = time.Now().Unix()
 			output, err := cmd.CombinedOutput()
@@ -165,9 +165,9 @@ func (ldr *Loader) StartSynchronous() []LoaderProcess {
 
 	for _, currentProcess := range ldr.Processes {
 
-		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
-
 		logger.Lgr.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
+
+		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
 
 		currentProcess.Start = time.Now().Unix()
 		output, err := cmd.CombinedOutput()
