@@ -9,7 +9,6 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/nu7hatch/gouuid"
 	"github.com/seantcanavan/logger"
@@ -30,8 +29,8 @@ var Cfg *Config
 type Config struct {
 	CheckInGmailAddress      string        `json:"CheckInGmailAddress"`      // (R) the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
 	CheckInGmailPassword     string        `json:"CheckInGmailPassword"`     // (R) the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
-	CheckInFrequencySeconds  time.Duration `json:"CheckInFrequencySeconds"`  // (R) The frequency with which this program will send status updates. In seconds.
-	NetQueryFrequencySeconds time.Duration `json:"NetQueryFrequencySeconds"` // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
+	CheckInFrequencySeconds  int		   `json:"CheckInFrequencySeconds"`  // (R) The frequency with which this program will send status updates. In seconds.
+	NetQueryFrequencySeconds int		   `json:"NetQueryFrequencySeconds"` // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
 	DeviceName               string        `json:"DeviceName"`               // (O) The canonical DeviceName for the machine currently executing this program.
 	DeviceId                 string        `json:"DeviceId"`                 // (O) The unique ID for the machine currently executing this program.
 	InitialStartup           string        `json:"InitialStartup"`           // (D) Whether or not this is the first time that the program is starting.

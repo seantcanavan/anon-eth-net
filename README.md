@@ -29,7 +29,6 @@ Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yo
   2. CheckInGmailPassword - set this to the password to the above gmail address.
   3. CheckInFrequencySeconds - set this to the frequency at which you'd like to receive system reports at your specified email address. value is in seconds.
   4. NetQueryFrequencySeconds - set this to the frequency at which you'd like anon-eth-net to check for internet connectivity.
-  5. UpdateFrequencySeconds - set this to the frequency at which you'd like anon-eth-net to check for updates to itself.
 2. Optionally update the optional values in assets/config.json:
   1. DeviceName - set this to the canonical name of the device which will be executing anon-eth-net. e.g. "main desktop", "garage pc", "sister's laptop", etc.
   2. DeviceId - if you wish to use your own method of uniquely identifying your remote devices fill in that value here otherwise anon-eth-net will generate a GUID for you automatically.

@@ -93,7 +93,7 @@ func (con *Network) Run() {
 
 			interval := config.Cfg.NetQueryFrequencySeconds
 
-			logger.Lgr.LogMessage("Network manager will sleep for %d seconds before querying the internet", config.Cfg.NetQueryFrequencySeconds)
+			logger.Lgr.LogMessage("Network manager will sleep for %d seconds before querying the internet", interval)
 
 			time.Sleep(time.Duration(interval) * time.Second)
 

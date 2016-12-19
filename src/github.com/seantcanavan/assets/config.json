@@ -3,7 +3,6 @@
   "CheckInGmailPassword" : "yourgmailpasswordhere",
   "CheckInFrequencySeconds" : 3600,
   "NetQueryFrequencySeconds" : 3600,
-  "UpdateFrequencySeconds": 3600,
 
   "DeviceName" : "My Little Raspberry Pi",
   "DeviceId" : "aa3b2cd6-7a95-4b2a-af33-7eb953d730a9"

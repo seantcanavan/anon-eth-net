@@ -19,10 +19,10 @@ func Run() {
 
 	go func() {
 
-		for 1 == 1 {
+	for 1 == 1 {
 
-			logger.Lgr.LogMessage("waiting for updates. sleeping %v", config.Cfg.CheckInFrequencySeconds)
-			time.Sleep(config.Cfg.CheckInFrequencySeconds * time.Second)
+			logger.Lgr.LogMessage("waiting for updates. sleeping %v", config.Cfg.UpdateFrequencySeconds)
+			time.Sleep(time.Duration(config.Cfg.UpdateFrequencySeconds) * time.Second)
 
 			local := config.Cfg.LocalVersion
 			remote, remoteErr := remoteVersion()

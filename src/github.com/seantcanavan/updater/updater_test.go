@@ -40,7 +40,7 @@ func TestVersionCompare(t *testing.T) {
 
 func TestRun(t *testing.T) {
 
-	config.Cfg.CheckInFrequencySeconds = 2
+	config.Cfg.UpdateFrequencySeconds = 2
 	Run()
 	time.Sleep(time.Second * 6)
 
