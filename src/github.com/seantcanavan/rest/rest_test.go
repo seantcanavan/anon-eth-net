@@ -63,6 +63,8 @@ func TestMain(m *testing.M) {
 		return
 	}
 
+	newHandler.StartupRestServer()
+
 	restHandler = newHandler
 
 	port = restHandler.Port

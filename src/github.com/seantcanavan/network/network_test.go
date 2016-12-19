@@ -39,7 +39,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestConnectionPass(t *testing.T) {
-
 	reachable := netw.IsInternetReachable()
 
 	if !reachable {
@@ -48,7 +47,6 @@ func TestConnectionPass(t *testing.T) {
 }
 
 func TestRunPass(t *testing.T) {
-
 	config.Cfg.NetQueryFrequencySeconds = 1
 	netw.Run()
 	time.Sleep(time.Second * 5)

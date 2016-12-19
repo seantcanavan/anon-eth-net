@@ -32,12 +32,11 @@ Clients can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yo
 2. Optionally update the optional values in assets/config.json:
   1. DeviceName - set this to the canonical name of the device which will be executing anon-eth-net. e.g. "main desktop", "garage pc", "sister's laptop", etc.
   2. DeviceId - if you wish to use your own method of uniquely identifying your remote devices fill in that value here otherwise anon-eth-net will generate a GUID for you automatically.
-3. Set your give gmail adress to allow "insecure app access". The page to enable that is here: https://support.google.com/accounts/answer/6010255?hl=en
-4. Skip to the operating system of your choice and continue to setup process!
-5. Download your favorite ethereum miner from the internet and add its install location to your system PATH variable.
-6. Read the manual for the miner and configure it along with all the command-line parameters required for it to operate.
-7. Update assets/main_loader_<targetos>.json with the command to start up the miner. An example is already located in assets/main_loader_linux.json to copy from.
-8. You're done! Run the binary!
+3. Set your gmail adress to allow "insecure app access". The page to enable that is here: https://support.google.com/accounts/answer/6010255?hl=en
+4. Download your favorite ethereum miner from the internet and add its install location to your system PATH variable.
+5. Read the manual for the miner and configure it along with all the command-line parameters required for it to operate. Extract the entire command-line command to start the miner.
+6. Update assets/main_loader_<targetos>.json with the command to start up the miner. An example is already located in assets/main_loader_linux.json to copy from.
+7. You're done! Run the binary!
 
 ##Mac Code Complitaion Setup:
 

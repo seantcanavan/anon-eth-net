@@ -27,18 +27,18 @@ var Cfg *Config
 // (D) means the value is default value already set and should only be
 // changed after careful consideration.
 type Config struct {
-	CheckInGmailAddress      string        `json:"CheckInGmailAddress"`      // (R) the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
-	CheckInGmailPassword     string        `json:"CheckInGmailPassword"`     // (R) the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
-	CheckInFrequencySeconds  int		   `json:"CheckInFrequencySeconds"`  // (R) The frequency with which this program will send status updates. In seconds.
-	NetQueryFrequencySeconds int		   `json:"NetQueryFrequencySeconds"` // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
-	DeviceName               string        `json:"DeviceName"`               // (O) The canonical DeviceName for the machine currently executing this program.
-	DeviceId                 string        `json:"DeviceId"`                 // (O) The unique ID for the machine currently executing this program.
-	InitialStartup           string        `json:"InitialStartup"`           // (D) Whether or not this is the first time that the program is starting.
-	FirstRunAfterUpdate      string        `json:"FirstRunAfterUpdate"`      // (D) Whether or not this is the first time that the program is running after an update has been executed.
-	UpdateFrequencySeconds   int           `json:"UpdateFrequencySeconds"`   // (D) The frequency with which this program will attempt to update itself. In seconds.
-	RemoteUpdateURI          string        `json:"RemoteUpdateURI"`          // (D) The remote location where new source code can be obtained from for this program.
-	RemoteVersionURI         string        `json:"RemoteVersionURI"`         // (D) The remote URI where the latest version number of this program can be obtained from.
-	LocalVersion             uint64        `json:"LocalVersion"`             // (D) The local version of this program that is currently running.
+	CheckInGmailAddress      string `json:"CheckInGmailAddress"`      // (R) the gmail address to send updates to and receive updates from. parsed from line 1 of CheckInEmailCredentialsFile
+	CheckInGmailPassword     string `json:"CheckInGmailPassword"`     // (R) the password for the gmail account. parsed from line 2 of CheckInEmailCredentialsFile
+	CheckInFrequencySeconds  int    `json:"CheckInFrequencySeconds"`  // (R) The frequency with which this program will send status updates. In seconds.
+	NetQueryFrequencySeconds int    `json:"NetQueryFrequencySeconds"` // (R) The frequency with which this program will attempt to connect to the outside world to verify internet connectivity
+	DeviceName               string `json:"DeviceName"`               // (O) The canonical DeviceName for the machine currently executing this program.
+	DeviceId                 string `json:"DeviceId"`                 // (O) The unique ID for the machine currently executing this program.
+	InitialStartup           string `json:"InitialStartup"`           // (D) Whether or not this is the first time that the program is starting.
+	FirstRunAfterUpdate      string `json:"FirstRunAfterUpdate"`      // (D) Whether or not this is the first time that the program is running after an update has been executed.
+	UpdateFrequencySeconds   int    `json:"UpdateFrequencySeconds"`   // (D) The frequency with which this program will attempt to update itself. In seconds.
+	RemoteUpdateURI          string `json:"RemoteUpdateURI"`          // (D) The remote location where new source code can be obtained from for this program.
+	RemoteVersionURI         string `json:"RemoteVersionURI"`         // (D) The remote URI where the latest version number of this program can be obtained from.
+	LocalVersion             uint64 `json:"LocalVersion"`             // (D) The local version of this program that is currently running.
 }
 
 // COnfigJSONParametersExplained() returns a nicely formatted string which

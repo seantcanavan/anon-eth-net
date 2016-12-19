@@ -103,8 +103,6 @@ func NewRestHandler() (*RestHandler, error) {
 
 	logger.Lgr.LogMessage("Successfully generated REST gorilla mux router: %+v", rh.rtr)
 
-	rh.startupRestServer()
-
 	logger.Lgr.LogMessage("Started up TLS REST server")
 	return &rh, nil
 }
@@ -145,7 +143,7 @@ func buildRestPath(protocol, host, port, root string, arguments ...string) strin
 // machine will listen for incoming commands on. A free port on this local
 // machine will be automatically detected and used. The randomly chosen
 // available port will be logged locally as well as emailed.
-func (rh *RestHandler) startupRestServer() error {
+func (rh *RestHandler) StartupRestServer() error {
 	port, err := freeport.Get()
 	if err != nil {
 		return err

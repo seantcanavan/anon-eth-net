@@ -87,7 +87,7 @@ func processesFromJSONFile(processesPath string) ([]LoaderProcess, error) {
 
 		logger.Lgr.LogMessage("Successfully created LoaderProcess instance: %v", lp.Name)
 
-		logInstance, logError := logger.CustomLogger(lp.Name, 1, 9999999999, 9999999999)
+		logInstance, logError := logger.CustomLogger(lp.Name, 1, 50000, 604800)
 		if logError != nil {
 			return nil, logError
 		}
@@ -125,22 +125,20 @@ func (ldr *Loader) StartAsynchronous() []LoaderProcess {
 			logger.Lgr.LogMessage("Asynchronously executing LoaderProcess: %+v", currentProcess)
 
 			cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
+			cmd.Stdout = currentProcess.Lgr
+			cmd.Stderr = currentProcess.Lgr
 
 			currentProcess.Start = time.Now().Unix()
-			output, err := cmd.CombinedOutput()
+			err := cmd.Run()
 			currentProcess.End = time.Now().Unix()
 			currentProcess.Duration = currentProcess.End - currentProcess.Start
 
 			if err != nil {
-				logger.Lgr.LogMessage("LoaderProcess:\n%+v\nexited with error status: %v", currentProcess, err.Error())
 				currentProcess.Lgr.LogMessage("LoaderProcess:\n%+v\nexited with error status: %v", currentProcess, err.Error())
 			} else {
-				logger.Lgr.LogMessage("LoaderProcess:\n%+v\nexited successfully", currentProcess)
 				currentProcess.Lgr.LogMessage("LoaderProcess:\n%+v\nexited successfully", currentProcess)
 			}
 
-			currentProcess.Lgr.LogMessage("Command output:\n%v\n", string(output))
-			logger.Lgr.LogMessage("Command output:\n%v\n", string(output))
 			logger.Lgr.LogMessage("Removing '%v' process from the Asynchronous WaitGroup. Execution took: %v", currentProcess.Name, currentProcess.Duration)
 
 		}(&ldr.Processes[index]) // passing the current process using index

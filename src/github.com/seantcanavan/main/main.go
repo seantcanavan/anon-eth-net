@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"runtime"
@@ -12,20 +14,14 @@ import (
 	"github.com/seantcanavan/logger"
 	"github.com/seantcanavan/network"
 	"github.com/seantcanavan/profiler"
+	"github.com/seantcanavan/rest"
 	"github.com/seantcanavan/updater"
 	"github.com/seantcanavan/utils"
 )
 
-// Loader for the main package which will execute all of the third party processes
-var ldr *loader.Loader
-
-// Connection for the main package which will constantly monitor the outgoing internet connection
-var net *network.Network
-
 func main() {
 
-	// check if the user is confused at first and is so, print the config.json
-	// with code documentation included. and and then exit.
+	//------------------ CHECK FOR COMMAND LINE HELP ARGUMENTS ------------------
 	if len(os.Args) > 1 {
 		if os.Args[1] == "h" || os.Args[1] == "help" || os.Args[1] == "?" {
 			fmt.Println("Does not require any command line arguments. Refer to the default ./assets/config.json file for all the parameters required for anon-eth-net to execute successfully.")
@@ -34,8 +30,7 @@ func main() {
 		}
 	}
 
-	// generate a Logger instance with the predefined volatility value and
-	// name it after the main_package to differentiate it from other packages
+	//------------------ GENERATE THE LOGGING FILE FOR THE MAIN PACKAGE ------------------
 	loggerErr := logger.StandardLogger("main_package")
 	if loggerErr != nil {
 		fmt.Println(loggerErr)
@@ -43,16 +38,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	// load the main config file from JSON which we'll use throughout execution.
-	// we're exiting under an error condition since it's so early in execution.
+	//------------------ LOAD THE CONFIG.JSON ASSET AND UNMARSHAL THE VALUES ------------------
 	configErr := config.FromFile()
 	if configErr != nil {
 		fmt.Println(fmt.Sprintf("Could not successfully load config. Received error %v. Make sure the JSON is well formed and the values are correct for each variable. Revert to the standard config on github if this problem persists.", configErr))
 		os.Exit(1)
 	}
 
-	// generate a loader instance with the appropriate JSON file based on the
-	// system architecture
+	//------------------ CREATE LOADER INSTANCE TO RUN PROCESSES LOCALLY BASED ON GOOS ------------------
 	var mainLoader *loader.Loader
 	var loaderErr error
 
@@ -83,12 +76,32 @@ func main() {
 		os.Exit(1)
 	}
 
-	// maintain a local updater reference for updating the main program
-	ldr = mainLoader
-	// maintain a local network reference for checking internet connection
-	net = mainNetwork
+	//------------------ CREATE REST INSTANCE TO ENABLE COMMUNIATION VIA REST ------------------
+	certPath, certPathErr := utils.AssetPath("server.cert")
+	if certPathErr != nil {
+		fmt.Println(certPathErr)
+		return
+	}
 
-	// if this is our first time ever starting up - run the initial config
+	certValue, certReadErr := ioutil.ReadFile(certPath)
+	if certReadErr != nil {
+		fmt.Println(certReadErr)
+		return
+	}
+
+	mainRest, restErr := rest.NewRestHandler()
+	if restErr != nil {
+		fmt.Println(restErr)
+		return
+	}
+
+	rootAuthorities := x509.NewCertPool()
+	if ok := rootAuthorities.AppendCertsFromPEM([]byte(certValue)); !ok {
+		fmt.Println("Unable to append certificate to set of root certificate authorities")
+		return
+	}
+
+	//------------------ IF THIS IS OUR FIRST TIME STARTING UP EVER, TAKE APPROPRIATE ACTIONS ------------------
 	if config.Cfg.InitialStartup == "yes" {
 		err := initialStartup()
 		if err != nil {
@@ -96,7 +109,7 @@ func main() {
 		}
 	}
 
-	// if this is our first time starting up after an update - run the update config
+	//------------------ IF THIS IS OUR FIRST TIME STARTING UP AFTER AN UPDATE, TAKE APPROPRIATE ACTIONS ------------------
 	if config.Cfg.FirstRunAfterUpdate == "yes" {
 		err := firstRunAfterUpdate()
 		if err != nil {
@@ -114,12 +127,15 @@ func main() {
 
 	// kick off the process loader loop that will execute things like miners
 	logger.Lgr.LogMessage("Initializing the loader")
-	ldr.Run()
+	mainLoader.Run()
 
 	// kick off the network monitor loop to monitor internet connectivity
 	logger.Lgr.LogMessage("Initializing the network monitor")
-	net.Run()
+	mainNetwork.Run()
 
+	// kick off the REST endpoints
+	logger.Lgr.LogMessage("Initializing the REST interface")
+	mainRest.StartupRestServer()
 
 	// create a channel to listen to type os.Signal on with depth = 1
 	sigs := make(chan os.Signal, 1)
