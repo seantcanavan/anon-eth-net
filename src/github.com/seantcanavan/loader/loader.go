@@ -166,22 +166,21 @@ func (ldr *Loader) StartSynchronous() []LoaderProcess {
 		logger.Lgr.LogMessage("Synchronously executing LoaderProcess: %+v", currentProcess)
 
 		cmd := exec.Command(currentProcess.Command, currentProcess.Arguments...)
+		cmd.Stdout = currentProcess.Lgr
+		cmd.Stderr = currentProcess.Lgr
+
 
 		currentProcess.Start = time.Now().Unix()
-		output, err := cmd.CombinedOutput()
+		err := cmd.Run()
 		currentProcess.End = time.Now().Unix()
 		currentProcess.Duration = currentProcess.End - currentProcess.Start
 
 		if err != nil {
-			logger.Lgr.LogMessage("LoaderProcess:\n%+v\nexited with error status: %v", currentProcess, err.Error())
 			currentProcess.Lgr.LogMessage("LoaderProcess:\n%+v\nexited with error status: %v", currentProcess, err.Error())
 		} else {
-			logger.Lgr.LogMessage("LoaderProcess:\n%+vexited successfully", currentProcess)
 			currentProcess.Lgr.LogMessage("LoaderProcess:\n%+vexited successfully", currentProcess)
 		}
 
-		currentProcess.Lgr.LogMessage("Command output:\n%v\n", string(output))
-		logger.Lgr.LogMessage("Command output:\n%v\n", string(output))
 		logger.Lgr.LogMessage("Finished executing one process out of %d", numProcesses)
 	}
 

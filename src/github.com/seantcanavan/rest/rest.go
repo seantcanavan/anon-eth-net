@@ -224,7 +224,6 @@ func (rh *RestHandler) writeResponseAndLog(errorMessage string, httpStatusCode i
 
 	if errorMessage != "" {
 		logger.Lgr.LogMessage(errorMessage)
-
 	}
 
 	logger.Lgr.LogMessage(statusBuffer.String())

@@ -23,11 +23,9 @@ func main() {
 
 	//------------------ CHECK FOR COMMAND LINE HELP ARGUMENTS ------------------
 	if len(os.Args) > 1 {
-		if os.Args[1] == "h" || os.Args[1] == "help" || os.Args[1] == "?" {
-			fmt.Println("Does not require any command line arguments. Refer to the default ./assets/config.json file for all the parameters required for anon-eth-net to execute successfully.")
-			fmt.Println(config.ConfigJSONParametersExplained())
-			os.Exit(1)
-		}
+		fmt.Println("Does not require any command line arguments. Refer to the default ./assets/config.json file for all the parameters required for anon-eth-net to execute successfully.")
+		fmt.Println(config.ConfigJSONParametersExplained())
+		os.Exit(1)
 	}
 
 	//------------------ GENERATE THE LOGGING FILE FOR THE MAIN PACKAGE ------------------
