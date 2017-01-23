@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/logger"
-	"github.com/seantcanavan/utils"
+	"github.com/seantcanavan/anon-eth-net/config"
+	"github.com/seantcanavan/anon-eth-net/logger"
+	"github.com/seantcanavan/anon-eth-net/utils"
 )
 
 var path string

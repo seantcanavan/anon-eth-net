@@ -30,3 +30,6 @@ assets/emaillogin.conf
 
 #ignore glide files
 glide.lock
+
+#vendor folder
+vendor/

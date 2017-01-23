@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/anon-eth-net/config"
+	"github.com/seantcanavan/anon-eth-net/logger"
 )
 
 func TestMain(m *testing.M) {

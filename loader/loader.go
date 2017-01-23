@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/anon-eth-net/logger"
 )
 
 const TIME_BETWEEN_SUCCESSIVE_ITERATIONS = 60

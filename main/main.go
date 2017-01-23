@@ -9,14 +9,14 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/loader"
-	"github.com/seantcanavan/logger"
-	"github.com/seantcanavan/network"
-	"github.com/seantcanavan/profiler"
-	"github.com/seantcanavan/rest"
-	"github.com/seantcanavan/updater"
-	"github.com/seantcanavan/utils"
+	"github.com/seantcanavan/anon-eth-net/config"
+	"github.com/seantcanavan/anon-eth-net/loader"
+	"github.com/seantcanavan/anon-eth-net/logger"
+	"github.com/seantcanavan/anon-eth-net/network"
+	"github.com/seantcanavan/anon-eth-net/profiler"
+	"github.com/seantcanavan/anon-eth-net/rest"
+	"github.com/seantcanavan/anon-eth-net/updater"
+	"github.com/seantcanavan/anon-eth-net/utils"
 )
 
 func main() {

@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/anon-eth-net/logger"
 )
 
 func TestMain(m *testing.M) {

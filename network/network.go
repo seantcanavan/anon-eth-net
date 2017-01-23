@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/loader"
-	"github.com/seantcanavan/logger"
-	"github.com/seantcanavan/utils"
+	"github.com/seantcanavan/anon-eth-net/config"
+	"github.com/seantcanavan/anon-eth-net/loader"
+	"github.com/seantcanavan/anon-eth-net/logger"
+	"github.com/seantcanavan/anon-eth-net/utils"
 )
 
 type Network struct {

@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/seantcanavan/utils"
+	"github.com/seantcanavan/anon-eth-net/utils"
 )
 
 // The file extension to use for all new log files that are created

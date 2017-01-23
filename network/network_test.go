@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/anon-eth-net/config"
+	"github.com/seantcanavan/anon-eth-net/logger"
 )
 
 var netw *Network

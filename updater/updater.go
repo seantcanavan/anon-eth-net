@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/anon-eth-net/config"
+	"github.com/seantcanavan/anon-eth-net/logger"
 )
 
 // Run will continuously check for updated versions of the software

@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/nu7hatch/gouuid"
-	"github.com/seantcanavan/logger"
-	"github.com/seantcanavan/utils"
+	"github.com/seantcanavan/anon-eth-net/logger"
+	"github.com/seantcanavan/anon-eth-net/utils"
 )
 
 var Cfg *Config

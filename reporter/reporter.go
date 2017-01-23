@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/jordan-wright/email"
-	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/logger"
+	"github.com/seantcanavan/anon-eth-net/config"
+	"github.com/seantcanavan/anon-eth-net/logger"
 )
 
 const EMAIL_SERVER = "smtp.gmail.com"

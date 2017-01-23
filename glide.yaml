@@ -1,4 +1,4 @@
-package: github.com/seantcanavan
+package: github.com/seantcanavan/anon-eth-net
 import:
 - package: github.com/facebookgo/freeport
 - package: github.com/gorilla/mux

@@ -14,12 +14,12 @@ import (
 
 	"github.com/facebookgo/freeport"
 	"github.com/gorilla/mux"
-	"github.com/seantcanavan/config"
-	"github.com/seantcanavan/loader"
-	"github.com/seantcanavan/logger"
-	"github.com/seantcanavan/profiler"
-	"github.com/seantcanavan/reporter"
-	"github.com/seantcanavan/utils"
+	"github.com/seantcanavan/anon-eth-net/config"
+	"github.com/seantcanavan/anon-eth-net/loader"
+	"github.com/seantcanavan/anon-eth-net/logger"
+	"github.com/seantcanavan/anon-eth-net/profiler"
+	"github.com/seantcanavan/anon-eth-net/reporter"
+	"github.com/seantcanavan/anon-eth-net/utils"
 )
 
 // The acceptable amount of time between the incoming timestamp and the local timestamp in seconds
