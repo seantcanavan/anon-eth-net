@@ -169,7 +169,6 @@ func (ldr *Loader) StartSynchronous() []LoaderProcess {
 		cmd.Stdout = currentProcess.Lgr
 		cmd.Stderr = currentProcess.Lgr
 
-
 		currentProcess.Start = time.Now().Unix()
 		err := cmd.Run()
 		currentProcess.End = time.Now().Unix()

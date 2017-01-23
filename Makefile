@@ -21,29 +21,27 @@ deps:
 	glide install
 
 format:
-	for p in $(PACKAGES); do \
-		gofmt -w ../../$$p; \
-	done
+	find . -type f -name "*.go" -exec gofmt -w {} \;
 
 install:
 	for p in $(PACKAGES); do \
-		go install ../../$$p; \
+		go install $$p; \
 	done
 
 release:
 	for p in $(PACKAGES); do \
-		go install ../../$$p; \
+		go install $$p; \
 	done
-	cp -f ../../../bin/main ./bin/anon-eth-net
+	cp -f ../../../../bin/main ./bin/anon-eth-net
 
 test:
 	for p in $(PACKAGES); do \
-		go test -v ../../$$p; \
+		go test -v $$p; \
 	done
 
 vet:
 	for p in $(PACKAGES); do \
-		go vet ../../$$p; \
+		go vet $$p; \
 	done
 
 linux-zip:
