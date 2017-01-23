@@ -25,13 +25,8 @@ _testmain.go
 *.tar
 *.log
 
-#compiled binaries
-/bin/
-/src/github.com/seantcanavan/vendor/
-src/github.com/seantcanavan/bin/
-
 #ignore password files
-src/github.com/seantcanavan/assets/emaillogin.conf
+assets/emaillogin.conf
 
 #ignore glide files
-src/github.com/seantcanavan/glide.lock
+glide.lock
