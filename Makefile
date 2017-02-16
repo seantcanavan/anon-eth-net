@@ -32,7 +32,7 @@ release:
 	for p in $(PACKAGES); do \
 		go install $$p; \
 	done
-	cp -f ../../../../bin/main ./bin/anon-eth-net
+	mv ../../../../bin/main ./bin/anon-eth-net
 
 test:
 	for p in $(PACKAGES); do \

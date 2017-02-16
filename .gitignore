@@ -36,3 +36,9 @@ bin/
 
 #vendor folder
 vendor/
+
+#config file likely with personal details in it
+assets/config.json
+
+#intellij stuff
+.idea/
