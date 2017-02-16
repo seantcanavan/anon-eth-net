@@ -41,7 +41,7 @@ type Config struct {
 	LocalVersion             uint64 `json:"LocalVersion"`             // (D) The local version of this program that is currently running.
 }
 
-// COnfigJSONParametersExplained() returns a nicely formatted string which
+// ConfigJSONParametersExplained() returns a nicely formatted string which
 // describes all the public variables available to the user for configuration.
 func ConfigJSONParametersExplained() string {
 	return `

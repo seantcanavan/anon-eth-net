@@ -10,7 +10,6 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -18,7 +17,7 @@ import (
 // the root asset directory where all the external files used are stored
 const ASSET_ROOT_DIR = "assets"
 
-// GetAssetPath will return the relative path to the file represented by
+// AssetPath will return the relative path to the file represented by
 // assetName otherwise it will return an error if the file doesn't exist.
 func AssetPath(assetName string) (string, error) {
 
@@ -31,10 +30,13 @@ func AssetPath(assetName string) (string, error) {
 	return relativePath, nil
 }
 
-// GetSysAssetPath will return the relative path to the file represented by
+// SysAssetPath will return the relative path to the file represented by
 // assetName but also add in the GOOS after the filename and before the
 // extension. This allows loading system-specific files with one command instead
-// of a complicated switch statement every time.
+// of a complicated switch statement every time. For instance if your GOOS ==
+// "linux" then you can open "config_linux.json" by just asking for
+// "config.json". This is extremely powerful and a core component of loading
+// system-specific shell commands based on the current GOOS.
 func SysAssetPath(assetName string) (string, error) {
 
 	var relativeName bytes.Buffer
@@ -73,11 +75,6 @@ func SysAssetPath(assetName string) (string, error) {
 // FullDateString will return the current time formatted as a string.
 func FullDateString() string {
 	return time.Now().String()
-}
-
-// UnixDateString will return the current time in unix time format as a string.
-func UnixDateString() string {
-	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
 // FullDateStringSafe returns the current time as a string with only file-name
@@ -125,6 +122,7 @@ func ReadLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+// ExternalIPAddress will get this current computer's external IP address.
 // credit to: https://gist.github.com/jniltinho/9788121
 func ExternalIPAddress() (string, error) {
 

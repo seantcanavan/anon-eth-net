@@ -47,9 +47,11 @@ func NewNetwork() (*Network, error) {
 	return netw, nil
 }
 
-// this was multi-threaded at first but it had reduced reliability when 20+
-// network requests went out simultaneously. this will run in the background as
-// it is so it won't really need to be multithreaded.
+// IsInternetReachable will reach out to the internet and attempt to query a
+// number of publicly reachable API endpoints or public websites. The list is
+// quite extensive and the endpoints targeted should be extremely reliable. If
+// a significant ratio of these sites can't be reached then AEN knows that the
+// internet is currently unreachable and returns false.
 func (con *Network) IsInternetReachable() bool {
 
 	numQueries := len(con.endpoints)

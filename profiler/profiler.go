@@ -108,11 +108,11 @@ func ProfileAsArchive() (*os.File, error) {
 	return tarBall, nil
 }
 
-// SendArchiveReportAsAttachment will generate each individual piece of the
+// SendArchiveProfileAsAttachment will generate each individual piece of the
 // system profile inside its own file. It will then gzip and tarball the
 // resulting pieces into a single archive for compressing and convenience
-// purposes. The original pieces will be automatically cleaned up the archive
-// is generated.
+// purposes. The original pieces will be automatically cleaned up when the
+// archive is generated.
 func SendArchiveProfileAsAttachment() (*os.File, error) {
 	filePtr, err := ProfileAsArchive()
 	if err != nil {
@@ -124,6 +124,8 @@ func SendArchiveProfileAsAttachment() (*os.File, error) {
 	return filePtr, reporter.SendAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
 }
 
+// generateEmailSubject will create the necessary formatted and pretty email
+// subject and return it for the current profile that was just generated.
 func generateEmailSubject() string {
 	var buf bytes.Buffer
 	buf.WriteString(PROFILE_EMAIL_SUBJECT)
@@ -132,12 +134,16 @@ func generateEmailSubject() string {
 	return string(buf.Bytes())
 }
 
+// generateEmailBody will create the necessary email body contents and return it
+// for the current profile that was just generated.
 func generateEmailBody() []byte {
 	var buf bytes.Buffer
 	buf.WriteString("A full system profile is attached.")
 	return buf.Bytes()
 }
 
+// Run will ensure that the profiler is constantly active and sending out
+// new profile updates at the interval defined by CheckInFrequencySeconds.
 func Run() {
 	// kick off the system profiler loop to send out system profiles at the specified interval
 	go func() {

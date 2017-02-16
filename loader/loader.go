@@ -48,7 +48,7 @@ func NewLoader(processesPath string) (*Loader, error) {
 	return loader, nil
 }
 
-// getProcessesFromJSONFile will read in a set of JSON values which define both
+// processesFromJSONFile will read in a set of JSON values which define both
 // the canonical name of the process as well as the command and any associated
 // parameters to successfully execute that command. A slice containing a
 // LoaderProcess struct for each individual command to execute will be returned.
@@ -185,6 +185,9 @@ func (ldr *Loader) StartSynchronous() []LoaderProcess {
 	return ldr.Processes
 }
 
+// Run will continuously execute this specific instance of Loader indefinitely.
+// Should only be called externally when all configuration options have been
+// correctly setup and you wish to execute a set number of processes forever.
 func (ldr *Loader) Run() {
 	go func() {
 		for 1 == 1 {

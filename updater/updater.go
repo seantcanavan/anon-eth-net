@@ -42,6 +42,10 @@ func Run() {
 	}()
 }
 
+// UpdateNecessary will look at the remotely defined version number as well as
+// the locally defined version number and compare the two. Based on the result
+// it will recommend a course of action. It will return True is the remote
+// version is higher (newer) than the local version.
 func UpdateNecessary() (bool, error) {
 
 	localVersion := config.Cfg.LocalVersion
@@ -67,7 +71,7 @@ func UpdateNecessary() (bool, error) {
 
 }
 
-// getRemoteVersion will grab the version of this program from the remote given
+// remoteVersion will grab the version of this program from the remote given
 // file path where the version number should reside as a whole integer number.
 // The default project structure is to have this file be named 'version.no' and
 // queried directly via the github.com API.
@@ -97,6 +101,7 @@ func remoteVersion() (uint64, error) {
 	return remoteVersion, nil
 }
 
+// doUpdate will hopefully someday actually perform the update
 func doUpdate() error {
 	logger.Lgr.LogMessage("performing an update")
 	return nil

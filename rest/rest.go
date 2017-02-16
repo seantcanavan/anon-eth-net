@@ -53,9 +53,6 @@ const LOG_REST_PATH = "logs"
 // The REST path name which calls the update handler
 const UPDATE_REST_PATH = "update"
 
-// The REST path name which calls the config handler
-const CONFIG_REST_PATH = "config"
-
 // The REST path name which calls the check in handler
 const CHECKIN_REST_PATH = "checkin"
 
@@ -107,6 +104,10 @@ func NewRestHandler() (*RestHandler, error) {
 	return &rh, nil
 }
 
+// buildGorillaPath will build a complete gorilla path argument for the given
+// root endpoint and all of the given arguments. Each successive argument will
+// be separated by a set of forward slashes to separate it from all the other
+// arguments. E.G. root/arg1/arg2/arg3 etc.
 func buildGorillaPath(root string, arguments ...string) string {
 	var routeBuf bytes.Buffer
 	routeBuf.WriteString("/")
@@ -121,6 +122,10 @@ func buildGorillaPath(root string, arguments ...string) string {
 	return routeBuf.String()
 }
 
+// buildRestPath will generate a full rest path give an endpoint and arguments.
+// This is very useful for sending out fully qualified links to specific
+// endpoints. This is used for documentation purposes when the REST server
+// starts up so the end-user can get notified of all active rest endpoints.
 func buildRestPath(protocol, host, port, root string, arguments ...string) string {
 	var routeBuf bytes.Buffer
 	routeBuf.WriteString(protocol)
@@ -139,10 +144,10 @@ func buildRestPath(protocol, host, port, root string, arguments ...string) strin
 	return routeBuf.String()
 }
 
-// startupRestServer will start up the local REST server where this remote
+// StartupRestServer will start up the local REST server where this remote
 // machine will listen for incoming commands on. A free port on this local
 // machine will be automatically detected and used. The randomly chosen
-// available port will be logged locally as well as emailed.
+// available port will be logged locally as well as reported via email.
 func (rh *RestHandler) StartupRestServer() error {
 	port, err := freeport.Get()
 	if err != nil {
@@ -229,10 +234,10 @@ func (rh *RestHandler) writeResponseAndLog(errorMessage string, httpStatusCode i
 	logger.Lgr.LogMessage(statusBuffer.String())
 }
 
-// checkinHandler will handle receiving and verifying check-in commands via REST.
-// Check-in commands will notify the remote machine that the remote user would
-// like the machine to perform a check-in. A check-in will send all pertinent data
-// regarding the current operating status of this remote machine.
+// checkinHandler will handle receiving and verifying check-in commands via
+// REST. Check-in commands will notify the remote machine that the remote user
+// would like the machine to perform a check-in. A check-in will send all
+// pertinent data regarding the current operating status of this remote machine.
 func (rh *RestHandler) checkinHandler(writer http.ResponseWriter, request *http.Request) {
 
 	var err error
@@ -272,9 +277,8 @@ func (rh *RestHandler) checkinHandler(writer http.ResponseWriter, request *http.
 
 // executeHandler will handle receiving and verifying execute commands via REST.
 // Execute commands will allow the local machine to execute the code contained
-// at the remote location. Currently considering supporting executables and
-// Python files. Should we do a JSON config instead to allow call command,
-// parameters, and a location to the file to download all cleanly in one?
+// in the body of the POST that is sent. Currently python, shell script, and
+// raw binaries are supported. This is an EXTREMELY powerful function.
 func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.Request) {
 
 	var err error
@@ -334,6 +338,11 @@ func (rh *RestHandler) executeHandler(writer http.ResponseWriter, request *http.
 	return
 }
 
+// executeLoader will take the type of a file to execute as well as the bytes
+// that represent that file. Currently supported file types are python, shell
+// script, and raw binaries. executeLoader will create the appropriate loader
+// instance based on the file type and then call StartSynchronous. When the
+// code is finished the rest command will return the result.
 func (rh *RestHandler) executeLoader(fileType string, fileContents []byte) error {
 
 	processMap := make(map[string]string)
@@ -487,8 +496,8 @@ func (rh *RestHandler) rebootHandler(writer http.ResponseWriter, request *http.R
 	return
 }
 
-// logHandler will handle receiving and verifying log retrieval commands? via
-// REST.
+// logHandler will handle receiving and verifying log retrieval commands via
+// REST. Still a work in progress.
 func (rh *RestHandler) logHandler(writer http.ResponseWriter, request *http.Request) {
 
 	var err error
@@ -524,6 +533,7 @@ func (rh *RestHandler) logHandler(writer http.ResponseWriter, request *http.Requ
 // updateHandler will handle receiving and verifying update commands via REST.
 // Update commands will allow the remote user to force a local update given a
 // specific remote URL - should probably be git for now.
+// Still a work in progress.
 func (rh *RestHandler) updateHandler(writer http.ResponseWriter, request *http.Request) {
 
 	var err error
@@ -613,6 +623,9 @@ func (rh *RestHandler) assetHandler(writer http.ResponseWriter, request *http.Re
 	return
 }
 
+// actionAssetAndReturn will perform a specific function on the given asset.
+// It will specifically empowers the basic CRUD operations described in
+// assetHandler().
 func (rh *RestHandler) actionAssetAndReturn(action string, assetPath string, writer http.ResponseWriter, request *http.Request) {
 
 	switch action {

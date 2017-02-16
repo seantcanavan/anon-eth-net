@@ -83,7 +83,8 @@ func StandardLogger(logBaseName string) error {
 
 // CurrentLogContents returns the contents of the current log file that's being
 // managed by the logger instance. The current log should be active thus
-// multiple calls to CurrentLogContents() should give different results.
+// multiple calls to CurrentLogContents() should give different results assuming
+// the log is being actively written to.
 func (lgr *Logger) CurrentLogContents() ([]byte, error) {
 
 	lgr.writer.Flush()
@@ -145,6 +146,9 @@ func (lgr *Logger) initLogger(logBaseName string) error {
 	return nil
 }
 
+// Write satisfies the writer interface for golang. This allows an instance of
+// Logger to be passed in to the os/exec library for capturing from both the
+// stdout and stderr steams.
 func (lgr *Logger) Write(p []byte) (n int, err error) {
 	lgr.LogMessage(string(p))
 	return len(p), nil
