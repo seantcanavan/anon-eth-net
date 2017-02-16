@@ -11,8 +11,6 @@ import (
 	"github.com/seantcanavan/anon-eth-net/logger"
 )
 
-const TIME_BETWEEN_SUCCESSIVE_ITERATIONS = 60
-
 // Loader represents a struct that will load a set of processes and watch over
 // them. It knows the name of every process that it should be keeping an eye on
 // as well as how to resurrect that process should it no longer be executing.

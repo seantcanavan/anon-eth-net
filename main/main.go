@@ -74,7 +74,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	//------------------ CREATE REST INSTANCE TO ENABLE COMMUNIATION VIA REST ------------------
+	//------------------ CREATE REST INSTANCE TO ENABLE COMMUNICATION VIA REST ------------------
 	certPath, certPathErr := utils.AssetPath("server.cert")
 	if certPathErr != nil {
 		fmt.Println(certPathErr)

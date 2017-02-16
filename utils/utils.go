@@ -125,22 +125,6 @@ func ReadLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-// DirectoryList returns a list of entries in the given directory. It filters
-// optionally for the given filter.
-func DirectoryList(directoryName string, filter string) []string {
-	fileList := []string{}
-	_ = filepath.Walk(directoryName, func(path string, f os.FileInfo, err error) error {
-		if filter != "" {
-			if strings.Contains(path, filter) {
-				fileList = append(fileList, path)
-			}
-		}
-		return nil
-	})
-
-	return fileList
-}
-
 // credit to: https://gist.github.com/jniltinho/9788121
 func ExternalIPAddress() (string, error) {
 

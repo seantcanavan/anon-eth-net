@@ -23,7 +23,6 @@ var nowString string
 var protocol string
 var host string
 var port string
-var publicKey string
 var transport *http.Transport
 var client *http.Client
 var restHandler *RestHandler

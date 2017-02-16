@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"time"
-	// "runtime"
 
 	"github.com/seantcanavan/anon-eth-net/config"
 	"github.com/seantcanavan/anon-eth-net/loader"
@@ -15,12 +14,6 @@ import (
 	"github.com/seantcanavan/anon-eth-net/reporter"
 	"github.com/seantcanavan/anon-eth-net/utils"
 )
-
-// the text to print after we finish executing a command so successive commands have some kind of visual break
-const END_COMMAND_DIVIDER = "------------------------------------------------------------\n\n"
-
-// prof is short for profile and is the file extension we use after generating full system profiles
-const PROFILE_FILE_EXTENSION = ".prof"
 
 // the subject of the email that we use when sending out the profile
 const PROFILE_EMAIL_SUBJECT = "System Profile"
@@ -131,19 +124,6 @@ func SendArchiveProfileAsAttachment() (*os.File, error) {
 	return filePtr, reporter.SendAttachment(generateEmailSubject(), generateEmailBody(), filePtr)
 }
 
-func beautifyTitle(title string) []byte {
-	var titleBuffer bytes.Buffer
-
-	titleBuffer.WriteString("-------------------- ")
-	titleBuffer.WriteString(title)
-	titleBuffer.WriteString(" ")
-	for titleBuffer.Len() < 60 {
-		titleBuffer.WriteString("-")
-	}
-
-	return titleBuffer.Bytes()
-}
-
 func generateEmailSubject() string {
 	var buf bytes.Buffer
 	buf.WriteString(PROFILE_EMAIL_SUBJECT)
@@ -159,19 +139,13 @@ func generateEmailBody() []byte {
 }
 
 func Run() {
-
 	// kick off the system profiler loop to send out system profiles at the specified interval
 	go func() {
-
 		for 1 == 1 {
-
 			logger.Lgr.LogMessage("Sleeping for %d seconds before sending a system profile", config.Cfg.CheckInFrequencySeconds)
 			time.Sleep(time.Duration(config.Cfg.CheckInFrequencySeconds) * time.Second)
 			logger.Lgr.LogMessage("Sending archive to provided email after sleeping %d seconds", config.Cfg.CheckInFrequencySeconds)
 			SendArchiveProfileAsAttachment()
-
 		}
-
 	}()
-
 }
