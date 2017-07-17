@@ -51,7 +51,7 @@ darwin-zip:
 	zip -r "./bin/anon-eth-net-v0.2.0-macos-x64.zip" assets/ bin/ -x ./assets/internal_ip_address_linux.json ./assets/internal_ip_address_windows.json ./assets/config.json ./assets/emaillogin.conf ./assets/loader_test*.json ./assets/logger_test.sample ./assets/rest_test_loader_binary* ./assets/version.no ./assets/main_loader_linux.json ./assets/main_loader_windows.json ./assets/profiler_loader_linux.json ./assets/profiler_loader_windows.json ./assets/reboot_loader_linux.json ./assets/reboot_loader_windows.json
 
 windows-zip:
-	zip -r "./bin/anon-eth-net-v0.2.0.windows-x64.zip" assets/ bin/ -x ./assets/internal_ip_address_linux.json ./assets/internal_ip_address_linux.json ./assets/config.json ./assets/emaillogin.conf ./assets/loader_test*.sjon ./assets/logger_test.sample ./assets/rest_test_loader_binary* ./assets/version.no ./assets/main_loader_darwin.json ./assets/main_loader_linux.json ./assets/profiler_loader_linux.json ./assets/profiler_loader_darwin.json ./assets/reboot_loader_linux.json ./assets/reboot_loader_darwin.json
+	zip -r "./bin/anon-eth-net-v0.2.0.windows-x64.zip" assets/ bin/ -x ./assets/internal_ip_address_linux.json ./assets/internal_ip_address_linux.json ./assets/config.json ./assets/emaillogin.conf ./assets/loader_test*.json ./assets/logger_test.sample ./assets/rest_test_loader_binary* ./assets/version.no ./assets/main_loader_darwin.json ./assets/main_loader_linux.json ./assets/profiler_loader_linux.json ./assets/profiler_loader_darwin.json ./assets/reboot_loader_linux.json ./assets/reboot_loader_darwin.json
 
 version-update:
 	@echo "Current build number: $(BUILD_NUMBER)"
