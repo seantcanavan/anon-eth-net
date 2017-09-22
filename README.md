@@ -47,10 +47,15 @@ Zombies can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yo
 3. Glide: `brew install glide`
 
 #### Required Setup:
-1. Select a parent folder for all your go code. 'golang' is not a bad idea. Inside this folder create a subfolder "src" and in that folder a subfolder named "github.com". Example: `golang/src/github.com`
-2. Since this project is under my name on GitHub it has to be cloned into a folder titled `seantcanavan` so use `git clone` to download the repository into a subfolder with my username like so: `golang/src/github.com/seantcanavan`. The code should now live within a folder titled `golang/src/github.com/seantcanavan/anon-eth-net`.
+1. Select a parent folder for all your go code. 'golang' is not a bad idea. Inside this folder create a subfolder 'src' and in that folder a subfolder named "github.com". Example: `golang/src/github.com`
+2. Since this project is under my name on GitHub it has to be cloned into a folder titled `seantcanavan` so use `git clone` to download the repository into a subfolder with my username like so:
+  1. `cd github.com`
+  2. `mkdir seantcanavan`
+  3. `cd seantcanavan`
+  4. `git clone git@github.com:seantcanavan/anon-eth-net.git`
+The code should now live within a folder titled `golang/src/github.com/seantcanavan/anon-eth-net`.
 3. Go is already automatically configured on your local macOS path if installed via the brew package manager.
-4. Setup GOBIN and GOPATH system variables for your macOS user. Point to the `<parent_go_folder>` directory. For GOBIN use the same value as GOPATH but add /bin to the end. GOPATH should be something like `/Users/<username>/<parent_go_folder>` and GOBIN should be something like `/Users/<username>/<parent_go_folder>/bin. All your golang projects will now need to reside under your GOPATH variable for compatibility and compilation purposes. You can automatically set the GOPATH variable in your .bash_profile file on each terminal load / system startup:
+4. Setup GOBIN and GOPATH system variables for your macOS user. Point to the `<parent_go_folder>` directory. For GOBIN use the same value as GOPATH but add /bin to the end. GOPATH should be something like `/Users/<username>/<parent_go_folder>` and GOBIN should be something like `/Users/<username>/<parent_go_folder>/bin`. All your golang projects will now need to reside under your GOPATH variable for compatibility and compilation purposes. You can automatically set the GOPATH variable in your .bash_profile file on each terminal load / system startup:
   1. `nano ~/.bash_profile`
   2. Scroll to the bottom and paste the following. You may wrap the folder argument after the equal sign in quotes if you have spaces in your folder names (shame on you).
   3. `export GOPATH=/Users/<username>/<parent_go_folder>`
@@ -83,10 +88,15 @@ Zombies can also use [go-dos-yourself](https://github.com/seantcanavan/go-dos-yo
   2. `sudo apt-get install glide`
 
 #### Required Setup:
-1. Select a parent folder for all your go code. 'golang' is not a bad idea. Inside this folder create a subfolder "src" and in that folder a subfolder named "github.com". Example: `golang/src/github.com`
-2. Since this project is under rmy name on GitHub it has to be cloned into a folder titled `seantcanavan` so use `git clone` to download the repository into a subfolder with my username like so: `golang/src/github.com/seantcanavan`. The code should now live within a folder titled `golang/src/github.com/seantcanavan/anon-eth-net`.
+1. Select a parent folder for all your go code. 'golang' is not a bad idea. Inside this folder create a subfolder 'src' and in that folder a subfolder named 'github.com'. Example: `golang/src/github.com`
+2. Since this project is under my name on GitHub it has to be cloned into a folder titled `seantcanavan` so use `git clone` to download the repository into a subfolder with my username like so:
+  1. `cd github.com`
+  2. `mkdir seantcanavan`
+  3. `cd seantcanavan`
+  4. `git clone git@github.com:seantcanavan/anon-eth-net.git`
+The code should now live within a folder titled `golang/src/github.com/seantcanavan/anon-eth-net`.
 3. Go is already automatically configured in your local Ubuntu path if installed via the synaptic package manager.
-4. Setup GOBIN and GOPATH system variables for your Ubuntu user. Point to the `<parent_go_folder>` directory. For GOBIN use the same value as GOPATH but add /bin to the end. GOPATH should be something like `/home/<username>/<parent_go_folder>` and GOBIN should be something like `/home/<username>/<parent_go_directory>/bin. All your golang projects will now need to reside under your GOPATH variable for compatibility and compilation purposes. You can automatically set the GOPATH variable in your .bashrc file on each terminal load / system startup with the following commands:
+4. Setup GOBIN and GOPATH system variables for your Ubuntu user. Point to the `<parent_go_folder>` directory. For GOBIN use the same value as GOPATH but add /bin to the end. GOPATH should be something like `/home/<username>/<parent_go_folder>` and GOBIN should be something like `/home/<username>/<parent_go_directory>/bin`. All your golang projects will now need to reside under your GOPATH variable for compatibility and compilation purposes. You can automatically set the GOPATH variable in your .bashrc file on each terminal load / system startup with the following commands:
   1. `nano ~/.bashrc`
   2. Scroll to the bottom and paste the following. You may wrap the folder argument after the equal sign in quotes if you have spaces in your folder names (shame on you).
   3. `export GOPATH=/home/<username>/<parent_go_folder>`
