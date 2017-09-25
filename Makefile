@@ -8,7 +8,7 @@ default: all
 
 clean:
 	for p in $(PACKAGES); do \
-		go clean ../../$$p; \
+		go clean $$p; \
 	done
 # cleanup temporary files created after test
 	find . -name "*.log" -type f -delete
